@@ -2,27 +2,27 @@
   "nodes": [
     {
       "id": 1,
-      "label": "Start",
+      "label": "Dungeon Call",
       "status": "complete",
-      "description": "Project started"
+      "description": "The project has officially started and begun development. All changes will be listed on this page as well as all progress."
     },
     {
       "id": 2,
-      "label": "Core Systems",
+      "label": "Veilmar",
       "status": "progress",
-      "description": "Main systems in development"
+      "description": "Veilmar is the main city of Dungeon Call where the adventurers of the world reside. This is in development!t"
     },
     {
       "id": 3,
       "label": "Combat",
       "status": "pending",
-      "description": "Combat mechanics not started"
+      "description": "Combat mechanics not started."
     },
     {
       "id": 4,
       "label": "Inventory System",
       "status": "pending",
-      "description": "Handles items and storage"
+      "description": "Handles items and storage."
     }
   ],
 
