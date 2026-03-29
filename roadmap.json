@@ -18,6 +18,12 @@
       "status": "pending",
       "description": "Combat mechanics not started"
     }
+    {
+  "id": 4,
+  "label": "Inventory System",
+  "status": "pending",
+  "description": "Handles items and storage"
+    }
   ],
 
   "edges": [
