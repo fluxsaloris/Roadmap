@@ -17,17 +17,18 @@
       "label": "Combat",
       "status": "pending",
       "description": "Combat mechanics not started"
-    }
+    },
     {
-  "id": 4,
-  "label": "Inventory System",
-  "status": "pending",
-  "description": "Handles items and storage"
+      "id": 4,
+      "label": "Inventory System",
+      "status": "pending",
+      "description": "Handles items and storage"
     }
   ],
 
   "edges": [
     { "from": 1, "to": 2 },
-    { "from": 2, "to": 3 }
+    { "from": 2, "to": 3 },
+    { "from": 2, "to": 4 }
   ]
 }
