@@ -16,7 +16,7 @@
       "id": 3,
       "label": "Combat",
       "status": "pending",
-      "description": "Combat mechanics not started but intend to begin with magic.."
+      "description": "Combat mechanics not started but intend to begin with magic."
     },
     {
       "id": 4,
@@ -35,7 +35,7 @@
       "label": "Mana Control",
       "status": "pending",
       "description": "This is going to the basics of magic before you move onto actual magic variety and specialty. You will manipulate mana in its raw form and this is where every mage will begin."
-    },
+    }
   ],
 
   "edges": [
@@ -43,6 +43,6 @@
     { "from": 2, "to": 3 },
     { "from": 2, "to": 4 },
     { "from": 3, "to": 5 },
-    { "from": 5, "to": 6 },
+    { "from": 5, "to": 6 }
   ]
 }
