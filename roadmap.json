@@ -65,6 +65,234 @@
       "label": "Dungeon",
       "status": "pending",
       "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown."
+    },
+    {
+      "id": "12",
+      "label": "Monoliths",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "13",
+      "label": "Temple Of The Gods",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "14",
+      "label": "Alchemical Store",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "15",
+      "label": "Merchant Guild",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "16",
+      "label": "Gatehouse & City Walls",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "17",
+      "label": "Apothecary & Medicine House",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "18",
+      "label": "Bath House",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "19",
+      "label": "Marketplace",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "20",
+      "label": "Adventurer Guild",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "21",
+      "label": "Restaurants",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "22",
+      "label": "Auction House",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "23",
+      "label": "Blacksmith",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "24",
+      "label": "Barracks",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "25",
+      "label": "City Districts",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "26",
+      "label": "Castle",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "27",
+      "label": "Magic Towers",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "28",
+      "label": "Black Magic Tower",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "29",
+      "label": "White Magic Tower",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "30",
+      "label": "Blue Magic Tower",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "31",
+      "label": "Green Magic Tower",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "32",
+      "label": "Red Magic Tower",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "33",
+      "label": "Black Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "34",
+      "label": "White Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "35",
+      "label": "Blue Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "36",
+      "label": "Green Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "37",
+      "label": "Red Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "38",
+      "label": "Blood Magic (Haemomancy)",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "39",
+      "label": "Necromancy",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "40",
+      "label": "Curse Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "41",
+      "label": "Demon Summoning",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "42",
+      "label": "Life Manipulation",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "43",
+      "label": "Mind Manipulation",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "44",
+      "label": "Barrier/Protection Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "45",
+      "label": "Divination Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "46",
+      "label": "Status Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "47",
+      "label": "Runic/Ritual Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "48",
+      "label": "Purification Magic",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": "49",
+      "label": "Spiritual Magic",
+      "status": "pending",
+      "description": "Coming Soon"
     }
   ],
 
@@ -78,6 +306,44 @@
     { "from": 2, "to": 8},
     { "from": 1, "to": 9},
     { "from": 9, "to": 10},
-    { "from": 1, "to": 11}
+    { "from": 1, "to": 11},
+    { "from": 2, "to": 12},
+    { "from": 2, "to": 13},
+    { "from": 2, "to": 14},
+    { "from": 2, "to": 15},
+    { "from": 2, "to": 16},
+    { "from": 2, "to": 17},
+    { "from": 2, "to": 18},
+    { "from": 2, "to": 19},
+    { "from": 2, "to": 20},
+    { "from": 2, "to": 21},
+    { "from": 2, "to": 22},
+    { "from": 2, "to": 23},
+    { "from": 2, "to": 24},
+    { "from": 2, "to": 25},
+    { "from": 2, "to": 26},
+    { "from": 2, "to": 27},
+    { "from": 27, "to": 28},
+    { "from": 27, "to": 29},
+    { "from": 27, "to": 30},
+    { "from": 27, "to": 31},
+    { "from": 27, "to": 32},
+    { "from": 7, "to": 33},
+    { "from": 7, "to": 34},
+    { "from": 7, "to": 35},
+    { "from": 7, "to": 36},
+    { "from": 7, "to": 37},
+    { "from": 33, "to": 38},
+    { "from": 33, "to": 39},
+    { "from": 33, "to": 40},
+    { "from": 33, "to": 41},
+    { "from": 33, "to": 42},
+    { "from": 33, "to": 43},
+    { "from": 34, "to": 44},
+    { "from": 34, "to": 45},
+    { "from": 34, "to": 46},
+    { "from": 34, "to": 47},
+    { "from": 34, "to": 48},
+    { "from": 34, "to": 49}
   ]
 }
