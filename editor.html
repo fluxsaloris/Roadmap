@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Roadmap Editor</title>
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: black;
+  color: white;
+  overflow: hidden;
+}
+
+#graph {
+  position: fixed;
+  inset: 0;
+}
+
+/* 🔐 Login */
+#loginScreen {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#loginBox {
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+#loginBox input {
+  padding: 8px;
+  margin: 10px 0;
+}
+
+/* 🎮 Controls */
+#editor {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+}
+
+#controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+button {
+  display: block;
+  width: 130px;
+  margin: 4px 0;
+  padding: 6px;
+  background: #111;
+  color: #aaa;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="loginScreen">
+  <div id="loginBox">
+    <h2>Editor Access</h2>
+    <input type="password" id="passwordInput" placeholder="Password">
+    <button onclick="checkPassword()">Enter</button>
+  </div>
+</div>
+
+<div id="graph"></div>
+
+<div id="editor">
+  <button onclick="addChild()">Add Child</button>
+  <button onclick="editNode()">Edit Node</button>
+  <button onclick="deleteNode()">Delete Node</button>
+  <button onclick="saveToGitHub()">💾 Save</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div id="controls">
+  <button onclick="zoomIn()">Zoom +</button>
+  <button onclick="zoomOut()">Zoom -</button>
+  <button onclick="resetView()">Reset</button>
+</div>
+
+<script>
+// 🔐 PASSWORD
+const PASSWORD = "CHANGE_ME";
+
+// 🔑 GITHUB CONFIG
+const GITHUB_TOKEN = "PASTE_YOUR_TOKEN_HERE";
+const REPO_OWNER = "fluxsaloris";
+const REPO_NAME = "Roadmap";
+const FILE_PATH = "roadmap.json";
+
+let network, nodes;
+let selectedNodeId = null;
+let nodeMap = {};
+
+// 🌳 TREE
+let tree = {
+  label: "Dungeon Call",
+  status: "complete",
+  description: "Start",
+  children: []
+};
+
+// 🎨 COLORS
+function getColor(status) {
+  if (status === "complete") return { background: "#00cc66" };
+  if (status === "progress") return { background: "#ffaa00" };
+  return { background: "#111" };
+}
+
+// 🔁 TREE → GRAPH
+function generateGraph() {
+  let id = 1;
+  let nodesArr = [];
+  let edgesArr = [];
+  nodeMap = {};
+
+  function traverse(node, parentId = null) {
+    if (!node.children) node.children = [];
+
+    const currentId = id++;
+    nodeMap[currentId] = node;
+
+    nodesArr.push({
+      id: currentId,
+      label: node.label,
+      shape: "box",
+      color: getColor(node.status),
+      description: node.description,
+      status: node.status
+    });
+
+    if (parentId) {
+      edgesArr.push({ from: parentId, to: currentId });
+    }
+
+    node.children.forEach(child => traverse(child, currentId));
+  }
+
+  traverse(tree);
+
+  nodes.clear();
+  nodes.add(nodesArr);
+  network.setData({ nodes: nodes, edges: edgesArr });
+
+  setTimeout(() => {
+    network.focus(1, { scale: 1.2 });
+  }, 100);
+}
+
+// 🖱 CLICK
+function setupClick() {
+  network.on("click", function(params) {
+    if (!params.nodes.length) {
+      selectedNodeId = null;
+      return;
+    }
+    selectedNodeId = params.nodes[0];
+  });
+}
+
+// ➕ ADD
+function addChild() {
+  if (!selectedNodeId) return alert("Select a node first");
+
+  const parent = nodeMap[selectedNodeId];
+
+  parent.children.push({
+    label: "New Node",
+    status: "pending",
+    description: "Coming Soon",
+    children: []
+  });
+
+  generateGraph();
+}
+
+// ✏️ EDIT
+function editNode() {
+  if (!selectedNodeId) return alert("Select a node first");
+
+  const node = nodeMap[selectedNodeId];
+
+  node.label = prompt("Name:", node.label) || node.label;
+  node.description = prompt("Description:", node.description) || node.description;
+  node.status = prompt("Status (complete/progress/pending):", node.status) || node.status;
+
+  generateGraph();
+}
+
+// ❌ DELETE
+function deleteNode() {
+  if (!selectedNodeId) return alert("Select a node first");
+
+  const target = nodeMap[selectedNodeId];
+
+  function remove(parent) {
+    if (!parent.children) return;
+
+    parent.children = parent.children.filter(child => child !== target);
+    parent.children.forEach(remove);
+  }
+
+  if (tree === target) {
+    alert("Cannot delete root");
+    return;
+  }
+
+  remove(tree);
+  selectedNodeId = null;
+
+  generateGraph();
+}
+
+// 🔁 BUILD GRAPH JSON
+function buildGraphJSON() {
+  let nodes = [];
+  let edges = [];
+  let id = 1;
+
+  function traverse(node, parentId = null) {
+    const currentId = id++;
+
+    nodes.push({
+      id: currentId,
+      label: node.label,
+      status: node.status,
+      description: node.description
+    });
+
+    if (parentId) {
+      edges.push({ from: parentId, to: currentId });
+    }
+
+    node.children.forEach(child => traverse(child, currentId));
+  }
+
+  traverse(tree);
+
+  return { nodes, edges };
+}
+
+// 💾 SAVE TO GITHUB
+async function saveToGitHub() {
+  try {
+    const data = buildGraphJSON();
+
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`
+      }
+    });
+
+    if (!res.ok) {
+      alert("Failed to fetch GitHub file");
+      return;
+    }
+
+    const file = await res.json();
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+
+    const update = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "Update roadmap",
+        content: content,
+        sha: file.sha
+      })
+    });
+
+    if (!update.ok) {
+      alert("Failed to save to GitHub");
+      return;
+    }
+
+    alert("Saved to GitHub ✅");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error saving to GitHub");
+  }
+}
+
+// 🔐 AUTH
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value;
+
+  if (input === PASSWORD) {
+    document.getElementById("loginScreen").style.display = "none";
+    localStorage.setItem("editorAccess", "true");
+  } else {
+    alert("Wrong password");
+  }
+}
+
+function logout() {
+  localStorage.removeItem("editorAccess");
+  location.reload();
+}
+
+window.onload = () => {
+  if (localStorage.getItem("editorAccess") === "true") {
+    document.getElementById("loginScreen").style.display = "none";
+  }
+};
+
+// 🔍 CONTROLS
+function zoomIn() { network.moveTo({ scale: network.getScale() * 1.2 }); }
+function zoomOut() { network.moveTo({ scale: network.getScale() * 0.8 }); }
+function resetView() { network.focus(1, { scale: 1.2 }); }
+
+// 🚀 INIT
+nodes = new vis.DataSet();
+
+network = new vis.Network(
+  document.getElementById("graph"),
+  { nodes: nodes, edges: [] },
+  {
+    layout: {
+      hierarchical: {
+        direction: "LR",
+        levelSeparation: 250,
+        nodeSpacing: 200
+      }
+    },
+    physics: false
+  }
+);
+
+setupClick();
+generateGraph();
+</script>
+
+</body>
+</html>
