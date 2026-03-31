@@ -1,307 +1,535 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Roadmap Editor</title>
-
-<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: black;
-  color: white;
-  overflow: hidden;
-}
-
-#graph {
-  position: fixed;
-  inset: 0;
-}
-
-/* 🔐 Login */
-#loginScreen {
-  position: fixed;
-  inset: 0;
-  background: black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-#loginBox {
-  background: #111;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-#loginBox input {
-  padding: 8px;
-  margin: 10px 0;
-}
-
-/* 🎮 Controls */
-#editor {
-  position: absolute;
-  bottom: 100px;
-  right: 20px;
-}
-
-#controls {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-}
-
-button {
-  display: block;
-  width: 140px;
-  margin: 4px 0;
-  padding: 6px;
-  background: #111;
-  color: #aaa;
-  border: 1px solid #333;
-  cursor: pointer;
-}
-</style>
-</head>
-
-<body>
-
-<!-- 🔐 LOGIN -->
-<div id="loginScreen">
-  <div id="loginBox">
-    <h2>Editor Access</h2>
-    <input type="password" id="passwordInput" placeholder="Password">
-    <button onclick="checkPassword()">Enter</button>
-  </div>
-</div>
-
-<div id="graph"></div>
-
-<div id="editor">
-  <button onclick="addChild()">Add Child</button>
-  <button onclick="editNode()">Edit Node</button>
-  <button onclick="deleteNode()">Delete Node</button>
-  <button onclick="saveToGitHub()">💾 Save</button>
-  <button onclick="logout()">Logout</button>
-</div>
-
-<div id="controls">
-  <button onclick="zoomIn()">Zoom +</button>
-  <button onclick="zoomOut()">Zoom -</button>
-  <button onclick="resetView()">Reset</button>
-</div>
-
-<script>
-
-// 🔐 CHANGE THIS
-const PASSWORD = "Nexus.?!?!.Axraex!1986?2004!!??Flux!Saloris";
-
-// 🌐 CHANGE THIS (your worker URL)
-const WORKER_URL = "https://roadmap-save.flux-saloris.workers.dev";
-
-// 🔒 MUST MATCH CLOUDFLARE SECRET
-const SECRET_KEY = "Nexus-FluxSaloris.3783573985367209572039751986_sadfibsdginsdidngisdngisdngiAxraex";
-
-let network, nodes;
-let selectedNodeId = null;
-let nodeMap = {};
-
-// 🌳 TREE
-let tree = {
-  label: "Dungeon Call",
-  status: "complete",
-  description: "Start",
-  children: []
-};
-
-// 🎨 COLORS
-function getColor(status) {
-  if (status === "complete") return { background: "#00cc66" };
-  if (status === "progress") return { background: "#ffaa00" };
-  return { background: "#111" };
-}
-
-// 🔁 TREE → GRAPH
-function generateGraph() {
-  let id = 1;
-  let nodesArr = [];
-  let edgesArr = [];
-  nodeMap = {};
-
-  function walk(node, parent=null) {
-    if (!node.children) node.children = [];
-
-    const currentId = id++;
-    nodeMap[currentId] = node;
-
-    nodesArr.push({
-      id: currentId,
-      label: node.label,
-      shape: "box",
-      color: getColor(node.status)
-    });
-
-    if (parent) edgesArr.push({ from: parent, to: currentId });
-
-    node.children.forEach(child => walk(child, currentId));
-  }
-
-  walk(tree);
-
-  nodes.clear();
-  nodes.add(nodesArr);
-  network.setData({ nodes: nodes, edges: edgesArr });
-
-  setTimeout(() => network.focus(1, { scale: 1.2 }), 100);
-}
-
-// 🖱 CLICK
-network = new vis.Network(
-  document.getElementById("graph"),
-  { nodes: new vis.DataSet(), edges: [] },
-  {
-    layout: {
-      hierarchical: {
-        direction: "LR",
-        levelSeparation: 250
-      }
-    },
-    physics: false
-  }
-);
-
-nodes = network.body.data.nodes;
-
-network.on("click", params => {
-  selectedNodeId = params.nodes[0] || null;
-});
-
-// ➕ ADD
-function addChild() {
-  if (!selectedNodeId) return alert("Select node first");
-
-  const parent = nodeMap[selectedNodeId];
-
-  parent.children.push({
-    label: "New Node",
-    status: "pending",
-    description: "Coming Soon",
-    children: []
-  });
-
-  generateGraph();
-}
-
-// ✏️ EDIT
-function editNode() {
-  if (!selectedNodeId) return alert("Select node first");
-
-  const n = nodeMap[selectedNodeId];
-
-  n.label = prompt("Name:", n.label) || n.label;
-  n.description = prompt("Description:", n.description) || n.description;
-  n.status = prompt("Status (complete/progress/pending):", n.status) || n.status;
-
-  generateGraph();
-}
-
-// ❌ DELETE
-function deleteNode() {
-  if (!selectedNodeId) return alert("Select node first");
-
-  const target = nodeMap[selectedNodeId];
-
-  function remove(parent) {
-    if (!parent.children) return;
-    parent.children = parent.children.filter(c => c !== target);
-    parent.children.forEach(remove);
-  }
-
-  if (tree === target) return alert("Cannot delete root");
-
-  remove(tree);
-  selectedNodeId = null;
-
-  generateGraph();
-}
-
-// 🔁 BUILD JSON
-function buildGraphJSON() {
-  let nodes = [], edges = [], id = 1;
-
-  function walk(n, parent=null) {
-    const cur = id++;
-
-    nodes.push({
-      id: cur,
-      label: n.label,
-      status: n.status,
-      description: n.description
-    });
-
-    if (parent) edges.push({ from: parent, to: cur });
-
-    n.children.forEach(c => walk(c, cur));
-  }
-
-  walk(tree);
-  return { nodes, edges };
-}
-
-// 💾 SAVE (SECURE)
-async function saveToGitHub() {
-  try {
-    const data = buildGraphJSON();
-
-    const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + SECRET_KEY
-      },
-      body: JSON.stringify({ data })
-    });
-
-    if (!res.ok) {
-      alert("Save failed");
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadmap Editor</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
     }
 
-    alert("Saved to GitHub ✅");
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, white, transparent),
+        radial-gradient(1px 1px at 30% 70%, white, transparent),
+        radial-gradient(1.5px 1.5px at 50% 40%, white, transparent),
+        radial-gradient(1px 1px at 80% 60%, white, transparent);
+      opacity: 0.5;
+    }
 
-  } catch (err) {
-    console.error(err);
-    alert("Error saving");
-  }
-}
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      border: 2px solid #BE1A48;
+      border-radius: 14px;
+      pointer-events: none;
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.35);
+      margin: 6px;
+    }
 
-// 🔐 LOGIN
-function checkPassword() {
-  if (document.getElementById("passwordInput").value === PASSWORD) {
-    document.getElementById("loginScreen").style.display = "none";
-  } else {
-    alert("Wrong password");
-  }
-}
+    #graph {
+      position: fixed;
+      inset: 0;
+    }
 
-function logout() {
-  location.reload();
-}
+    #statusBar {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 20;
+      background: rgba(15, 15, 15, 0.88);
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #ccc;
+      max-width: min(420px, calc(100vw - 40px));
+      backdrop-filter: blur(8px);
+    }
 
-// 🔍 CONTROLS
-function zoomIn() { network.moveTo({ scale: network.getScale() * 1.2 }); }
-function zoomOut() { network.moveTo({ scale: network.getScale() * 0.8 }); }
-function resetView() { network.focus(1, { scale: 1.2 }); }
+    #infoBox {
+      position: fixed;
+      width: clamp(220px, 70vw, 290px);
+      max-height: min(50vh, 340px);
+      overflow-y: auto;
+      background: rgba(20, 20, 20, 0.94);
+      backdrop-filter: blur(12px);
+      padding: 14px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
 
-// 🚀 INIT
-generateGraph();
+    #infoBox.hidden {
+      display: none;
+    }
 
-</script>
+    #infoBox h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
 
+    #infoBox p {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #ddd;
+      white-space: pre-wrap;
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    #editorPanel,
+    #controls {
+      position: fixed;
+      right: 20px;
+      z-index: 20;
+    }
+
+    #editorPanel {
+      bottom: 110px;
+    }
+
+    #controls {
+      bottom: 20px;
+    }
+
+    button {
+      display: block;
+      width: 150px;
+      margin: 4px 0;
+      padding: 8px 10px;
+      background: #111;
+      color: #ccc;
+      border: 1px solid #2b2b2b;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #171717;
+    }
+  </style>
+</head>
+<body>
+  <div id="graph"></div>
+  <div id="statusBar">Ready.</div>
+  <div id="infoBox" class="hidden"></div>
+
+  <div id="editorPanel">
+    <button onclick="addChild()">Add Child</button>
+    <button onclick="editNode()">Edit Node</button>
+    <button onclick="deleteNode()">Delete Node</button>
+    <button onclick="saveRoadmap()">Save to GitHub</button>
+    <button onclick="reloadFromGitHub()">Reload from GitHub</button>
+    <button onclick="exportCurrentGraph()">Export JSON</button>
+  </div>
+
+  <div id="controls">
+    <button onclick="zoomIn()">Zoom +</button>
+    <button onclick="zoomOut()">Zoom -</button>
+    <button onclick="resetView()">Reset</button>
+  </div>
+
+  <script>
+    const START_NODE_ID = 1;
+
+    let network;
+    let nodes;
+    let selectedNodeId = null;
+    let nodeMap = {};
+    let tree = null;
+
+    function setStatus(message, isError = false) {
+      const bar = document.getElementById("statusBar");
+      bar.textContent = message;
+      bar.style.color = isError ? "#ff8a8a" : "#ccc";
+    }
+
+    function getColor(status) {
+      if (status === "complete") {
+        return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
+      }
+      if (status === "progress") {
+        return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
+      }
+      return { background: "#111", border: "#333", font: { color: "#777" } };
+    }
+
+    function positionInfoBox(domX, domY) {
+      const box = document.getElementById("infoBox");
+      const padding = 10;
+
+      requestAnimationFrame(() => {
+        const rect = box.getBoundingClientRect();
+
+        let left = domX + 16;
+        let top = domY - 16;
+
+        if (left + rect.width > window.innerWidth - padding) {
+          left = domX - rect.width - 16;
+        }
+
+        if (top + rect.height > window.innerHeight - padding) {
+          top = window.innerHeight - rect.height - padding;
+        }
+
+        if (top < padding) top = padding;
+        if (left < padding) left = padding;
+
+        box.style.left = left + "px";
+        box.style.top = top + "px";
+      });
+    }
+
+    function buildTreeFromGraph(graphData) {
+      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
+      const graphEdges = Array.isArray(graphData?.edges) ? graphData.edges : [];
+
+      if (!graphNodes.length) {
+        return {
+          label: "Dungeon Call",
+          status: "complete",
+          description: "Start",
+          children: []
+        };
+      }
+
+      const byId = {};
+      const childIds = new Set();
+      const childrenLookup = {};
+
+      for (const node of graphNodes) {
+        byId[node.id] = {
+          label: node.label || "Unnamed",
+          status: node.status || "pending",
+          description: node.description || "Coming Soon",
+          children: []
+        };
+        childrenLookup[node.id] = [];
+      }
+
+      for (const edge of graphEdges) {
+        if (byId[edge.from] && byId[edge.to]) {
+          childrenLookup[edge.from].push(edge.to);
+          childIds.add(edge.to);
+        }
+      }
+
+      function attach(id) {
+        const node = byId[id];
+        node.children = childrenLookup[id].map(childId => attach(childId));
+        return node;
+      }
+
+      let rootId = graphNodes[0].id;
+      const explicitRoot = graphNodes.find(n => !childIds.has(n.id));
+      if (explicitRoot) rootId = explicitRoot.id;
+
+      return attach(rootId);
+    }
+
+    function buildGraphFromTree(treeRoot) {
+      let nextId = 1;
+      const outNodes = [];
+      const outEdges = [];
+      nodeMap = {};
+
+      function walk(node, parentId = null) {
+        if (!node.children) node.children = [];
+
+        const currentId = nextId++;
+        nodeMap[currentId] = node;
+
+        outNodes.push({
+          id: currentId,
+          label: node.label || "Unnamed",
+          shape: "box",
+          margin: 14,
+          color: getColor(node.status || "pending"),
+          description: node.description || "Coming Soon",
+          status: node.status || "pending"
+        });
+
+        if (parentId !== null) {
+          outEdges.push({ from: parentId, to: currentId });
+        }
+
+        for (const child of node.children) {
+          walk(child, currentId);
+        }
+      }
+
+      walk(treeRoot);
+      return { nodes: outNodes, edges: outEdges };
+    }
+
+    function buildGraphJSON() {
+      const outNodes = [];
+      const outEdges = [];
+      let nextId = 1;
+
+      function walk(node, parentId = null) {
+        if (!node.children) node.children = [];
+
+        const currentId = nextId++;
+
+        outNodes.push({
+          id: currentId,
+          label: node.label || "Unnamed",
+          status: node.status || "pending",
+          description: node.description || "Coming Soon"
+        });
+
+        if (parentId !== null) {
+          outEdges.push({ from: parentId, to: currentId });
+        }
+
+        for (const child of node.children) {
+          walk(child, currentId);
+        }
+      }
+
+      walk(tree);
+      return { nodes: outNodes, edges: outEdges };
+    }
+
+    function renderGraph() {
+      const graph = buildGraphFromTree(tree);
+      nodes.clear();
+      nodes.add(graph.nodes);
+      network.setData({ nodes, edges: graph.edges });
+
+      setTimeout(() => {
+        network.focus(START_NODE_ID, { scale: 1.2 });
+      }, 100);
+    }
+
+    async function reloadFromGitHub() {
+      try {
+        setStatus("Loading roadmap from GitHub...");
+
+        const res = await fetch("./roadmap.json?v=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("Could not load roadmap.json");
+        }
+
+        const graphData = await res.json();
+        tree = buildTreeFromGraph(graphData);
+        renderGraph();
+        selectedNodeId = null;
+        document.getElementById("infoBox").classList.add("hidden");
+        setStatus("Loaded roadmap from GitHub.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Failed to load roadmap.json", true);
+        alert("Failed to load roadmap.json");
+      }
+    }
+
+    function addChild() {
+      if (!selectedNodeId) {
+        alert("Select a node first.");
+        return;
+      }
+
+      const parent = nodeMap[selectedNodeId];
+      if (!parent.children) parent.children = [];
+
+      parent.children.push({
+        label: "New Node",
+        status: "pending",
+        description: "Coming Soon",
+        children: []
+      });
+
+      renderGraph();
+      setStatus("Child node added. Save when ready.");
+    }
+
+    function editNode() {
+      if (!selectedNodeId) {
+        alert("Select a node first.");
+        return;
+      }
+
+      const node = nodeMap[selectedNodeId];
+
+      const newLabel = prompt("Name:", node.label || "");
+      if (newLabel !== null && newLabel.trim() !== "") {
+        node.label = newLabel.trim();
+      }
+
+      const newDescription = prompt("Description:", node.description || "");
+      if (newDescription !== null) {
+        node.description = newDescription;
+      }
+
+      const newStatus = prompt("Status (complete / progress / pending):", node.status || "pending");
+      if (newStatus !== null) {
+        const normalized = newStatus.trim().toLowerCase();
+        if (["complete", "progress", "pending"].includes(normalized)) {
+          node.status = normalized;
+        } else if (newStatus.trim() !== "") {
+          alert("Invalid status. Using previous value.");
+        }
+      }
+
+      renderGraph();
+      setStatus("Node updated. Save when ready.");
+    }
+
+    function deleteNode() {
+      if (!selectedNodeId) {
+        alert("Select a node first.");
+        return;
+      }
+
+      const target = nodeMap[selectedNodeId];
+
+      if (tree === target) {
+        alert("Cannot delete the root node.");
+        return;
+      }
+
+      function removeFrom(parent) {
+        if (!parent.children) return false;
+
+        const originalLength = parent.children.length;
+        parent.children = parent.children.filter(child => child !== target);
+
+        if (parent.children.length !== originalLength) {
+          return true;
+        }
+
+        for (const child of parent.children) {
+          if (removeFrom(child)) return true;
+        }
+
+        return false;
+      }
+
+      removeFrom(tree);
+      selectedNodeId = null;
+      document.getElementById("infoBox").classList.add("hidden");
+      renderGraph();
+      setStatus("Node deleted. Save when ready.");
+    }
+
+    async function saveRoadmap() {
+      try {
+        setStatus("Saving to GitHub...");
+
+        const data = buildGraphJSON();
+
+        const res = await fetch("/api/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ data })
+        });
+
+        const text = await res.text();
+
+        if (!res.ok) {
+          console.error(text);
+          throw new Error(text || "Save failed");
+        }
+
+        setStatus("Saved to GitHub.");
+        alert("Saved to GitHub ✅");
+      } catch (err) {
+        console.error(err);
+        setStatus("Save failed.", true);
+        alert("Save failed. Check Pages/Function logs.");
+      }
+    }
+
+    function exportCurrentGraph() {
+      const data = buildGraphJSON();
+      console.log(JSON.stringify(data, null, 2));
+      alert("Graph JSON printed to console.");
+    }
+
+    function zoomIn() {
+      network.moveTo({ scale: network.getScale() * 1.2 });
+    }
+
+    function zoomOut() {
+      network.moveTo({ scale: network.getScale() * 0.8 });
+    }
+
+    function resetView() {
+      network.focus(START_NODE_ID, { scale: 1.2 });
+    }
+
+    nodes = new vis.DataSet();
+
+    network = new vis.Network(
+      document.getElementById("graph"),
+      { nodes, edges: [] },
+      {
+        layout: {
+          hierarchical: {
+            direction: "LR",
+            levelSeparation: 250,
+            nodeSpacing: 200
+          }
+        },
+        physics: false
+      }
+    );
+
+    network.on("click", function(params) {
+      const info = document.getElementById("infoBox");
+
+      if (!params.nodes.length) {
+        selectedNodeId = null;
+        info.classList.add("hidden");
+        return;
+      }
+
+      selectedNodeId = params.nodes[0];
+      const node = nodes.get(selectedNodeId);
+
+      const statusLabel =
+        node.status === "complete" ? "Done" :
+        node.status === "progress" ? "In Progress" :
+        "Not Started";
+
+      info.innerHTML =
+        '<div id="closeBtn">✕</div>' +
+        `<h3>${node.label}</h3>` +
+        `<p>${node.description || "No description available."}</p>` +
+        `<p><strong>Status:</strong> ${statusLabel}</p>`;
+
+      info.classList.remove("hidden");
+      positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
+
+      document.getElementById("closeBtn").onclick = () => {
+        info.classList.add("hidden");
+      };
+    });
+
+    reloadFromGitHub();
+  </script>
 </body>
 </html>
