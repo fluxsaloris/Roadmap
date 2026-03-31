@@ -58,7 +58,7 @@ body {
 
 button {
   display: block;
-  width: 130px;
+  width: 140px;
   margin: 4px 0;
   padding: 6px;
   background: #111;
@@ -97,14 +97,15 @@ button {
 </div>
 
 <script>
-// 🔐 PASSWORD
-const PASSWORD = "CHANGE_ME";
 
-// 🔑 GITHUB CONFIG
-const GITHUB_TOKEN = "PASTE_YOUR_TOKEN_HERE";
-const REPO_OWNER = "fluxsaloris";
-const REPO_NAME = "Roadmap";
-const FILE_PATH = "roadmap.json";
+// 🔐 CHANGE THIS
+const PASSWORD = "Nexus.?!?!.Axraex!1986?2004!!??Flux!Saloris";
+
+// 🌐 CHANGE THIS (your worker URL)
+const WORKER_URL = "https://roadmap-save.flux-saloris.workers.dev";
+
+// 🔒 MUST MATCH CLOUDFLARE SECRET
+const SECRET_KEY = "Nexus-FluxSaloris.3783573985367209572039751986_sadfibsdginsdidngisdngisdngiAxraex";
 
 let network, nodes;
 let selectedNodeId = null;
@@ -132,7 +133,7 @@ function generateGraph() {
   let edgesArr = [];
   nodeMap = {};
 
-  function traverse(node, parentId = null) {
+  function walk(node, parent=null) {
     if (!node.children) node.children = [];
 
     const currentId = id++;
@@ -142,43 +143,47 @@ function generateGraph() {
       id: currentId,
       label: node.label,
       shape: "box",
-      color: getColor(node.status),
-      description: node.description,
-      status: node.status
+      color: getColor(node.status)
     });
 
-    if (parentId) {
-      edgesArr.push({ from: parentId, to: currentId });
-    }
+    if (parent) edgesArr.push({ from: parent, to: currentId });
 
-    node.children.forEach(child => traverse(child, currentId));
+    node.children.forEach(child => walk(child, currentId));
   }
 
-  traverse(tree);
+  walk(tree);
 
   nodes.clear();
   nodes.add(nodesArr);
   network.setData({ nodes: nodes, edges: edgesArr });
 
-  setTimeout(() => {
-    network.focus(1, { scale: 1.2 });
-  }, 100);
+  setTimeout(() => network.focus(1, { scale: 1.2 }), 100);
 }
 
 // 🖱 CLICK
-function setupClick() {
-  network.on("click", function(params) {
-    if (!params.nodes.length) {
-      selectedNodeId = null;
-      return;
-    }
-    selectedNodeId = params.nodes[0];
-  });
-}
+network = new vis.Network(
+  document.getElementById("graph"),
+  { nodes: new vis.DataSet(), edges: [] },
+  {
+    layout: {
+      hierarchical: {
+        direction: "LR",
+        levelSeparation: 250
+      }
+    },
+    physics: false
+  }
+);
+
+nodes = network.body.data.nodes;
+
+network.on("click", params => {
+  selectedNodeId = params.nodes[0] || null;
+});
 
 // ➕ ADD
 function addChild() {
-  if (!selectedNodeId) return alert("Select a node first");
+  if (!selectedNodeId) return alert("Select node first");
 
   const parent = nodeMap[selectedNodeId];
 
@@ -194,34 +199,30 @@ function addChild() {
 
 // ✏️ EDIT
 function editNode() {
-  if (!selectedNodeId) return alert("Select a node first");
+  if (!selectedNodeId) return alert("Select node first");
 
-  const node = nodeMap[selectedNodeId];
+  const n = nodeMap[selectedNodeId];
 
-  node.label = prompt("Name:", node.label) || node.label;
-  node.description = prompt("Description:", node.description) || node.description;
-  node.status = prompt("Status (complete/progress/pending):", node.status) || node.status;
+  n.label = prompt("Name:", n.label) || n.label;
+  n.description = prompt("Description:", n.description) || n.description;
+  n.status = prompt("Status (complete/progress/pending):", n.status) || n.status;
 
   generateGraph();
 }
 
 // ❌ DELETE
 function deleteNode() {
-  if (!selectedNodeId) return alert("Select a node first");
+  if (!selectedNodeId) return alert("Select node first");
 
   const target = nodeMap[selectedNodeId];
 
   function remove(parent) {
     if (!parent.children) return;
-
-    parent.children = parent.children.filter(child => child !== target);
+    parent.children = parent.children.filter(c => c !== target);
     parent.children.forEach(remove);
   }
 
-  if (tree === target) {
-    alert("Cannot delete root");
-    return;
-  }
+  if (tree === target) return alert("Cannot delete root");
 
   remove(tree);
   selectedNodeId = null;
@@ -229,71 +230,45 @@ function deleteNode() {
   generateGraph();
 }
 
-// 🔁 BUILD GRAPH JSON
+// 🔁 BUILD JSON
 function buildGraphJSON() {
-  let nodes = [];
-  let edges = [];
-  let id = 1;
+  let nodes = [], edges = [], id = 1;
 
-  function traverse(node, parentId = null) {
-    const currentId = id++;
+  function walk(n, parent=null) {
+    const cur = id++;
 
     nodes.push({
-      id: currentId,
-      label: node.label,
-      status: node.status,
-      description: node.description
+      id: cur,
+      label: n.label,
+      status: n.status,
+      description: n.description
     });
 
-    if (parentId) {
-      edges.push({ from: parentId, to: currentId });
-    }
+    if (parent) edges.push({ from: parent, to: cur });
 
-    node.children.forEach(child => traverse(child, currentId));
+    n.children.forEach(c => walk(c, cur));
   }
 
-  traverse(tree);
-
+  walk(tree);
   return { nodes, edges };
 }
 
-// 💾 SAVE TO GITHUB
+// 💾 SAVE (SECURE)
 async function saveToGitHub() {
   try {
     const data = buildGraphJSON();
 
-    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-
-    const res = await fetch(url, {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
       headers: {
-        Authorization: `token ${GITHUB_TOKEN}`
-      }
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + SECRET_KEY
+      },
+      body: JSON.stringify({ data })
     });
 
     if (!res.ok) {
-      alert("Failed to fetch GitHub file");
-      return;
-    }
-
-    const file = await res.json();
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-
-    const update = await fetch(url, {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "Update roadmap",
-        content: content,
-        sha: file.sha
-      })
-    });
-
-    if (!update.ok) {
-      alert("Failed to save to GitHub");
+      alert("Save failed");
       return;
     }
 
@@ -301,32 +276,22 @@ async function saveToGitHub() {
 
   } catch (err) {
     console.error(err);
-    alert("Error saving to GitHub");
+    alert("Error saving");
   }
 }
 
-// 🔐 AUTH
+// 🔐 LOGIN
 function checkPassword() {
-  const input = document.getElementById("passwordInput").value;
-
-  if (input === PASSWORD) {
+  if (document.getElementById("passwordInput").value === PASSWORD) {
     document.getElementById("loginScreen").style.display = "none";
-    localStorage.setItem("editorAccess", "true");
   } else {
     alert("Wrong password");
   }
 }
 
 function logout() {
-  localStorage.removeItem("editorAccess");
   location.reload();
 }
-
-window.onload = () => {
-  if (localStorage.getItem("editorAccess") === "true") {
-    document.getElementById("loginScreen").style.display = "none";
-  }
-};
 
 // 🔍 CONTROLS
 function zoomIn() { network.moveTo({ scale: network.getScale() * 1.2 }); }
@@ -334,25 +299,8 @@ function zoomOut() { network.moveTo({ scale: network.getScale() * 0.8 }); }
 function resetView() { network.focus(1, { scale: 1.2 }); }
 
 // 🚀 INIT
-nodes = new vis.DataSet();
-
-network = new vis.Network(
-  document.getElementById("graph"),
-  { nodes: nodes, edges: [] },
-  {
-    layout: {
-      hierarchical: {
-        direction: "LR",
-        levelSeparation: 250,
-        nodeSpacing: 200
-      }
-    },
-    physics: false
-  }
-);
-
-setupClick();
 generateGraph();
+
 </script>
 
 </body>
