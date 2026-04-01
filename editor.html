@@ -3,28 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roadmap Editor</title>
+  <title>Dungeon Call Roadmap Editor</title>
   <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      background: #000 !important;
       color: white;
       overflow: hidden;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+      background: radial-gradient(circle at 30% 20%, #111, #000 70%) !important;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      z-index: -1;
+      z-index: 0;
       background-image:
-        radial-gradient(1px 1px at 10% 20%, white, transparent),
-        radial-gradient(1px 1px at 30% 70%, white, transparent),
-        radial-gradient(1.5px 1.5px at 50% 40%, white, transparent),
-        radial-gradient(1px 1px at 80% 60%, white, transparent);
-      opacity: 0.5;
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
+      opacity: 0.35;
+      pointer-events: none;
     }
 
     body::after {
@@ -34,98 +44,77 @@
       border: 2px solid #BE1A48;
       border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.35);
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.3);
       margin: 6px;
+      z-index: 2;
     }
 
     #graph {
       position: fixed;
       inset: 0;
+      z-index: 1;
+      background: transparent !important;
+    }
+
+    #topPanel {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 20;
+      width: min(480px, calc(100vw - 40px));
+      background: rgba(15, 15, 15, 0.9);
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+    }
+
+    #topPanel h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      line-height: 1.2;
+      color: #fff;
+    }
+
+    #topPanel p {
+      margin: 0 0 10px;
+      color: #bbb;
+      font-size: 14px;
+      line-height: 1.45;
     }
 
     #statusBar {
-      position: fixed;
-      top: 14px;
-      left: 14px;
-      z-index: 20;
-      background: rgba(15, 15, 15, 0.88);
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 13px;
-      color: #ccc;
-      max-width: min(420px, calc(100vw - 40px));
-      backdrop-filter: blur(8px);
+      font-size: 12px;
+      color: #999;
+      margin-top: 8px;
     }
 
-    #infoBox {
-      position: fixed;
-      width: clamp(220px, 70vw, 290px);
-      max-height: min(50vh, 340px);
-      overflow-y: auto;
-      background: rgba(20, 20, 20, 0.94);
-      backdrop-filter: blur(12px);
-      padding: 14px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      z-index: 20;
-    }
-
-    #infoBox.hidden {
-      display: none;
-    }
-
-    #infoBox h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
-    }
-
-    #infoBox p {
-      font-size: 13px;
-      line-height: 1.4;
-      color: #ddd;
-      white-space: pre-wrap;
-    }
-
-    #closeBtn {
-      position: absolute;
-      top: 6px;
-      right: 8px;
-      cursor: pointer;
-      color: #aaa;
-      font-size: 14px;
-    }
-
+    #nodeEditor,
     #editorPanel,
     #controls,
-    #nodeEditor {
-      position: fixed;
-      right: 20px;
+    #infoBox,
+    #errorPanel {
       z-index: 20;
     }
 
-    #editorPanel {
-      bottom: 160px;
-    }
-
-    #controls {
-      bottom: 20px;
-    }
-
     #nodeEditor {
-      top: 20px;
-      width: 300px;
-      background: rgba(20, 20, 20, 0.94);
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      width: min(320px, calc(100vw - 40px));
+      background: rgba(20, 20, 20, 0.96);
       border: 1px solid #2a2a2a;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 14px;
+      backdrop-filter: blur(12px);
       box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
     }
 
     #nodeEditor h3 {
       margin: 0 0 12px;
-      font-size: 15px;
+      font-size: 18px;
+      color: #fff;
     }
 
     #nodeEditor label {
@@ -141,12 +130,20 @@
       width: 100%;
       box-sizing: border-box;
       background: #111;
-      color: #ddd;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 8px;
+      color: #e5e5e5;
+      border: 1px solid #303030;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
       font-family: inherit;
-      font-size: 13px;
+    }
+
+    #nodeEditor input:focus,
+    #nodeEditor textarea:focus,
+    #nodeEditor select:focus {
+      border-color: #BE1A48;
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
     #nodeEditor textarea {
@@ -154,39 +151,180 @@
       resize: vertical;
     }
 
-    .editorNote {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #888;
-      line-height: 1.4;
-    }
-
-    button {
-      display: block;
-      width: 150px;
-      margin: 4px 0;
-      padding: 8px 10px;
-      background: #111;
-      color: #ccc;
-      border: 1px solid #2b2b2b;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
     #nodeEditor button {
       width: 100%;
       margin-top: 12px;
     }
 
+    .editorNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8d8d8d;
+      line-height: 1.4;
+    }
+
+    #editorPanel,
+    #controls {
+      position: fixed;
+      right: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #editorPanel {
+      bottom: 170px;
+    }
+
+    #controls {
+      bottom: 18px;
+    }
+
+    button {
+      background: #111;
+      color: #ddd;
+      border: 1px solid #2b2b2b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
     button:hover {
       background: #171717;
+    }
+
+    #infoBox {
+      position: fixed;
+      width: clamp(240px, 28vw, 340px);
+      max-height: min(60vh, 420px);
+      overflow-y: auto;
+      background: rgba(20, 20, 20, 0.96);
+      border: 1px solid #2a2a2a;
+      backdrop-filter: blur(12px);
+      padding: 14px;
+      border-radius: 14px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      color: white;
+      display: none;
+    }
+
+    #infoBox h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.3;
+      color: #fff;
+    }
+
+    #infoBox p {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #d7d7d7;
+      white-space: pre-wrap;
+      margin: 10px 0 0;
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    #statusBadge {
+      display: inline-block;
+      margin: 2px 0 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 50;
+      background: rgba(18, 18, 18, 0.95);
+      color: #f0f0f0;
+      border: 1px solid #363636;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 13px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(420px, calc(100vw - 40px));
+      background: rgba(35, 12, 18, 0.96);
+      border: 1px solid rgba(190, 26, 72, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffb3c9;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #f2d7df;
+    }
+
+    @media (max-width: 1100px) {
+      #topPanel {
+        width: calc(100vw - 36px);
+      }
+
+      #nodeEditor {
+        top: auto;
+        bottom: 18px;
+        left: 18px;
+        right: 18px;
+        width: auto;
+      }
+
+      #editorPanel {
+        bottom: 320px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="graph"></div>
-  <div id="statusBar">Ready.</div>
-  <div id="infoBox" class="hidden"></div>
+
+  <div id="topPanel">
+    <h1>Dungeon Call Editor</h1>
+    <p>Edit roadmap nodes, update progress, and push changes live to GitHub.</p>
+    <div id="statusBar">Loading latest roadmap from GitHub...</div>
+  </div>
 
   <div id="nodeEditor">
     <h3>Node Editor</h3>
@@ -209,6 +347,14 @@
     <div class="editorNote">
       Click a node in the graph to load it here.
     </div>
+  </div>
+
+  <div id="infoBox"></div>
+  <div id="toast"></div>
+
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t load roadmap</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
   <div id="editorPanel">
@@ -235,11 +381,31 @@
     let selectedNodeId = null;
     let nodeMap = {};
     let tree = null;
+    let toastTimer = null;
 
     function setStatus(message, isError = false) {
       const bar = document.getElementById("statusBar");
       bar.textContent = message;
-      bar.style.color = isError ? "#ff8a8a" : "#ccc";
+      bar.style.color = isError ? "#ff8a8a" : "#999";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
     }
 
     function getColor(status) {
@@ -252,9 +418,25 @@
       return { background: "#111", border: "#333", font: { color: "#777" } };
     }
 
+    function getStatusLabel(status) {
+      if (status === "complete") return "Done";
+      if (status === "progress") return "In Progress";
+      return "Not Started";
+    }
+
+    function getStatusBadgeStyle(status) {
+      if (status === "complete") {
+        return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
+      }
+      if (status === "progress") {
+        return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
+      }
+      return "background:#181818;color:#999;border:1px solid #333;";
+    }
+
     function positionInfoBox(domX, domY) {
       const box = document.getElementById("infoBox");
-      const padding = 10;
+      const padding = 12;
 
       requestAnimationFrame(() => {
         const rect = box.getBoundingClientRect();
@@ -395,10 +577,6 @@
       nodes.clear();
       nodes.add(graph.nodes);
       network.setData({ nodes, edges: graph.edges });
-
-      setTimeout(() => {
-        network.focus(START_NODE_ID, { scale: 1.2 });
-      }, 100);
     }
 
     async function reloadFromGitHub() {
@@ -418,12 +596,13 @@
         renderGraph();
         selectedNodeId = null;
         clearEditorFields();
-        document.getElementById("infoBox").classList.add("hidden");
+        document.getElementById("infoBox").style.display = "none";
+        hideErrorPanel();
         setStatus("Loaded latest roadmap from GitHub.");
       } catch (err) {
         console.error(err);
-        setStatus("Failed to load roadmap.json from GitHub.", true);
-        alert("Failed to load roadmap.json from GitHub");
+        setStatus("Failed to load roadmap from GitHub.", true);
+        showErrorPanel("Roadmap refresh failed. Try refreshing again in a moment.");
       }
     }
 
@@ -447,7 +626,7 @@
 
     function applyNodeChanges() {
       if (!selectedNodeId) {
-        alert("Select a node first.");
+        showToast("Select a node first.");
         return;
       }
 
@@ -458,11 +637,12 @@
 
       renderGraph();
       setStatus("Node updated. Save when ready.");
+      showToast("Node changes applied.");
     }
 
     function addChild() {
       if (!selectedNodeId) {
-        alert("Select a node first.");
+        showToast("Select a node first.");
         return;
       }
 
@@ -478,18 +658,19 @@
 
       renderGraph();
       setStatus("Child node added. Select it to edit details.");
+      showToast("Child node added.");
     }
 
     function deleteNode() {
       if (!selectedNodeId) {
-        alert("Select a node first.");
+        showToast("Select a node first.");
         return;
       }
 
       const target = nodeMap[selectedNodeId];
 
       if (tree === target) {
-        alert("Cannot delete the root node.");
+        showToast("You can't delete the root.");
         return;
       }
 
@@ -513,9 +694,10 @@
       removeFrom(tree);
       selectedNodeId = null;
       clearEditorFields();
-      document.getElementById("infoBox").classList.add("hidden");
+      document.getElementById("infoBox").style.display = "none";
       renderGraph();
       setStatus("Node deleted. Save when ready.");
+      showToast("Node deleted.");
     }
 
     async function saveRoadmap() {
@@ -539,19 +721,20 @@
           throw new Error(text || "Save failed");
         }
 
+        hideErrorPanel();
         setStatus("Saved to GitHub.");
-        alert("Saved to GitHub ✅");
+        showToast("Saved to GitHub.");
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
-        alert("Save failed. Check your Worker.");
+        showErrorPanel("Saving failed. Check your Worker or try again.");
       }
     }
 
     function exportCurrentGraph() {
       const data = buildGraphJSON();
       console.log(JSON.stringify(data, null, 2));
-      alert("Graph JSON printed to console.");
+      showToast("Graph JSON printed to console.");
     }
 
     function zoomIn() {
@@ -563,14 +746,15 @@
     }
 
     function resetView() {
-      network.focus(START_NODE_ID, { scale: 1.2 });
+      network.focus(START_NODE_ID, { scale: 1.2, animation: false });
+      setStatus("View reset.");
     }
 
     nodes = new vis.DataSet();
 
     network = new vis.Network(
       document.getElementById("graph"),
-      { nodes, edges: [] },
+      { nodes: nodes, edges: [] },
       {
         layout: {
           hierarchical: {
@@ -579,7 +763,10 @@
             nodeSpacing: 200
           }
         },
-        physics: false
+        physics: false,
+        interaction: {
+          dragNodes: false
+        }
       }
     );
 
@@ -589,7 +776,7 @@
       if (!params.nodes.length) {
         selectedNodeId = null;
         clearEditorFields();
-        info.classList.add("hidden");
+        info.style.display = "none";
         return;
       }
 
@@ -597,23 +784,24 @@
       const node = nodes.get(selectedNodeId);
       loadSelectedNodeIntoEditor();
 
-      const statusLabel =
-        node.status === "complete" ? "Done" :
-        node.status === "progress" ? "In Progress" :
-        "Not Started";
-
       info.innerHTML =
         '<div id="closeBtn">✕</div>' +
         `<h3>${node.label}</h3>` +
-        `<p>${node.description || "No description available."}</p>` +
-        `<p><strong>Status:</strong> ${statusLabel}</p>`;
+        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
+        `<p>${node.description || "No description available."}</p>`;
 
-      info.classList.remove("hidden");
+      info.style.display = "block";
       positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
 
       document.getElementById("closeBtn").onclick = () => {
-        info.classList.add("hidden");
+        info.style.display = "none";
       };
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        reloadFromGitHub();
+      }
     });
 
     reloadFromGitHub();
