@@ -415,6 +415,21 @@
       return result;
     }
 
+    function preserveCamera(callback) {
+      const currentScale = network.getScale();
+      const currentPosition = network.getViewPosition();
+
+      callback();
+
+      requestAnimationFrame(() => {
+        network.moveTo({
+          position: currentPosition,
+          scale: currentScale,
+          animation: false
+        });
+      });
+    }
+
     function applyCollapseState() {
       if (!fullGraphData) return;
 
@@ -513,21 +528,30 @@
         return;
       }
 
-      if (collapsedNodes.has(selectedNodeId)) {
-        collapsedNodes.delete(selectedNodeId);
-        setStatus("Branch expanded.");
-      } else {
-        collapsedNodes.add(selectedNodeId);
-        setStatus("Branch collapsed.");
+      if (selectedNodeId === START_NODE_ID) {
+        alert("Can't collapse the root.");
+        return;
       }
 
-      applyCollapseState();
+      preserveCamera(() => {
+        if (collapsedNodes.has(selectedNodeId)) {
+          collapsedNodes.delete(selectedNodeId);
+          setStatus("Branch expanded.");
+        } else {
+          collapsedNodes.add(selectedNodeId);
+          setStatus("Branch collapsed.");
+        }
+
+        applyCollapseState();
+      });
     }
 
     function expandAll() {
-      collapsedNodes.clear();
-      applyCollapseState();
-      setStatus("All branches expanded.");
+      preserveCamera(() => {
+        collapsedNodes.clear();
+        applyCollapseState();
+        setStatus("All branches expanded.");
+      });
     }
 
     function zoomIn() {
