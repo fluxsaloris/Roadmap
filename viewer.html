@@ -67,7 +67,7 @@
       top: 18px;
       left: 18px;
       z-index: 20;
-      width: min(450px, calc(100vw - 40px));
+      width: min(470px, calc(100vw - 40px));
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -154,8 +154,8 @@
 
     #infoBox {
       position: fixed;
-      width: clamp(240px, 28vw, 320px);
-      max-height: min(60vh, 420px);
+      width: clamp(240px, 28vw, 340px);
+      max-height: min(65vh, 460px);
       overflow-y: auto;
       background: rgba(20, 20, 20, 0.96);
       border: 1px solid #2a2a2a;
@@ -204,6 +204,13 @@
       font-weight: 700;
     }
 
+    .smallNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #999;
+      line-height: 1.4;
+    }
+
     #controls {
       position: fixed;
       right: 20px;
@@ -227,30 +234,6 @@
 
     button:hover {
       background: #171717;
-    }
-
-    @media (max-width: 768px) {
-      #hero {
-        width: calc(100vw - 36px);
-      }
-
-      #infoBox {
-        width: calc(100vw - 36px);
-        left: 18px !important;
-        right: 18px !important;
-        top: auto !important;
-        bottom: 90px !important;
-        max-height: 38vh;
-      }
-
-      #controls {
-        right: 18px;
-        bottom: 18px;
-      }
-
-      button {
-        min-width: 120px;
-      }
     }
   </style>
 </head>
@@ -293,6 +276,8 @@
   <div id="infoBox" class="hidden"></div>
 
   <div id="controls">
+    <button onclick="toggleSelectedBranch()">Toggle Branch</button>
+    <button onclick="expandAll()">Expand All</button>
     <button onclick="zoomIn()">Zoom +</button>
     <button onclick="zoomOut()">Zoom -</button>
     <button onclick="resetView()">Reset</button>
@@ -306,6 +291,8 @@
     let network;
     let nodes;
     let fullGraphData = null;
+    let selectedNodeId = null;
+    const collapsedNodes = new Set();
 
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
@@ -371,14 +358,6 @@
       const box = document.getElementById("infoBox");
       const padding = 12;
 
-      if (window.innerWidth <= 768) {
-        box.style.left = "18px";
-        box.style.right = "18px";
-        box.style.bottom = "90px";
-        box.style.top = "auto";
-        return;
-      }
-
       requestAnimationFrame(() => {
         const rect = box.getBoundingClientRect();
 
@@ -403,6 +382,71 @@
       });
     }
 
+    function buildChildMap(data) {
+      const childMap = new Map();
+      for (const node of data.nodes) {
+        childMap.set(node.id, []);
+      }
+      for (const edge of data.edges) {
+        if (!childMap.has(edge.from)) childMap.set(edge.from, []);
+        childMap.get(edge.from).push(edge.to);
+      }
+      return childMap;
+    }
+
+    function getHiddenDescendants(rootId, childMap, hiddenSet) {
+      const stack = [...(childMap.get(rootId) || [])];
+      while (stack.length) {
+        const id = stack.pop();
+        if (hiddenSet.has(id)) continue;
+        hiddenSet.add(id);
+        const children = childMap.get(id) || [];
+        for (const child of children) stack.push(child);
+      }
+    }
+
+    function getVisibleGraph(data) {
+      const childMap = buildChildMap(data);
+      const hidden = new Set();
+
+      for (const collapsedId of collapsedNodes) {
+        getHiddenDescendants(collapsedId, childMap, hidden);
+      }
+
+      return {
+        nodes: data.nodes.filter(n => !hidden.has(n.id)),
+        edges: data.edges.filter(e => !hidden.has(e.from) && !hidden.has(e.to))
+      };
+    }
+
+    function renderCurrentGraph() {
+      if (!fullGraphData) return;
+
+      const visible = getVisibleGraph(fullGraphData);
+
+      nodes.clear();
+      nodes.add(
+        visible.nodes.map(n => ({
+          id: n.id,
+          label: collapsedNodes.has(n.id) ? `${n.label}  [+/-]` : n.label,
+          shape: "box",
+          margin: 14,
+          color: getColor(n.status),
+          description: n.description,
+          status: n.status
+        }))
+      );
+
+      network.setData({
+        nodes: nodes,
+        edges: visible.edges
+      });
+
+      setTimeout(() => {
+        network.focus(START_NODE_ID, { scale: 1.2 });
+      }, 100);
+    }
+
     async function reloadGraph() {
       try {
         setStatus("Loading latest roadmap...");
@@ -415,37 +459,37 @@
 
         const data = await res.json();
         fullGraphData = data;
-
-        nodes.clear();
-        nodes.add(
-          data.nodes.map(n => ({
-            id: n.id,
-            label: n.label,
-            shape: "box",
-            margin: 14,
-            color: getColor(n.status),
-            description: n.description,
-            status: n.status
-          }))
-        );
-
-        network.setData({
-          nodes: nodes,
-          edges: data.edges
-        });
-
         updateStats(data);
-
-        setTimeout(() => {
-          network.focus(START_NODE_ID, { scale: 1.2 });
-        }, 100);
-
+        renderCurrentGraph();
         setStatus("Loaded latest roadmap.");
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
         alert("Failed to load roadmap.");
       }
+    }
+
+    function toggleSelectedBranch() {
+      if (!selectedNodeId) {
+        alert("Select a node first.");
+        return;
+      }
+
+      if (collapsedNodes.has(selectedNodeId)) {
+        collapsedNodes.delete(selectedNodeId);
+        setStatus("Branch expanded.");
+      } else {
+        collapsedNodes.add(selectedNodeId);
+        setStatus("Branch collapsed.");
+      }
+
+      renderCurrentGraph();
+    }
+
+    function expandAll() {
+      collapsedNodes.clear();
+      renderCurrentGraph();
+      setStatus("All branches expanded.");
     }
 
     function zoomIn() {
@@ -484,17 +528,20 @@
       const info = document.getElementById("infoBox");
 
       if (!params.nodes.length) {
+        selectedNodeId = null;
         info.classList.add("hidden");
         return;
       }
 
-      const node = nodes.get(params.nodes[0]);
+      selectedNodeId = params.nodes[0];
+      const node = nodes.get(selectedNodeId);
 
       info.innerHTML =
         '<div id="closeBtn">✕</div>' +
-        `<h3>${node.label}</h3>` +
+        `<h3>${node.label.replace("  [+/-]", "")}</h3>` +
         `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>`;
+        `<p>${node.description || "No description available."}</p>` +
+        `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
 
       info.classList.remove("hidden");
       positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
