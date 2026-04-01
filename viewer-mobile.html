@@ -65,6 +65,61 @@
       line-height: 1.45;
     }
 
+    .statsBar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .statCard {
+      background: rgba(20,20,20,0.9);
+      border: 1px solid #2c2c2c;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .statValue {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .statLabel {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #9d9d9d;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .progressWrap {
+      margin-top: 14px;
+    }
+
+    .progressText {
+      font-size: 12px;
+      color: #bbb;
+      margin-bottom: 6px;
+    }
+
+    .progressTrack {
+      width: 100%;
+      height: 10px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progressFill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #BE1A48, #ff4f86);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
     .toolbar {
       display: flex;
       gap: 10px;
@@ -132,50 +187,17 @@
       font-weight: 700;
     }
 
-    .depth-0 {
-      margin-left: 0;
-      border-left: 4px solid rgba(190, 26, 72, 0.9);
-    }
-
-    .depth-1 {
-      margin-left: 8px;
-      border-left: 4px solid rgba(190, 26, 72, 0.7);
-    }
-
-    .depth-2 {
-      margin-left: 16px;
-      border-left: 4px solid rgba(190, 26, 72, 0.5);
-    }
-
-    .depth-3 {
-      margin-left: 24px;
-      border-left: 4px solid rgba(190, 26, 72, 0.35);
-    }
-
-    .depth-4 {
-      margin-left: 32px;
-      border-left: 4px solid rgba(190, 26, 72, 0.2);
-    }
+    .depth-0 { margin-left: 0; border-left: 4px solid rgba(190, 26, 72, 0.9); }
+    .depth-1 { margin-left: 8px; border-left: 4px solid rgba(190, 26, 72, 0.7); }
+    .depth-2 { margin-left: 16px; border-left: 4px solid rgba(190, 26, 72, 0.5); }
+    .depth-3 { margin-left: 24px; border-left: 4px solid rgba(190, 26, 72, 0.35); }
+    .depth-4 { margin-left: 32px; border-left: 4px solid rgba(190, 26, 72, 0.2); }
 
     .empty {
       color: #999;
       font-size: 14px;
       text-align: center;
       padding: 20px 0;
-    }
-
-    @media (min-width: 768px) {
-      .container {
-        padding-top: 28px;
-      }
-
-      .hero h1 {
-        font-size: 26px;
-      }
-
-      .card h3 {
-        font-size: 17px;
-      }
     }
   </style>
 </head>
@@ -184,6 +206,32 @@
     <div class="hero">
       <h1>Dungeon Call Roadmap</h1>
       <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
+
+      <div class="statsBar">
+        <div class="statCard">
+          <div class="statValue" id="statTotal">0</div>
+          <div class="statLabel">Total</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statComplete">0</div>
+          <div class="statLabel">Done</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statProgress">0</div>
+          <div class="statLabel">Progress</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statPending">0</div>
+          <div class="statLabel">Pending</div>
+        </div>
+      </div>
+
+      <div class="progressWrap">
+        <div class="progressText" id="progressText">Completion: 0%</div>
+        <div class="progressTrack">
+          <div class="progressFill" id="progressFill"></div>
+        </div>
+      </div>
     </div>
 
     <div class="toolbar">
@@ -218,6 +266,22 @@
         return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
       }
       return "background:#181818;color:#999;border:1px solid #333;";
+    }
+
+    function updateStats(graphData) {
+      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
+      const total = graphNodes.length;
+      const complete = graphNodes.filter(n => n.status === "complete").length;
+      const progress = graphNodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
+      const percent = total ? Math.round((complete / total) * 100) : 0;
+
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statComplete").textContent = complete;
+      document.getElementById("statProgress").textContent = progress;
+      document.getElementById("statPending").textContent = pending;
+      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
+      document.getElementById("progressFill").style.width = `${percent}%`;
     }
 
     function buildTreeFromGraph(graphData) {
@@ -302,6 +366,7 @@
         }
 
         const graphData = await res.json();
+        updateStats(graphData);
         const tree = buildTreeFromGraph(graphData);
         renderCards(tree);
         setStatus("Loaded latest roadmap.");
