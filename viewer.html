@@ -66,7 +66,7 @@
       top: 18px;
       left: 18px;
       z-index: 20;
-      width: min(470px, calc(100vw - 40px));
+      width: min(500px, calc(100vw - 40px));
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -89,10 +89,74 @@
       line-height: 1.45;
     }
 
+    #searchWrap {
+      position: relative;
+      margin-top: 12px;
+    }
+
+    #searchInput {
+      width: 100%;
+      box-sizing: border-box;
+      background: #111;
+      color: #e5e5e5;
+      border: 1px solid #303030;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #searchInput:focus {
+      border-color: #BE1A48;
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+    }
+
+    #searchResults {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(18, 18, 18, 0.96);
+      border: 1px solid #2f2f2f;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      overflow: hidden;
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+      z-index: 25;
+      backdrop-filter: blur(10px);
+    }
+
+    .searchResult {
+      padding: 10px 12px;
+      border-bottom: 1px solid #262626;
+      cursor: pointer;
+    }
+
+    .searchResult:last-child {
+      border-bottom: none;
+    }
+
+    .searchResult:hover {
+      background: rgba(190, 26, 72, 0.12);
+    }
+
+    .searchResultTitle {
+      font-size: 14px;
+      color: #f0f0f0;
+      margin-bottom: 4px;
+    }
+
+    .searchResultMeta {
+      font-size: 12px;
+      color: #9f9f9f;
+    }
+
     #statusLine {
       font-size: 12px;
       color: #999;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     #statsBar {
@@ -266,6 +330,11 @@
     <h1>Dungeon Call Roadmap</h1>
     <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
 
+    <div id="searchWrap">
+      <input id="searchInput" type="text" placeholder="Search roadmap nodes..." autocomplete="off" />
+      <div id="searchResults"></div>
+    </div>
+
     <div id="statsBar">
       <div class="statCard">
         <div class="statValue" id="statTotal">0</div>
@@ -315,14 +384,16 @@
     let nodes;
     let edges;
     let fullGraphData = null;
+    let rawGraphData = null;
     let selectedNodeId = null;
-    let hasInitialFocused = false;
     let toastTimer = null;
     let staticPositions = null;
+    let highlightTimer = null;
 
     const collapsedNodes = new Set();
     const originalNodeMap = new Map();
     const childMap = new Map();
+    const parentMap = new Map();
 
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
@@ -346,6 +417,16 @@
         return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
       }
       return { background: "#111", border: "#333", font: { color: "#777" } };
+    }
+
+    function getHighlightedColor(status) {
+      if (status === "complete") {
+        return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
+      }
+      if (status === "progress") {
+        return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
+      }
+      return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
     }
 
     function getStatusLabel(status) {
@@ -399,6 +480,7 @@
     function buildMaps(data) {
       originalNodeMap.clear();
       childMap.clear();
+      parentMap.clear();
 
       for (const node of data.nodes) {
         originalNodeMap.set(node.id, { ...node });
@@ -408,6 +490,7 @@
       for (const edge of data.edges) {
         if (!childMap.has(edge.from)) childMap.set(edge.from, []);
         childMap.get(edge.from).push(edge.to);
+        parentMap.set(edge.to, edge.from);
       }
     }
 
@@ -423,6 +506,18 @@
       }
 
       return result;
+    }
+
+    function getAncestorChain(nodeId) {
+      const ancestors = [];
+      let current = parentMap.get(nodeId);
+
+      while (current !== undefined) {
+        ancestors.push(current);
+        current = parentMap.get(current);
+      }
+
+      return ancestors;
     }
 
     function preserveCamera(callback) {
@@ -535,22 +630,117 @@
         }
 
         selectedNodeId = params.nodes[0];
-        const node = nodes.get(selectedNodeId);
-
-        info.innerHTML =
-          '<div id="closeBtn">✕</div>' +
-          `<h3>${node.label.replace("  [+/-]", "")}</h3>` +
-          `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-          `<p>${node.description || "No description available."}</p>` +
-          `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
-
-        info.classList.remove("hidden");
-        positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
-
-        document.getElementById("closeBtn").onclick = () => {
-          info.classList.add("hidden");
-        };
+        openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
       });
+    }
+
+    function openNodeInfo(nodeId, domX = 80, domY = 120) {
+      const info = document.getElementById("infoBox");
+      const node = nodes.get(nodeId);
+      if (!node) return;
+
+      selectedNodeId = nodeId;
+
+      info.innerHTML =
+        '<div id="closeBtn">✕</div>' +
+        `<h3>${node.label.replace("  [+/-]", "")}</h3>` +
+        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
+        `<p>${node.description || "No description available."}</p>` +
+        `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
+
+      info.classList.remove("hidden");
+      positionInfoBox(domX, domY);
+
+      document.getElementById("closeBtn").onclick = () => {
+        info.classList.add("hidden");
+      };
+    }
+
+    function highlightNode(nodeId) {
+      const original = originalNodeMap.get(nodeId);
+      if (!original) return;
+
+      nodes.update({
+        id: nodeId,
+        color: getHighlightedColor(original.status)
+      });
+
+      if (highlightTimer) clearTimeout(highlightTimer);
+      highlightTimer = setTimeout(() => {
+        const freshOriginal = originalNodeMap.get(nodeId);
+        if (!freshOriginal) return;
+        nodes.update({
+          id: nodeId,
+          color: getColor(freshOriginal.status)
+        });
+      }, 2000);
+    }
+
+    function renderSearchResults(query) {
+      const resultsBox = document.getElementById("searchResults");
+      resultsBox.innerHTML = "";
+
+      if (!query || !rawGraphData?.nodes?.length) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const matches = rawGraphData.nodes
+        .filter(node => (node.label || "").toLowerCase().includes(q))
+        .slice(0, 8);
+
+      if (!matches.length) {
+        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
+        resultsBox.style.display = "block";
+        return;
+      }
+
+      for (const match of matches) {
+        const item = document.createElement("div");
+        item.className = "searchResult";
+        item.innerHTML = `
+          <div class="searchResultTitle">${match.label}</div>
+          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
+        `;
+        item.onclick = () => {
+          jumpToNode(match.id);
+          resultsBox.style.display = "none";
+        };
+        resultsBox.appendChild(item);
+      }
+
+      resultsBox.style.display = "block";
+    }
+
+    function jumpToNode(nodeId) {
+      const ancestors = getAncestorChain(nodeId);
+
+      preserveCamera(() => {
+        for (const ancestor of ancestors) {
+          if (collapsedNodes.has(ancestor)) {
+            collapsedNodes.delete(ancestor);
+          }
+        }
+        applyCollapseState();
+      });
+
+      setTimeout(() => {
+        network.focus(nodeId, {
+          scale: 1.35,
+          animation: {
+            duration: 400,
+            easingFunction: "easeInOutQuad"
+          }
+        });
+        highlightNode(nodeId);
+        openNodeInfo(nodeId, window.innerWidth * 0.5, 140);
+      }, 60);
     }
 
     async function reloadGraph() {
@@ -560,27 +750,23 @@
         const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
         if (!res.ok) throw new Error("Could not load roadmap.json");
 
-        const rawData = await res.json();
-        buildMaps(rawData);
-        updateStats(rawData);
+        rawGraphData = await res.json();
+        buildMaps(rawGraphData);
+        updateStats(rawGraphData);
         collapsedNodes.clear();
         staticPositions = null;
         selectedNodeId = null;
 
-        fullGraphData = createNetworkData(rawData, false);
+        fullGraphData = createNetworkData(rawGraphData, false);
         createNetwork(fullGraphData, false);
 
         setTimeout(() => {
           network.focus(START_NODE_ID, { scale: 1.2, animation: false });
 
           setTimeout(() => {
-            const positions = network.getPositions();
-            staticPositions = positions;
-
-            fullGraphData = createNetworkData(rawData, true);
+            staticPositions = network.getPositions();
+            fullGraphData = createNetworkData(rawGraphData, true);
             createNetwork(fullGraphData, true);
-
-            hasInitialFocused = true;
             network.focus(START_NODE_ID, { scale: 1.2, animation: false });
             setStatus("Loaded latest roadmap.");
           }, 150);
@@ -635,6 +821,28 @@
       network.focus(START_NODE_ID, { scale: 1.2, animation: false });
       setStatus("View reset.");
     }
+
+    document.addEventListener("click", (e) => {
+      const wrap = document.getElementById("searchWrap");
+      const results = document.getElementById("searchResults");
+      if (!wrap.contains(e.target)) {
+        results.style.display = "none";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("searchInput");
+      input.addEventListener("input", () => {
+        renderSearchResults(input.value);
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document.getElementById("searchResults").style.display = "none";
+          input.blur();
+        }
+      });
+    });
 
     reloadGraph();
     setInterval(reloadGraph, 30000);
