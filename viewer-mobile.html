@@ -311,6 +311,34 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    #errorPanel {
+      background: rgba(35, 12, 18, 0.96);
+      border: 1px solid rgba(190, 26, 72, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+      backdrop-filter: blur(10px);
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffb3c9;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #f2d7df;
+    }
   </style>
 </head>
 <body>
@@ -349,6 +377,11 @@
           <div class="progressFill" id="progressFill"></div>
         </div>
       </div>
+    </div>
+
+    <div id="errorPanel">
+      <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
+      <div id="errorPanelText">Trying again when the page becomes active.</div>
     </div>
 
     <div class="toolbar">
@@ -390,6 +423,15 @@
       }, 3000);
     }
 
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
+    }
+
     function getStatusLabel(status) {
       if (status === "complete") return "Done";
       if (status === "progress") return "In Progress";
@@ -397,12 +439,8 @@
     }
 
     function getBadgeStyle(status) {
-      if (status === "complete") {
-        return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      }
-      if (status === "progress") {
-        return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      }
+      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
+      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
       return "background:#181818;color:#999;border:1px solid #333;";
     }
 
@@ -649,10 +687,12 @@
 
         const tree = buildTreeFromGraph(graphData);
         renderCards(tree);
+        hideErrorPanel();
         setStatus("Loaded latest roadmap.");
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
+        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
       }
     }
 
@@ -676,6 +716,12 @@
           input.blur();
         }
       });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        reloadRoadmap();
+      }
     });
 
     reloadRoadmap();
