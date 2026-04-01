@@ -292,6 +292,7 @@
     let nodes;
     let fullGraphData = null;
     let selectedNodeId = null;
+    let hasInitialFocused = false;
     const collapsedNodes = new Set();
 
     function setStatus(text, isError = false) {
@@ -419,8 +420,11 @@
       };
     }
 
-    function renderCurrentGraph() {
+    function renderCurrentGraph(preserveView = true) {
       if (!fullGraphData) return;
+
+      const previousScale = preserveView ? network.getScale() : 1.2;
+      const previousPosition = preserveView ? network.getViewPosition() : null;
 
       const visible = getVisibleGraph(fullGraphData);
 
@@ -442,9 +446,24 @@
         edges: visible.edges
       });
 
+      if (!hasInitialFocused || !preserveView) {
+        hasInitialFocused = true;
+        setTimeout(() => {
+          network.focus(START_NODE_ID, {
+            scale: 1.2,
+            animation: false
+          });
+        }, 50);
+        return;
+      }
+
       setTimeout(() => {
-        network.focus(START_NODE_ID, { scale: 1.2 });
-      }, 100);
+        network.moveTo({
+          position: previousPosition,
+          scale: previousScale,
+          animation: false
+        });
+      }, 50);
     }
 
     async function reloadGraph() {
@@ -460,7 +479,7 @@
         const data = await res.json();
         fullGraphData = data;
         updateStats(data);
-        renderCurrentGraph();
+        renderCurrentGraph(hasInitialFocused);
         setStatus("Loaded latest roadmap.");
       } catch (err) {
         console.error(err);
@@ -483,12 +502,12 @@
         setStatus("Branch collapsed.");
       }
 
-      renderCurrentGraph();
+      renderCurrentGraph(true);
     }
 
     function expandAll() {
       collapsedNodes.clear();
-      renderCurrentGraph();
+      renderCurrentGraph(true);
       setStatus("All branches expanded.");
     }
 
@@ -501,7 +520,8 @@
     }
 
     function resetView() {
-      network.focus(START_NODE_ID, { scale: 1.2 });
+      renderCurrentGraph(false);
+      setStatus("View reset.");
     }
 
     nodes = new vis.DataSet();
