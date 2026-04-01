@@ -65,6 +65,70 @@
       line-height: 1.45;
     }
 
+    .searchWrap {
+      position: relative;
+      margin-top: 14px;
+    }
+
+    .searchInput {
+      width: 100%;
+      box-sizing: border-box;
+      background: #111;
+      color: #e5e5e5;
+      border: 1px solid #303030;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .searchInput:focus {
+      border-color: #BE1A48;
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+    }
+
+    .searchResults {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(18, 18, 18, 0.96);
+      border: 1px solid #2f2f2f;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      overflow: hidden;
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+      z-index: 25;
+      backdrop-filter: blur(10px);
+    }
+
+    .searchResult {
+      padding: 10px 12px;
+      border-bottom: 1px solid #262626;
+      cursor: pointer;
+    }
+
+    .searchResult:last-child {
+      border-bottom: none;
+    }
+
+    .searchResult:active {
+      background: rgba(190, 26, 72, 0.16);
+    }
+
+    .searchResultTitle {
+      font-size: 14px;
+      color: #f0f0f0;
+      margin-bottom: 4px;
+    }
+
+    .searchResultMeta {
+      font-size: 12px;
+      color: #9f9f9f;
+    }
+
     .statsBar {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -163,6 +227,12 @@
       padding: 14px;
       box-shadow: 0 0 15px rgba(0,0,0,0.35);
       backdrop-filter: blur(8px);
+      scroll-margin-top: 20px;
+    }
+
+    .card.highlighted {
+      border-color: #ff78a5;
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.25), 0 0 18px rgba(190, 26, 72, 0.18);
     }
 
     .card h3 {
@@ -249,6 +319,11 @@
       <h1>Dungeon Call Roadmap</h1>
       <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
 
+      <div class="searchWrap">
+        <input id="searchInput" class="searchInput" type="text" placeholder="Search roadmap nodes..." autocomplete="off" />
+        <div id="searchResults" class="searchResults"></div>
+      </div>
+
       <div class="statsBar">
         <div class="statCard">
           <div class="statValue" id="statTotal">0</div>
@@ -293,6 +368,8 @@
     const ROOT_ID = 1;
 
     let graphData = null;
+    let cardIndex = new Map();
+    let parentMap = new Map();
     const collapsedNodes = new Set();
     let toastTimer = null;
 
@@ -354,6 +431,7 @@
       const byId = {};
       const childIds = new Set();
       const childrenLookup = {};
+      parentMap = new Map();
 
       for (const node of graphNodes) {
         byId[node.id] = {
@@ -370,6 +448,7 @@
         if (byId[edge.from] && byId[edge.to]) {
           childrenLookup[edge.from].push(edge.to);
           childIds.add(edge.to);
+          parentMap.set(edge.to, edge.from);
         }
       }
 
@@ -389,6 +468,7 @@
     function renderCards(root) {
       const list = document.getElementById("roadmapList");
       list.innerHTML = "";
+      cardIndex = new Map();
 
       if (!root) {
         list.innerHTML = '<div class="empty">No roadmap data available.</div>';
@@ -401,6 +481,7 @@
 
         const card = document.createElement("div");
         card.className = `card depth-${Math.min(depth, 4)}`;
+        card.id = `node-card-${node.id}`;
 
         const buttonHTML = hasChildren
           ? `<button class="branchBtn" data-node-id="${node.id}">
@@ -420,6 +501,7 @@
         `;
 
         list.appendChild(card);
+        cardIndex.set(node.id, card);
 
         if (!isCollapsed) {
           for (const child of node.children || []) {
@@ -463,6 +545,93 @@
       setStatus("All branches expanded.");
     }
 
+    function getAncestorChain(nodeId) {
+      const ancestors = [];
+      let current = parentMap.get(nodeId);
+
+      while (current !== undefined) {
+        ancestors.push(current);
+        current = parentMap.get(current);
+      }
+
+      return ancestors;
+    }
+
+    function highlightCard(nodeId) {
+      const card = cardIndex.get(nodeId);
+      if (!card) return;
+
+      card.classList.add("highlighted");
+      setTimeout(() => {
+        card.classList.remove("highlighted");
+      }, 2000);
+    }
+
+    function jumpToNode(nodeId) {
+      const ancestors = getAncestorChain(nodeId);
+      for (const ancestor of ancestors) {
+        if (collapsedNodes.has(ancestor)) {
+          collapsedNodes.delete(ancestor);
+        }
+      }
+
+      const tree = buildTreeFromGraph(graphData);
+      renderCards(tree);
+
+      const card = cardIndex.get(nodeId);
+      if (!card) return;
+
+      card.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      highlightCard(nodeId);
+    }
+
+    function renderSearchResults(query) {
+      const resultsBox = document.getElementById("searchResults");
+      resultsBox.innerHTML = "";
+
+      if (!query || !graphData?.nodes?.length) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const matches = graphData.nodes
+        .filter(node => (node.label || "").toLowerCase().includes(q))
+        .slice(0, 8);
+
+      if (!matches.length) {
+        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
+        resultsBox.style.display = "block";
+        return;
+      }
+
+      for (const match of matches) {
+        const item = document.createElement("div");
+        item.className = "searchResult";
+        item.innerHTML = `
+          <div class="searchResultTitle">${match.label}</div>
+          <div class="searchResultMeta">${getStatusLabel(match.status)} • Tap to jump</div>
+        `;
+        item.onclick = () => {
+          jumpToNode(match.id);
+          resultsBox.style.display = "none";
+          document.getElementById("searchInput").blur();
+        };
+        resultsBox.appendChild(item);
+      }
+
+      resultsBox.style.display = "block";
+    }
+
     async function reloadRoadmap() {
       try {
         setStatus("Loading latest roadmap...");
@@ -486,6 +655,28 @@
         setStatus("Failed to load roadmap.", true);
       }
     }
+
+    document.addEventListener("click", (e) => {
+      const wrap = document.querySelector(".searchWrap");
+      const results = document.getElementById("searchResults");
+      if (wrap && !wrap.contains(e.target)) {
+        results.style.display = "none";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("searchInput");
+      input.addEventListener("input", () => {
+        renderSearchResults(input.value);
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document.getElementById("searchResults").style.display = "none";
+          input.blur();
+        }
+      });
+    });
 
     reloadRoadmap();
     setInterval(reloadRoadmap, 30000);
