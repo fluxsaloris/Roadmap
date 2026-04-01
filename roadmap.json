@@ -296,6 +296,12 @@
     },
     {
       "id": 50,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": 51,
       "label": "Dungeon",
       "status": "pending",
       "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown."
@@ -495,8 +501,12 @@
       "to": 49
     },
     {
-      "from": 1,
+      "from": 49,
       "to": 50
+    },
+    {
+      "from": 1,
+      "to": 51
     }
   ]
 }
