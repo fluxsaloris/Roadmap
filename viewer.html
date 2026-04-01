@@ -234,6 +234,29 @@
     button:hover {
       background: #171717;
     }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 50;
+      background: rgba(18, 18, 18, 0.95);
+      color: #f0f0f0;
+      border: 1px solid #363636;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 13px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -273,6 +296,7 @@
   </div>
 
   <div id="infoBox" class="hidden"></div>
+  <div id="toast"></div>
 
   <div id="controls">
     <button onclick="toggleSelectedBranch()">Toggle Branch</button>
@@ -293,6 +317,8 @@
     let fullGraphData = null;
     let selectedNodeId = null;
     let hasInitialFocused = false;
+    let toastTimer = null;
+    let positionsLocked = false;
 
     const collapsedNodes = new Set();
     const originalNodeMap = new Map();
@@ -302,6 +328,17 @@
       const el = document.getElementById("statusLine");
       el.textContent = text;
       el.style.color = isError ? "#ff8a8a" : "#999";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
     }
 
     function getColor(status) {
@@ -430,6 +467,22 @@
       });
     }
 
+    function lockCurrentLayout() {
+      if (!fullGraphData || positionsLocked) return;
+
+      const positions = network.getPositions();
+
+      const lockedNodes = fullGraphData.nodes.map(node => ({
+        id: node.id,
+        x: positions[node.id]?.x ?? node.x,
+        y: positions[node.id]?.y ?? node.y,
+        fixed: { x: true, y: true }
+      }));
+
+      nodes.update(lockedNodes);
+      positionsLocked = true;
+    }
+
     function applyCollapseState() {
       if (!fullGraphData) return;
 
@@ -475,6 +528,7 @@
         if (!res.ok) throw new Error("Could not load roadmap.json");
 
         const data = await res.json();
+        positionsLocked = false;
         fullGraphData = {
           nodes: data.nodes.map(n => ({
             id: n.id,
@@ -511,7 +565,15 @@
               scale: 1.2,
               animation: false
             });
+
+            setTimeout(() => {
+              lockCurrentLayout();
+            }, 100);
           }, 50);
+        } else {
+          setTimeout(() => {
+            lockCurrentLayout();
+          }, 100);
         }
 
         setStatus("Loaded latest roadmap.");
@@ -524,12 +586,12 @@
 
     function toggleSelectedBranch() {
       if (!selectedNodeId) {
-        alert("Select a node first.");
+        showToast("Select a node first.");
         return;
       }
 
       if (selectedNodeId === START_NODE_ID) {
-        alert("Can't collapse the root.");
+        showToast("You can't collapse the root.");
         return;
       }
 
