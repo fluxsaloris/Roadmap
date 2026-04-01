@@ -284,18 +284,24 @@
     },
     {
       "id": 48,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon"
+    },
+    {
+      "id": 49,
       "label": "Character Customisation",
       "status": "pending",
       "description": "The character customisation process is going to allow you to pick your race, pick between multiple premade hair styles, body types and your size."
     },
     {
-      "id": 49,
+      "id": 50,
       "label": "Races",
       "status": "pending",
       "description": "The races for Dungeon Call will be a multitude of species making your character seem less fully human than kind of like a Demi-Human and they will be separate from the pure species found in the Dungeon."
     },
     {
-      "id": 50,
+      "id": 51,
       "label": "Dungeon",
       "status": "pending",
       "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown."
@@ -487,16 +493,20 @@
       "to": 47
     },
     {
-      "from": 1,
+      "from": 47,
       "to": 48
     },
     {
-      "from": 48,
+      "from": 1,
       "to": 49
     },
     {
-      "from": 1,
+      "from": 49,
       "to": 50
+    },
+    {
+      "from": 1,
+      "to": 51
     }
   ]
 }
