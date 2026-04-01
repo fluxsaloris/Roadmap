@@ -321,6 +321,38 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 40;
+      width: min(360px, calc(100vw - 40px));
+      background: rgba(35, 12, 18, 0.96);
+      border: 1px solid rgba(190, 26, 72, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffb3c9;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #f2d7df;
+    }
   </style>
 </head>
 <body>
@@ -367,6 +399,11 @@
   <div id="infoBox" class="hidden"></div>
   <div id="toast"></div>
 
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
+    <div id="errorPanelText">Trying again when the page becomes active.</div>
+  </div>
+
   <div id="controls">
     <button onclick="toggleSelectedBranch()">Toggle Branch</button>
     <button onclick="expandAll()">Expand All</button>
@@ -409,23 +446,24 @@
       toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
     }
 
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
+    }
+
     function getColor(status) {
-      if (status === "complete") {
-        return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
-      }
-      if (status === "progress") {
-        return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
-      }
+      if (status === "complete") return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
+      if (status === "progress") return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
       return { background: "#111", border: "#333", font: { color: "#777" } };
     }
 
     function getHighlightedColor(status) {
-      if (status === "complete") {
-        return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
-      }
-      if (status === "progress") {
-        return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
-      }
+      if (status === "complete") return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
+      if (status === "progress") return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
       return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
     }
 
@@ -441,8 +479,8 @@
       return "background:#181818;color:#999;border:1px solid #333;";
     }
 
-    function updateStats(data) {
-      const graphNodes = Array.isArray(data?.nodes) ? data.nodes : [];
+    function updateStats(graphData) {
+      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
       const total = graphNodes.length;
       const complete = graphNodes.filter(n => n.status === "complete").length;
       const progress = graphNodes.filter(n => n.status === "progress").length;
@@ -540,9 +578,7 @@
 
       const hiddenNodeIds = new Set();
       for (const collapsedId of collapsedNodes) {
-        for (const descendant of getDescendants(collapsedId)) {
-          hiddenNodeIds.add(descendant);
-        }
+        for (const descendant of getDescendants(collapsedId)) hiddenNodeIds.add(descendant);
       }
 
       const nodeUpdates = fullGraphData.nodes.map(node => {
@@ -723,9 +759,7 @@
 
       preserveCamera(() => {
         for (const ancestor of ancestors) {
-          if (collapsedNodes.has(ancestor)) {
-            collapsedNodes.delete(ancestor);
-          }
+          if (collapsedNodes.has(ancestor)) collapsedNodes.delete(ancestor);
         }
         applyCollapseState();
       });
@@ -768,13 +802,14 @@
             fullGraphData = createNetworkData(rawGraphData, true);
             createNetwork(fullGraphData, true);
             network.focus(START_NODE_ID, { scale: 1.2, animation: false });
+            hideErrorPanel();
             setStatus("Loaded latest roadmap.");
           }, 150);
         }, 50);
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
-        alert("Failed to load roadmap.");
+        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
       }
     }
 
@@ -842,6 +877,12 @@
           input.blur();
         }
       });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        reloadGraph();
+      }
     });
 
     reloadGraph();
