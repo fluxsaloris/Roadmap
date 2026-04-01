@@ -97,18 +97,68 @@
     }
 
     #editorPanel,
-    #controls {
+    #controls,
+    #nodeEditor {
       position: fixed;
       right: 20px;
       z-index: 20;
     }
 
     #editorPanel {
-      bottom: 110px;
+      bottom: 160px;
     }
 
     #controls {
       bottom: 20px;
+    }
+
+    #nodeEditor {
+      top: 20px;
+      width: 300px;
+      background: rgba(20, 20, 20, 0.94);
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    #nodeEditor h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    #nodeEditor label {
+      display: block;
+      margin: 10px 0 6px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    #nodeEditor input,
+    #nodeEditor textarea,
+    #nodeEditor select {
+      width: 100%;
+      box-sizing: border-box;
+      background: #111;
+      color: #ddd;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    #nodeEditor textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .editorNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.4;
     }
 
     button {
@@ -123,6 +173,11 @@
       cursor: pointer;
     }
 
+    #nodeEditor button {
+      width: 100%;
+      margin-top: 12px;
+    }
+
     button:hover {
       background: #171717;
     }
@@ -133,9 +188,31 @@
   <div id="statusBar">Ready.</div>
   <div id="infoBox" class="hidden"></div>
 
+  <div id="nodeEditor">
+    <h3>Node Editor</h3>
+
+    <label for="nodeLabel">Label</label>
+    <input id="nodeLabel" type="text" placeholder="Select a node..." />
+
+    <label for="nodeDescription">Description</label>
+    <textarea id="nodeDescription" placeholder="Node description..."></textarea>
+
+    <label for="nodeStatus">Status</label>
+    <select id="nodeStatus">
+      <option value="pending">Pending</option>
+      <option value="progress">In Progress</option>
+      <option value="complete">Complete</option>
+    </select>
+
+    <button onclick="applyNodeChanges()">Apply Changes</button>
+
+    <div class="editorNote">
+      Click a node in the graph to load it here.
+    </div>
+  </div>
+
   <div id="editorPanel">
     <button onclick="addChild()">Add Child</button>
-    <button onclick="editNode()">Edit Node</button>
     <button onclick="deleteNode()">Delete Node</button>
     <button onclick="saveRoadmap()">Save to GitHub</button>
     <button onclick="reloadFromGitHub()">Reload from GitHub</button>
@@ -340,6 +417,7 @@
         tree = buildTreeFromGraph(graphData);
         renderGraph();
         selectedNodeId = null;
+        clearEditorFields();
         document.getElementById("infoBox").classList.add("hidden");
         setStatus("Loaded latest roadmap from GitHub.");
       } catch (err) {
@@ -347,6 +425,39 @@
         setStatus("Failed to load roadmap.json from GitHub.", true);
         alert("Failed to load roadmap.json from GitHub");
       }
+    }
+
+    function loadSelectedNodeIntoEditor() {
+      if (!selectedNodeId || !nodeMap[selectedNodeId]) {
+        clearEditorFields();
+        return;
+      }
+
+      const node = nodeMap[selectedNodeId];
+      document.getElementById("nodeLabel").value = node.label || "";
+      document.getElementById("nodeDescription").value = node.description || "";
+      document.getElementById("nodeStatus").value = node.status || "pending";
+    }
+
+    function clearEditorFields() {
+      document.getElementById("nodeLabel").value = "";
+      document.getElementById("nodeDescription").value = "";
+      document.getElementById("nodeStatus").value = "pending";
+    }
+
+    function applyNodeChanges() {
+      if (!selectedNodeId) {
+        alert("Select a node first.");
+        return;
+      }
+
+      const node = nodeMap[selectedNodeId];
+      node.label = document.getElementById("nodeLabel").value.trim() || "Unnamed";
+      node.description = document.getElementById("nodeDescription").value;
+      node.status = document.getElementById("nodeStatus").value;
+
+      renderGraph();
+      setStatus("Node updated. Save when ready.");
     }
 
     function addChild() {
@@ -366,39 +477,7 @@
       });
 
       renderGraph();
-      setStatus("Child node added. Save when ready.");
-    }
-
-    function editNode() {
-      if (!selectedNodeId) {
-        alert("Select a node first.");
-        return;
-      }
-
-      const node = nodeMap[selectedNodeId];
-
-      const newLabel = prompt("Name:", node.label || "");
-      if (newLabel !== null && newLabel.trim() !== "") {
-        node.label = newLabel.trim();
-      }
-
-      const newDescription = prompt("Description:", node.description || "");
-      if (newDescription !== null) {
-        node.description = newDescription;
-      }
-
-      const newStatus = prompt("Status (complete / progress / pending):", node.status || "pending");
-      if (newStatus !== null) {
-        const normalized = newStatus.trim().toLowerCase();
-        if (["complete", "progress", "pending"].includes(normalized)) {
-          node.status = normalized;
-        } else if (newStatus.trim() !== "") {
-          alert("Invalid status. Using previous value.");
-        }
-      }
-
-      renderGraph();
-      setStatus("Node updated. Save when ready.");
+      setStatus("Child node added. Select it to edit details.");
     }
 
     function deleteNode() {
@@ -433,6 +512,7 @@
 
       removeFrom(tree);
       selectedNodeId = null;
+      clearEditorFields();
       document.getElementById("infoBox").classList.add("hidden");
       renderGraph();
       setStatus("Node deleted. Save when ready.");
@@ -508,12 +588,14 @@
 
       if (!params.nodes.length) {
         selectedNodeId = null;
+        clearEditorFields();
         info.classList.add("hidden");
         return;
       }
 
       selectedNodeId = params.nodes[0];
       const node = nodes.get(selectedNodeId);
+      loadSelectedNodeIntoEditor();
 
       const statusLabel =
         node.status === "complete" ? "Done" :
