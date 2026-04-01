@@ -151,6 +151,7 @@
   <script>
     const START_NODE_ID = 1;
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
+    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
     let network;
     let nodes;
@@ -325,11 +326,14 @@
 
     async function reloadFromGitHub() {
       try {
-        setStatus("Loading roadmap from GitHub...");
+        setStatus("Loading latest roadmap from GitHub...");
 
-        const res = await fetch("./roadmap.json?v=" + Date.now(), { cache: "no-store" });
+        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+          cache: "no-store"
+        });
+
         if (!res.ok) {
-          throw new Error("Could not load roadmap.json");
+          throw new Error("Could not load roadmap.json from GitHub");
         }
 
         const graphData = await res.json();
@@ -337,11 +341,11 @@
         renderGraph();
         selectedNodeId = null;
         document.getElementById("infoBox").classList.add("hidden");
-        setStatus("Loaded roadmap from GitHub.");
+        setStatus("Loaded latest roadmap from GitHub.");
       } catch (err) {
         console.error(err);
-        setStatus("Failed to load roadmap.json", true);
-        alert("Failed to load roadmap.json");
+        setStatus("Failed to load roadmap.json from GitHub.", true);
+        alert("Failed to load roadmap.json from GitHub");
       }
     }
 
