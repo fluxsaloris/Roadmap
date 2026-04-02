@@ -487,6 +487,14 @@
       "description": "Short nimble human",
       "x": 1119,
       "y": -1067
+    },
+    {
+      "id": 63,
+      "label": "Owl",
+      "status": "pending",
+      "description": "",
+      "x": 1115,
+      "y": -960
     }
   ],
   "edges": [
@@ -729,6 +737,10 @@
     {
       "from": 49,
       "to": 62
+    },
+    {
+      "from": 49,
+      "to": 63
     }
   ]
 }
