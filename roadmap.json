@@ -409,12 +409,28 @@
       "y": -1681
     },
     {
-      "id": 52,
-      "label": "High Elf",
+      "id": 53,
+      "label": "New Node",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1775,
-      "y": -1881
+      "x": 1701,
+      "y": -1755
+    },
+    {
+      "id": 54,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1701,
+      "y": -1755
+    },
+    {
+      "id": 55,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1941,
+      "y": -1795
     }
   ],
   "edges": [
@@ -620,7 +636,15 @@
     },
     {
       "from": 50,
-      "to": 52
+      "to": 53
+    },
+    {
+      "from": 50,
+      "to": 54
+    },
+    {
+      "from": 54,
+      "to": 55
     }
   ]
 }
