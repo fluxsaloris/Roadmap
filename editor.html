@@ -11,7 +11,6 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      min-height: 100%;
       background: #000 !important;
       color: white;
       overflow: hidden;
@@ -61,7 +60,8 @@
       top: 18px;
       left: 18px;
       z-index: 20;
-      width: min(560px, calc(100vw - 40px));
+      width: min(560px, calc(100vw - 420px));
+      min-width: 320px;
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -169,11 +169,23 @@
       position: fixed;
       top: 18px;
       right: 18px;
-      width: min(340px, calc(100vw - 40px));
+      bottom: 18px;
+      width: 340px;
       z-index: 20;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    #rightSidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #rightSidebar::-webkit-scrollbar-thumb {
+      background: #2b2b2b;
+      border-radius: 999px;
     }
 
     .panel {
@@ -259,14 +271,6 @@
 
     button:hover {
       background: #171717;
-    }
-
-    #controls {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      width: min(340px, calc(100vw - 40px));
-      z-index: 20;
     }
 
     #infoBox {
@@ -462,15 +466,13 @@
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1150px) {
       #topPanel {
         width: calc(100vw - 36px);
       }
 
-      #rightSidebar,
-      #controls {
-        position: static;
-        width: auto;
+      #rightSidebar {
+        width: 300px;
       }
     }
   </style>
@@ -511,7 +513,7 @@
       <button onclick="applyNodeChanges()">Apply Changes</button>
 
       <div class="editorNote">
-        Click a node in the graph to load it here. Drag nodes to reposition them in the editor.
+        Click a node in the graph to load it here. Drag nodes to reposition them. Position changes are saved into roadmap.json.
       </div>
     </div>
 
@@ -533,14 +535,14 @@
         <button onclick="exportCurrentGraph()">Export JSON</button>
       </div>
     </div>
-  </div>
 
-  <div id="controls" class="panel">
-    <div class="panelTitleSmall">View Controls</div>
-    <div class="buttonGrid">
-      <button onclick="zoomIn()">Zoom +</button>
-      <button onclick="zoomOut()">Zoom -</button>
-      <button onclick="resetView()">Reset</button>
+    <div class="panel">
+      <div class="panelTitleSmall">View Controls</div>
+      <div class="buttonGrid">
+        <button onclick="zoomIn()">Zoom +</button>
+        <button onclick="zoomOut()">Zoom -</button>
+        <button onclick="resetView()">Reset</button>
+      </div>
     </div>
   </div>
 
@@ -576,30 +578,24 @@
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
     let network;
-    let nodes;
-    let edges;
+    let nodesDS;
+    let edgesDS;
 
+    let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
-    let rootNode = null;
     let toastTimer = null;
     let hasUnsavedChanges = false;
-    let editorIdCounter = 1;
-
-    let nodeById = new Map();
-    let parentById = new Map();
-    let positionById = new Map();
-
-    function nextEditorId() {
-      return `n_${editorIdCounter++}`;
-    }
+    let loadingLocked = false;
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
       document.getElementById("loadingOverlay").style.display = "flex";
+      loadingLocked = true;
     }
 
     function hideLoading() {
       document.getElementById("loadingOverlay").style.display = "none";
+      loadingLocked = false;
     }
 
     function setStatus(message, isError = false) {
@@ -633,14 +629,22 @@
     }
 
     function getColor(status) {
-      if (status === "complete") return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
+      if (status === "complete") {
+        return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
+      }
+      if (status === "progress") {
+        return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
+      }
       return { background: "#111", border: "#333", font: { color: "#777" } };
     }
 
     function getHighlightColor(status) {
-      if (status === "complete") return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
+      if (status === "complete") {
+        return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
+      }
+      if (status === "progress") {
+        return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
+      }
       return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
     }
 
@@ -681,198 +685,100 @@
       document.getElementById("nodeStatus").value = "pending";
     }
 
-    function loadSelectedNodeIntoEditor() {
-      const node = nodeById.get(selectedNodeId);
-      if (!node) {
-        clearEditorFields();
-        return;
-      }
-      document.getElementById("nodeLabel").value = node.label || "";
-      document.getElementById("nodeDescription").value = node.description || "";
-      document.getElementById("nodeStatus").value = node.status || "pending";
+    function normalizeGraphData(raw) {
+      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+
+      const nodes = rawNodes.map(n => ({
+        id: Number(n.id),
+        label: n.label || "Unnamed",
+        status: n.status || "pending",
+        description: n.description || "Coming Soon",
+        x: typeof n.x === "number" ? n.x : null,
+        y: typeof n.y === "number" ? n.y : null
+      }));
+
+      const edges = rawEdges.map((e, index) => ({
+        id: `${e.from}->${e.to}-${index}`,
+        from: Number(e.from),
+        to: Number(e.to)
+      }));
+
+      return { nodes, edges };
     }
 
-    function assignEditorIds(node) {
-      node._eid = nextEditorId();
-      if (!node.children) node.children = [];
-      for (const child of node.children) assignEditorIds(child);
+    function getNodeById(id) {
+      return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
     }
 
-    function buildTreeFromGraph(graphData) {
-      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
-      const graphEdges = Array.isArray(graphData?.edges) ? graphData.edges : [];
-
-      if (!graphNodes.length) {
-        return {
-          _eid: nextEditorId(),
-          label: "Dungeon Call",
-          status: "complete",
-          description: "Start",
-          children: []
-        };
-      }
-
-      const byId = {};
-      const childIds = new Set();
-      const childrenLookup = {};
-
-      for (const node of graphNodes) {
-        byId[node.id] = {
-          label: node.label || "Unnamed",
-          status: node.status || "pending",
-          description: node.description || "Coming Soon",
-          children: []
-        };
-        childrenLookup[node.id] = [];
-      }
-
-      for (const edge of graphEdges) {
-        if (byId[edge.from] && byId[edge.to]) {
-          childrenLookup[edge.from].push(edge.to);
-          childIds.add(edge.to);
-        }
-      }
-
-      function attach(id) {
-        const node = byId[id];
-        node.children = childrenLookup[id].map(childId => attach(childId));
-        return node;
-      }
-
-      let rootId = graphNodes[0].id;
-      const explicitRoot = graphNodes.find(n => !childIds.has(n.id));
-      if (explicitRoot) rootId = explicitRoot.id;
-
-      const root = attach(rootId);
-      assignEditorIds(root);
-      return root;
+    function getChildrenOf(parentId) {
+      const childIds = graphData.edges
+        .filter(e => Number(e.from) === Number(parentId))
+        .map(e => Number(e.to));
+      return graphData.nodes.filter(n => childIds.includes(Number(n.id)));
     }
 
-    function flattenTree(root) {
-      const out = [];
-      nodeById.clear();
-      parentById.clear();
-
-      function walk(node, parentId = null) {
-        nodeById.set(node._eid, node);
-        parentById.set(node._eid, parentId);
-        out.push({ node, parentId });
-        for (const child of node.children || []) walk(child, node._eid);
-      }
-
-      walk(root);
-      return out;
-    }
-
-    function buildExportJSON() {
-      const outNodes = [];
-      const outEdges = [];
-      let nextId = 1;
-
-      function walk(node, parentExportId = null) {
-        const currentId = nextId++;
-        outNodes.push({
-          id: currentId,
-          label: node.label || "Unnamed",
-          status: node.status || "pending",
-          description: node.description || "Coming Soon"
-        });
-
-        if (parentExportId !== null) {
-          outEdges.push({ from: parentExportId, to: currentId });
-        }
-
-        for (const child of node.children || []) {
-          walk(child, currentId);
-        }
-      }
-
-      walk(rootNode);
-      return { nodes: outNodes, edges: outEdges };
-    }
-
-    function cloneSubtree(node) {
-      return {
-        _eid: nextEditorId(),
-        label: node.label,
-        status: node.status,
-        description: node.description,
-        children: (node.children || []).map(cloneSubtree)
-      };
+    function getParentId(nodeId) {
+      const edge = graphData.edges.find(e => Number(e.to) === Number(nodeId));
+      return edge ? Number(edge.from) : null;
     }
 
     function getRootId() {
-      return rootNode ? rootNode._eid : null;
+      const childIds = new Set(graphData.edges.map(e => Number(e.to)));
+      const root = graphData.nodes.find(n => !childIds.has(Number(n.id)));
+      return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
     }
 
-    function getParentNode(id) {
-      const parentId = parentById.get(id);
-      return parentId ? nodeById.get(parentId) : null;
+    function getNextNodeId() {
+      if (!graphData.nodes.length) return 1;
+      return Math.max(...graphData.nodes.map(n => Number(n.id))) + 1;
     }
 
-    function ensureChildPositions(parent) {
-      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
-      const children = parent.children || [];
-      const total = children.length;
+    function buildNetworkNodes(useFixedPositions) {
+      return graphData.nodes.map(n => {
+        const nodeData = {
+          id: Number(n.id),
+          label: n.label,
+          shape: "box",
+          margin: 14,
+          color: getColor(n.status),
+          description: n.description,
+          status: n.status
+        };
 
-      children.forEach((child, index) => {
-        if (!positionById.has(child._eid)) {
-          positionById.set(child._eid, {
-            x: parentPos.x + 240,
-            y: parentPos.y + (index - (total - 1) / 2) * 110
-          });
+        if (useFixedPositions && typeof n.x === "number" && typeof n.y === "number") {
+          nodeData.x = n.x;
+          nodeData.y = n.y;
+          nodeData.fixed = { x: false, y: false };
         }
+
+        return nodeData;
       });
     }
 
-    function buildNetworkData(useFixedPositions) {
-      const flat = flattenTree(rootNode);
-      const builtNodes = [];
-      const builtEdges = [];
-
-      for (const { node, parentId } of flat) {
-        const nodeData = {
-          id: node._eid,
-          label: node.label || "Unnamed",
-          shape: "box",
-          margin: 14,
-          color: getColor(node.status || "pending"),
-          description: node.description || "Coming Soon",
-          status: node.status || "pending"
-        };
-
-        if (useFixedPositions && positionById.has(node._eid)) {
-          const pos = positionById.get(node._eid);
-          nodeData.x = pos.x;
-          nodeData.y = pos.y;
-          nodeData.fixed = { x: true, y: true };
-        }
-
-        builtNodes.push(nodeData);
-
-        if (parentId) {
-          builtEdges.push({
-            id: `${parentId}->${node._eid}`,
-            from: parentId,
-            to: node._eid
-          });
-        }
-      }
-
-      return { nodes: builtNodes, edges: builtEdges };
+    function buildNetworkEdges() {
+      return graphData.edges.map(e => ({
+        id: e.id,
+        from: Number(e.from),
+        to: Number(e.to)
+      }));
     }
 
-    function createNetwork(data, useFixedLayout) {
+    function hasSavedPositions() {
+      return graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
+    }
+
+    function createNetwork(useFixedPositions) {
       if (network) network.destroy();
 
-      nodes = new vis.DataSet(data.nodes);
-      edges = new vis.DataSet(data.edges);
+      nodesDS = new vis.DataSet(buildNetworkNodes(useFixedPositions));
+      edgesDS = new vis.DataSet(buildNetworkEdges());
 
       network = new vis.Network(
         document.getElementById("graph"),
-        { nodes, edges },
+        { nodes: nodesDS, edges: edgesDS },
         {
-          layout: useFixedLayout ? {} : {
+          layout: useFixedPositions ? {} : {
             hierarchical: {
               direction: "LR",
               levelSeparation: 250,
@@ -881,7 +787,7 @@
           },
           physics: false,
           interaction: {
-            dragNodes: useFixedLayout,
+            dragNodes: useFixedPositions,
             dragView: true,
             zoomView: true
           }
@@ -890,6 +796,7 @@
 
       network.on("click", function(params) {
         const info = document.getElementById("infoBox");
+
         if (!params.nodes.length) {
           selectedNodeId = null;
           clearEditorFields();
@@ -897,64 +804,71 @@
           return;
         }
 
-        selectedNodeId = params.nodes[0];
+        selectedNodeId = Number(params.nodes[0]);
         loadSelectedNodeIntoEditor();
         openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
       });
 
       network.on("dragEnd", function(params) {
-        if (!params.nodes || !params.nodes.length) return;
+        if (!params.nodes || !params.nodes.length || loadingLocked) return;
+
         const positions = network.getPositions(params.nodes);
-        for (const id of params.nodes) {
-          if (positions[id]) {
-            positionById.set(String(id), {
-              x: positions[id].x,
-              y: positions[id].y
-            });
+        for (const nodeId of params.nodes) {
+          const graphNode = getNodeById(Number(nodeId));
+          if (graphNode && positions[nodeId]) {
+            graphNode.x = positions[nodeId].x;
+            graphNode.y = positions[nodeId].y;
           }
         }
+
         setDirtyState(true);
-        setStatus("Node position updated. Save if you want to keep your content changes.");
+        setStatus("Node position updated. Save when ready.");
       });
     }
 
-    function lockLayoutFromCurrentNetwork() {
+    function lockCurrentLayoutIntoGraphData() {
       const positions = network.getPositions();
-      for (const [id, pos] of Object.entries(positions)) {
-        positionById.set(String(id), { x: pos.x, y: pos.y });
-      }
+      graphData.nodes.forEach(node => {
+        const pos = positions[node.id];
+        if (pos) {
+          node.x = pos.x;
+          node.y = pos.y;
+        }
+      });
     }
 
-    function syncGraphIncremental(preserveCamera = true, focusNodeId = null) {
+    function rebuildDatasetsPreserveView(focusNodeId = null) {
       const currentScale = network.getScale();
       const currentPosition = network.getViewPosition();
 
-      const data = buildNetworkData(true);
-      const newNodeIds = new Set(data.nodes.map(n => n.id));
-      const newEdgeIds = new Set(data.edges.map(e => e.id));
+      const existingNodeIds = new Set(nodesDS.getIds());
+      const existingEdgeIds = new Set(edgesDS.getIds());
 
-      const existingNodeIds = new Set(nodes.getIds());
-      const existingEdgeIds = new Set(edges.getIds());
+      const nextNodes = buildNetworkNodes(true);
+      const nextEdges = buildNetworkEdges();
 
-      const nodesToRemove = [...existingNodeIds].filter(id => !newNodeIds.has(id));
-      const edgesToRemove = [...existingEdgeIds].filter(id => !newEdgeIds.has(id));
+      const nextNodeIds = new Set(nextNodes.map(n => n.id));
+      const nextEdgeIds = new Set(nextEdges.map(e => e.id));
 
-      if (nodesToRemove.length) nodes.remove(nodesToRemove);
-      if (edgesToRemove.length) edges.remove(edgesToRemove);
+      const removeNodeIds = [...existingNodeIds].filter(id => !nextNodeIds.has(id));
+      const removeEdgeIds = [...existingEdgeIds].filter(id => !nextEdgeIds.has(id));
 
-      nodes.update(data.nodes);
-      edges.update(data.edges);
+      if (removeEdgeIds.length) edgesDS.remove(removeEdgeIds);
+      if (removeNodeIds.length) nodesDS.remove(removeNodeIds);
+
+      nodesDS.update(nextNodes);
+      edgesDS.update(nextEdges);
 
       requestAnimationFrame(() => {
         if (focusNodeId) {
-          network.focus(focusNodeId, {
+          network.focus(Number(focusNodeId), {
             scale: Math.max(currentScale, 1.12),
             animation: {
               duration: 220,
               easingFunction: "easeInOutQuad"
             }
           });
-        } else if (preserveCamera) {
+        } else {
           network.moveTo({
             position: currentPosition,
             scale: currentScale,
@@ -966,7 +880,7 @@
 
     function openNodeInfo(nodeId, domX = 80, domY = 120) {
       const info = document.getElementById("infoBox");
-      const node = nodeById.get(nodeId);
+      const node = getNodeById(nodeId);
       if (!node) return;
 
       info.innerHTML =
@@ -984,22 +898,34 @@
     }
 
     function highlightNode(nodeId) {
-      const node = nodeById.get(nodeId);
+      const node = getNodeById(nodeId);
       if (!node) return;
 
-      nodes.update({
+      nodesDS.update({
         id: nodeId,
         color: getHighlightColor(node.status)
       });
 
       setTimeout(() => {
-        const fresh = nodeById.get(nodeId);
+        const fresh = getNodeById(nodeId);
         if (!fresh) return;
-        nodes.update({
+        nodesDS.update({
           id: nodeId,
           color: getColor(fresh.status)
         });
       }, 1800);
+    }
+
+    function loadSelectedNodeIntoEditor() {
+      const node = getNodeById(selectedNodeId);
+      if (!node) {
+        clearEditorFields();
+        return;
+      }
+
+      document.getElementById("nodeLabel").value = node.label || "";
+      document.getElementById("nodeDescription").value = node.description || "";
+      document.getElementById("nodeStatus").value = node.status || "pending";
     }
 
     async function reloadFromGitHub() {
@@ -1013,34 +939,50 @@
 
         if (!res.ok) throw new Error("Could not load roadmap.json from GitHub");
 
-        const graphData = await res.json();
-
-        editorIdCounter = 1;
-        positionById.clear();
+        graphData = normalizeGraphData(await res.json());
         selectedNodeId = null;
 
-        rootNode = buildTreeFromGraph(graphData);
-
-        const initialData = buildNetworkData(false);
-        createNetwork(initialData, false);
-
-        setTimeout(() => {
-          network.focus(getRootId(), { scale: START_NODE_SCALE, animation: false });
+        if (hasSavedPositions()) {
+          createNetwork(true);
+          const rootId = getRootId();
+          if (rootId !== null) {
+            network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+          }
+        } else {
+          createNetwork(false);
+          const rootId = getRootId();
 
           setTimeout(() => {
-            lockLayoutFromCurrentNetwork();
-            const fixedData = buildNetworkData(true);
-            createNetwork(fixedData, true);
+            if (rootId !== null) {
+              network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+            }
 
-            network.focus(getRootId(), { scale: START_NODE_SCALE, animation: false });
-            clearEditorFields();
-            document.getElementById("infoBox").style.display = "none";
-            hideErrorPanel();
-            setDirtyState(false);
-            setStatus("Loaded latest roadmap from GitHub.");
-            hideLoading();
-          }, 120);
-        }, 40);
+            setTimeout(() => {
+              lockCurrentLayoutIntoGraphData();
+              createNetwork(true);
+
+              if (rootId !== null) {
+                network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+              }
+
+              hideErrorPanel();
+              clearEditorFields();
+              document.getElementById("infoBox").style.display = "none";
+              setDirtyState(false);
+              setStatus("Loaded latest roadmap from GitHub.");
+              hideLoading();
+            }, 150);
+          }, 50);
+
+          return;
+        }
+
+        hideErrorPanel();
+        clearEditorFields();
+        document.getElementById("infoBox").style.display = "none";
+        setDirtyState(false);
+        setStatus("Loaded latest roadmap from GitHub.");
+        hideLoading();
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap from GitHub.", true);
@@ -1055,14 +997,14 @@
         return;
       }
 
-      const node = nodeById.get(selectedNodeId);
+      const node = getNodeById(selectedNodeId);
       if (!node) return;
 
       node.label = document.getElementById("nodeLabel").value.trim() || "Unnamed";
       node.description = document.getElementById("nodeDescription").value;
       node.status = document.getElementById("nodeStatus").value;
 
-      syncGraphIncremental(true, null);
+      rebuildDatasetsPreserveView();
       openNodeInfo(selectedNodeId);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
@@ -1076,28 +1018,35 @@
         return;
       }
 
-      const parent = nodeById.get(selectedNodeId);
+      const parent = getNodeById(selectedNodeId);
       if (!parent) return;
 
+      const siblingCount = getChildrenOf(parent.id).length;
+      const newId = getNextNodeId();
+
       const newNode = {
-        _eid: nextEditorId(),
+        id: newId,
         label: "New Node",
         status: "pending",
         description: "Coming Soon",
-        children: []
+        x: (typeof parent.x === "number" ? parent.x : 0) + 240,
+        y: (typeof parent.y === "number" ? parent.y : 0) + (siblingCount * 110) - 40
       };
 
-      parent.children = parent.children || [];
-      parent.children.push(newNode);
-      ensureChildPositions(parent);
+      graphData.nodes.push(newNode);
+      graphData.edges.push({
+        id: `${parent.id}->${newId}-${Date.now()}`,
+        from: parent.id,
+        to: newId
+      });
 
-      selectedNodeId = newNode._eid;
-      syncGraphIncremental(true, newNode._eid);
+      selectedNodeId = newId;
+      rebuildDatasetsPreserveView(newId);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Child node added. Edit its details now.");
       showToast("Child node added.");
-      highlightNode(newNode._eid);
+      highlightNode(newId);
     }
 
     function addSibling() {
@@ -1106,30 +1055,71 @@
         return;
       }
 
-      const parent = getParentNode(selectedNodeId);
-      if (!parent) {
+      const parentId = getParentId(selectedNodeId);
+      if (parentId === null) {
         showToast("The root node can't have a sibling.");
         return;
       }
 
+      const parent = getNodeById(parentId);
+      const siblingCount = getChildrenOf(parentId).length;
+      const newId = getNextNodeId();
+
       const newNode = {
-        _eid: nextEditorId(),
+        id: newId,
         label: "New Sibling",
         status: "pending",
         description: "Coming Soon",
-        children: []
+        x: (typeof parent.x === "number" ? parent.x : 0) + 240,
+        y: (typeof parent.y === "number" ? parent.y : 0) + (siblingCount * 110) - 40
       };
 
-      parent.children.push(newNode);
-      ensureChildPositions(parent);
+      graphData.nodes.push(newNode);
+      graphData.edges.push({
+        id: `${parentId}->${newId}-${Date.now()}`,
+        from: parentId,
+        to: newId
+      });
 
-      selectedNodeId = newNode._eid;
-      syncGraphIncremental(true, newNode._eid);
+      selectedNodeId = newId;
+      rebuildDatasetsPreserveView(newId);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Sibling node added. Edit its details now.");
       showToast("Sibling node added.");
-      highlightNode(newNode._eid);
+      highlightNode(newId);
+    }
+
+    function duplicateSubtree(oldId, newParentId, offsetX = 120, offsetY = 120) {
+      const source = getNodeById(oldId);
+      if (!source) return null;
+
+      const newId = getNextNodeId();
+      const copy = {
+        id: newId,
+        label: source.label + " Copy",
+        status: source.status,
+        description: source.description,
+        x: (typeof source.x === "number" ? source.x : 0) + offsetX,
+        y: (typeof source.y === "number" ? source.y : 0) + offsetY
+      };
+
+      graphData.nodes.push(copy);
+
+      if (newParentId !== null) {
+        graphData.edges.push({
+          id: `${newParentId}->${newId}-${Date.now()}-${Math.random()}`,
+          from: newParentId,
+          to: newId
+        });
+      }
+
+      const children = getChildrenOf(oldId);
+      for (const child of children) {
+        duplicateSubtree(child.id, newId, offsetX, offsetY);
+      }
+
+      return newId;
     }
 
     function duplicateNode() {
@@ -1138,25 +1128,20 @@
         return;
       }
 
-      const source = nodeById.get(selectedNodeId);
-      const parent = getParentNode(selectedNodeId);
-
-      if (!source || !parent) {
+      const parentId = getParentId(selectedNodeId);
+      if (parentId === null) {
         showToast("You can't duplicate the root.");
         return;
       }
 
-      const copy = cloneSubtree(source);
-      parent.children.push(copy);
-      ensureChildPositions(parent);
-
-      selectedNodeId = copy._eid;
-      syncGraphIncremental(true, copy._eid);
+      const newRootId = duplicateSubtree(selectedNodeId, parentId, 140, 120);
+      selectedNodeId = newRootId;
+      rebuildDatasetsPreserveView(newRootId);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Node duplicated.");
       showToast("Node duplicated.");
-      highlightNode(copy._eid);
+      highlightNode(newRootId);
     }
 
     function openDeleteModal() {
@@ -1177,36 +1162,46 @@
       document.getElementById("deleteModal").classList.remove("show");
     }
 
-    function removeSubtreePositions(node) {
-      positionById.delete(node._eid);
-      for (const child of node.children || []) {
-        removeSubtreePositions(child);
+    function getDescendants(nodeId) {
+      const result = [];
+      const stack = [nodeId];
+
+      while (stack.length) {
+        const current = stack.pop();
+        result.push(current);
+        const children = getChildrenOf(current);
+        for (const child of children) stack.push(child.id);
       }
+
+      return result;
     }
 
     function confirmDeleteNode() {
-      const target = nodeById.get(selectedNodeId);
-      if (!target) {
+      const targetId = selectedNodeId;
+      if (targetId === null) {
         closeDeleteModal();
         return;
       }
 
-      const parent = getParentNode(selectedNodeId);
-      if (!parent) {
+      if (targetId === getRootId()) {
         closeDeleteModal();
         showToast("You can't delete the root.");
         return;
       }
 
-      parent.children = parent.children.filter(child => child._eid !== target._eid);
-      removeSubtreePositions(target);
+      const idsToDelete = new Set(getDescendants(targetId));
+
+      graphData.nodes = graphData.nodes.filter(n => !idsToDelete.has(Number(n.id)));
+      graphData.edges = graphData.edges.filter(
+        e => !idsToDelete.has(Number(e.from)) && !idsToDelete.has(Number(e.to))
+      );
 
       selectedNodeId = null;
       clearEditorFields();
       document.getElementById("infoBox").style.display = "none";
       closeDeleteModal();
 
-      syncGraphIncremental(true, null);
+      rebuildDatasetsPreserveView();
       setDirtyState(true);
       setStatus("Node deleted. Save when ready.");
       showToast("Node deleted.");
@@ -1216,12 +1211,25 @@
       try {
         setStatus("Saving to GitHub...");
 
-        const data = buildExportJSON();
+        const payload = {
+          nodes: graphData.nodes.map(n => ({
+            id: n.id,
+            label: n.label,
+            status: n.status,
+            description: n.description,
+            x: n.x,
+            y: n.y
+          })),
+          edges: graphData.edges.map(e => ({
+            from: e.from,
+            to: e.to
+          }))
+        };
 
         const res = await fetch(SAVE_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data })
+          body: JSON.stringify({ data: payload })
         });
 
         const text = await res.text();
@@ -1239,7 +1247,22 @@
     }
 
     function exportCurrentGraph() {
-      console.log(JSON.stringify(buildExportJSON(), null, 2));
+      const payload = {
+        nodes: graphData.nodes.map(n => ({
+          id: n.id,
+          label: n.label,
+          status: n.status,
+          description: n.description,
+          x: n.x,
+          y: n.y
+        })),
+        edges: graphData.edges.map(e => ({
+          from: e.from,
+          to: e.to
+        }))
+      };
+
+      console.log(JSON.stringify(payload, null, 2));
       showToast("Graph JSON printed to console.");
     }
 
@@ -1253,26 +1276,16 @@
 
     function resetView() {
       const rootId = getRootId();
-      if (!rootId) return;
+      if (rootId === null) return;
       network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
       setStatus("View reset.");
-    }
-
-    function flattenSearchNodes() {
-      const out = [];
-      function walk(node, depth = 0) {
-        out.push({ id: node._eid, label: node.label, status: node.status, depth });
-        for (const child of node.children || []) walk(child, depth + 1);
-      }
-      if (rootNode) walk(rootNode);
-      return out;
     }
 
     function renderSearchResults(query) {
       const resultsBox = document.getElementById("searchResults");
       resultsBox.innerHTML = "";
 
-      if (!query || !rootNode) {
+      if (!query || !graphData.nodes.length) {
         resultsBox.style.display = "none";
         return;
       }
@@ -1283,7 +1296,7 @@
         return;
       }
 
-      const matches = flattenSearchNodes()
+      const matches = graphData.nodes
         .filter(n => (n.label || "").toLowerCase().includes(q))
         .slice(0, 8);
 
@@ -1311,13 +1324,13 @@
     }
 
     function jumpToNode(nodeId) {
-      const node = nodeById.get(nodeId);
+      const node = getNodeById(nodeId);
       if (!node) return;
 
-      selectedNodeId = nodeId;
+      selectedNodeId = Number(nodeId);
       loadSelectedNodeIntoEditor();
 
-      network.focus(nodeId, {
+      network.focus(Number(nodeId), {
         scale: Math.max(network.getScale(), 1.12),
         animation: {
           duration: 280,
@@ -1325,8 +1338,8 @@
         }
       });
 
-      highlightNode(nodeId);
-      openNodeInfo(nodeId, window.innerWidth * 0.45, 130);
+      highlightNode(Number(nodeId));
+      openNodeInfo(Number(nodeId), window.innerWidth * 0.45, 130);
       showToast("Jumped to node.");
     }
 
