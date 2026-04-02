@@ -220,7 +220,10 @@
 
     #nodeEditor input,
     #nodeEditor textarea,
-    #nodeEditor select {
+    #nodeEditor select,
+    #infoBox input,
+    #infoBox textarea,
+    #infoBox select {
       width: 100%;
       box-sizing: border-box;
       background: #111;
@@ -235,12 +238,16 @@
 
     #nodeEditor input:focus,
     #nodeEditor textarea:focus,
-    #nodeEditor select:focus {
+    #nodeEditor select:focus,
+    #infoBox input:focus,
+    #infoBox textarea:focus,
+    #infoBox select:focus {
       border-color: #BE1A48;
       box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
-    #nodeEditor textarea {
+    #nodeEditor textarea,
+    #infoBox textarea {
       min-height: 110px;
       resize: vertical;
     }
@@ -256,6 +263,15 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+
+    .buttonRow {
+      display: flex;
+      gap: 10px;
+    }
+
+    .buttonRow button {
+      flex: 1;
     }
 
     button {
@@ -275,8 +291,8 @@
 
     #infoBox {
       position: fixed;
-      width: clamp(240px, 28vw, 340px);
-      max-height: min(60vh, 420px);
+      width: clamp(260px, 28vw, 360px);
+      max-height: min(72vh, 560px);
       overflow-y: auto;
       background: rgba(20, 20, 20, 0.96);
       border: 1px solid #2a2a2a;
@@ -294,6 +310,7 @@
       font-size: 16px;
       line-height: 1.3;
       color: #fff;
+      padding-right: 22px;
     }
 
     #infoBox p {
@@ -322,6 +339,25 @@
       font-weight: 700;
     }
 
+    .infoInlineEditor {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #2c2c2c;
+    }
+
+    .infoInlineEditor label {
+      display: block;
+      margin: 10px 0 6px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    .infoNote {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8f8f8f;
+    }
+
     #toast {
       position: fixed;
       left: 50%;
@@ -341,6 +377,29 @@
     }
 
     #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #autoSaveBanner {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-12px);
+      z-index: 90;
+      background: rgba(17, 17, 17, 0.96);
+      color: #f0f0f0;
+      border: 1px solid #363636;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 13px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #autoSaveBanner.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
@@ -530,9 +589,21 @@
     <div class="panel">
       <div class="panelTitleSmall">Project Actions</div>
       <div class="buttonGrid">
-        <button onclick="saveRoadmap()">Save to GitHub</button>
+        <button onclick="saveRoadmap(false)">Save to GitHub</button>
         <button onclick="reloadFromGitHub()">Reload from GitHub</button>
         <button onclick="exportCurrentGraph()">Export JSON</button>
+        <button onclick="autoArrange()">Auto Arrange</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitleSmall">Editor Tools</div>
+      <div class="buttonGrid">
+        <div class="buttonRow">
+          <button onclick="undo()">Undo</button>
+          <button onclick="redo()">Redo</button>
+        </div>
+        <button onclick="toggleFocusMode()">Toggle Focus Mode</button>
       </div>
     </div>
 
@@ -548,6 +619,7 @@
 
   <div id="infoBox"></div>
   <div id="toast"></div>
+  <div id="autoSaveBanner">Auto-saved</div>
 
   <div id="errorPanel">
     <div id="errorPanelTitle">Couldn’t load roadmap</div>
@@ -584,8 +656,59 @@
     let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
     let toastTimer = null;
+    let autoSaveBannerTimer = null;
     let hasUnsavedChanges = false;
     let loadingLocked = false;
+    let autoSaveTimer = null;
+    let focusModeEnabled = false;
+    let dragHistoryCaptured = false;
+
+    let historyStack = [];
+    let redoStack = [];
+
+    function cloneGraphData(data) {
+      return JSON.parse(JSON.stringify(data));
+    }
+
+    function pushHistory() {
+      historyStack.push(cloneGraphData(graphData));
+      if (historyStack.length > 100) historyStack.shift();
+      redoStack = [];
+    }
+
+    function undo() {
+      if (!historyStack.length) {
+        showToast("Nothing to undo.");
+        return;
+      }
+
+      redoStack.push(cloneGraphData(graphData));
+      graphData = historyStack.pop();
+      selectedNodeId = null;
+      clearEditorFields();
+      document.getElementById("infoBox").style.display = "none";
+      rebuildDatasetsPreserveView();
+      setDirtyState(true);
+      setStatus("Undo applied.");
+      showToast("Undo");
+    }
+
+    function redo() {
+      if (!redoStack.length) {
+        showToast("Nothing to redo.");
+        return;
+      }
+
+      historyStack.push(cloneGraphData(graphData));
+      graphData = redoStack.pop();
+      selectedNodeId = null;
+      clearEditorFields();
+      document.getElementById("infoBox").style.display = "none";
+      rebuildDatasetsPreserveView();
+      setDirtyState(true);
+      setStatus("Redo applied.");
+      showToast("Redo");
+    }
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
@@ -604,9 +727,25 @@
       bar.style.color = isError ? "#ff8a8a" : "#999";
     }
 
+    function triggerAutoSave() {
+      clearTimeout(autoSaveTimer);
+
+      if (!hasUnsavedChanges) return;
+
+      autoSaveTimer = setTimeout(() => {
+        saveRoadmap(true);
+      }, 4000);
+    }
+
     function setDirtyState(isDirty) {
       hasUnsavedChanges = isDirty;
       document.getElementById("dirtyIndicator").classList.toggle("show", isDirty);
+
+      if (isDirty) {
+        triggerAutoSave();
+      } else {
+        clearTimeout(autoSaveTimer);
+      }
     }
 
     function showToast(message) {
@@ -617,6 +756,17 @@
       toastTimer = setTimeout(() => {
         toast.classList.remove("show");
       }, 3000);
+    }
+
+    function showAutoSaveBanner(message = "Auto-saved") {
+      const banner = document.getElementById("autoSaveBanner");
+      banner.textContent = message;
+      banner.classList.add("show");
+
+      if (autoSaveBannerTimer) clearTimeout(autoSaveBannerTimer);
+      autoSaveBannerTimer = setTimeout(() => {
+        banner.classList.remove("show");
+      }, 2200);
     }
 
     function showErrorPanel(message) {
@@ -646,6 +796,16 @@
         return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
       }
       return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
+    }
+
+    function getDimColor(status) {
+      if (status === "complete") {
+        return { background: "#183025", border: "#284338", font: { color: "#8ea79b" } };
+      }
+      if (status === "progress") {
+        return { background: "#3a331f", border: "#554a28", font: { color: "#c5b98e" } };
+      }
+      return { background: "#171717", border: "#2c2c2c", font: { color: "#777" } };
     }
 
     function getStatusLabel(status) {
@@ -801,12 +961,22 @@
           selectedNodeId = null;
           clearEditorFields();
           info.style.display = "none";
+          applyFocusMode();
           return;
         }
 
         selectedNodeId = Number(params.nodes[0]);
         loadSelectedNodeIntoEditor();
         openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
+        applyFocusMode();
+      });
+
+      network.on("dragStart", function(params) {
+        if (!params.nodes || !params.nodes.length || loadingLocked) return;
+        if (!dragHistoryCaptured) {
+          pushHistory();
+          dragHistoryCaptured = true;
+        }
       });
 
       network.on("dragEnd", function(params) {
@@ -821,8 +991,10 @@
           }
         }
 
+        dragHistoryCaptured = false;
         setDirtyState(true);
         setStatus("Node position updated. Save when ready.");
+        applyFocusMode();
       });
     }
 
@@ -841,6 +1013,8 @@
       const currentScale = network.getScale();
       const currentPosition = network.getViewPosition();
 
+      network.setOptions({ physics: false });
+
       const existingNodeIds = new Set(nodesDS.getIds());
       const existingEdgeIds = new Set(edgesDS.getIds());
 
@@ -858,6 +1032,7 @@
 
       nodesDS.update(nextNodes);
       edgesDS.update(nextEdges);
+      applyFocusMode(false);
 
       requestAnimationFrame(() => {
         if (focusNodeId) {
@@ -887,7 +1062,21 @@
         '<div id="closeBtn">✕</div>' +
         `<h3>${node.label}</h3>` +
         `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>`;
+        `<p>${node.description || "No description available."}</p>` +
+        `<div class="infoInlineEditor">
+          <label for="infoInlineLabel">Quick Edit Label</label>
+          <input id="infoInlineLabel" type="text" value="${escapeHtml(node.label)}" />
+          <label for="infoInlineDescription">Quick Edit Description</label>
+          <textarea id="infoInlineDescription">${escapeHtml(node.description || "")}</textarea>
+          <label for="infoInlineStatus">Quick Edit Status</label>
+          <select id="infoInlineStatus">
+            <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
+            <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
+            <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
+          </select>
+          <button onclick="applyInlineInfoChanges()">Apply From Panel</button>
+          <div class="infoNote">This lets you edit directly from the node popup too.</div>
+        </div>`;
 
       info.style.display = "block";
       positionInfoBox(domX, domY);
@@ -895,6 +1084,38 @@
       document.getElementById("closeBtn").onclick = () => {
         info.style.display = "none";
       };
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function applyInlineInfoChanges() {
+      if (!selectedNodeId) {
+        showToast("Select a node first.");
+        return;
+      }
+
+      pushHistory();
+
+      const node = getNodeById(selectedNodeId);
+      if (!node) return;
+
+      node.label = document.getElementById("infoInlineLabel").value.trim() || "Unnamed";
+      node.description = document.getElementById("infoInlineDescription").value;
+      node.status = document.getElementById("infoInlineStatus").value;
+
+      loadSelectedNodeIntoEditor();
+      rebuildDatasetsPreserveView();
+      openNodeInfo(selectedNodeId, parseFloat(document.getElementById("infoBox").style.left || 100), parseFloat(document.getElementById("infoBox").style.top || 100));
+      setDirtyState(true);
+      setStatus("Node updated from popup. Save when ready.");
+      showToast("Quick edit applied.");
     }
 
     function highlightNode(nodeId) {
@@ -909,10 +1130,7 @@
       setTimeout(() => {
         const fresh = getNodeById(nodeId);
         if (!fresh) return;
-        nodesDS.update({
-          id: nodeId,
-          color: getColor(fresh.status)
-        });
+        applyFocusMode();
       }, 1800);
     }
 
@@ -928,6 +1146,34 @@
       document.getElementById("nodeStatus").value = node.status || "pending";
     }
 
+    function applyFocusMode(showToastMessage = false) {
+      if (!nodesDS) return;
+
+      if (!focusModeEnabled || !selectedNodeId) {
+        nodesDS.update(graphData.nodes.map(node => ({
+          id: node.id,
+          color: getColor(node.status)
+        })));
+        if (showToastMessage) showToast("Focus mode off.");
+        return;
+      }
+
+      nodesDS.update(graphData.nodes.map(node => ({
+        id: node.id,
+        color: Number(node.id) === Number(selectedNodeId)
+          ? getHighlightColor(node.status)
+          : getDimColor(node.status)
+      })));
+
+      if (showToastMessage) showToast("Focus mode on.");
+    }
+
+    function toggleFocusMode() {
+      focusModeEnabled = !focusModeEnabled;
+      applyFocusMode(true);
+      setStatus(focusModeEnabled ? "Focus mode enabled." : "Focus mode disabled.");
+    }
+
     async function reloadFromGitHub() {
       try {
         showLoading("Syncing latest roadmap...");
@@ -941,6 +1187,8 @@
 
         graphData = normalizeGraphData(await res.json());
         selectedNodeId = null;
+        historyStack = [];
+        redoStack = [];
 
         if (hasSavedPositions()) {
           createNetwork(true);
@@ -997,6 +1245,8 @@
         return;
       }
 
+      pushHistory();
+
       const node = getNodeById(selectedNodeId);
       if (!node) return;
 
@@ -1017,6 +1267,8 @@
         showToast("Select a node first.");
         return;
       }
+
+      pushHistory();
 
       const parent = getNodeById(selectedNodeId);
       if (!parent) return;
@@ -1054,6 +1306,8 @@
         showToast("Select a node first.");
         return;
       }
+
+      pushHistory();
 
       const parentId = getParentId(selectedNodeId);
       if (parentId === null) {
@@ -1128,6 +1382,8 @@
         return;
       }
 
+      pushHistory();
+
       const parentId = getParentId(selectedNodeId);
       if (parentId === null) {
         showToast("You can't duplicate the root.");
@@ -1183,6 +1439,8 @@
         return;
       }
 
+      pushHistory();
+
       if (targetId === getRootId()) {
         closeDeleteModal();
         showToast("You can't delete the root.");
@@ -1207,9 +1465,9 @@
       showToast("Node deleted.");
     }
 
-    async function saveRoadmap() {
+    async function saveRoadmap(isAutoSave = false) {
       try {
-        setStatus("Saving to GitHub...");
+        setStatus(isAutoSave ? "Auto-saving to GitHub..." : "Saving to GitHub...");
 
         const payload = {
           nodes: graphData.nodes.map(n => ({
@@ -1237,8 +1495,13 @@
 
         hideErrorPanel();
         setDirtyState(false);
-        setStatus("Saved to GitHub.");
-        showToast("Saved to GitHub.");
+        setStatus(isAutoSave ? "Auto-saved to GitHub." : "Saved to GitHub.");
+
+        if (isAutoSave) {
+          showAutoSaveBanner("Auto-saved to GitHub");
+        } else {
+          showToast("Saved to GitHub.");
+        }
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
@@ -1279,6 +1542,37 @@
       if (rootId === null) return;
       network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
       setStatus("View reset.");
+    }
+
+    function autoArrange() {
+      pushHistory();
+
+      const rootId = getRootId();
+      const previousSelected = selectedNodeId;
+
+      showLoading("Auto arranging roadmap...");
+
+      createNetwork(false);
+
+      setTimeout(() => {
+        lockCurrentLayoutIntoGraphData();
+        createNetwork(true);
+
+        if (previousSelected !== null) {
+          selectedNodeId = previousSelected;
+          loadSelectedNodeIntoEditor();
+          applyFocusMode();
+        }
+
+        if (rootId !== null) {
+          network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+        }
+
+        hideLoading();
+        setDirtyState(true);
+        setStatus("Auto arranged. Save when ready.");
+        showToast("Auto arranged.");
+      }, 350);
     }
 
     function renderSearchResults(query) {
@@ -1340,6 +1634,7 @@
 
       highlightNode(Number(nodeId));
       openNodeInfo(Number(nodeId), window.innerWidth * 0.45, 130);
+      applyFocusMode();
       showToast("Jumped to node.");
     }
 
@@ -1363,6 +1658,23 @@
           input.blur();
         }
       });
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+      if (ctrlOrCmd && !e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      }
+
+      if (
+        (ctrlOrCmd && e.key.toLowerCase() === "y") ||
+        (ctrlOrCmd && e.shiftKey && e.key.toLowerCase() === "z")
+      ) {
+        e.preventDefault();
+        redo();
+      }
     });
 
     document.addEventListener("visibilitychange", () => {
