@@ -617,6 +617,17 @@
     </div>
   </div>
 
+  <div class="panel">
+  <div class="panelTitleSmall">Timeline</div>
+  <div id="timelineList" style="max-height:160px;overflow-y:auto;font-size:12px;"></div>
+  <button onclick="restoreSnapshot()">Restore Selected</button>
+</div>
+
+<div class="panel">
+  <div class="panelTitleSmall">Diff Viewer</div>
+  <div id="diffViewer" style="font-size:12px;color:#ccc;white-space:pre-wrap;"></div>
+</div>
+
   <div id="infoBox"></div>
   <div id="toast"></div>
   <div id="autoSaveBanner">Auto-saved</div>
@@ -655,6 +666,8 @@
 
     let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
+    let timeline = [];
+    let selectedSnapshotIndex = null;
     let toastTimer = null;
     let autoSaveBannerTimer = null;
     let hasUnsavedChanges = false;
@@ -1240,6 +1253,7 @@
     }
 
     function applyNodeChanges() {
+      createSnapshot();
       if (!selectedNodeId) {
         showToast("Select a node first.");
         return;
@@ -1263,6 +1277,7 @@
     }
 
     function addChild() {
+      createSnapshot();
       if (!selectedNodeId) {
         showToast("Select a node first.");
         return;
@@ -1302,6 +1317,7 @@
     }
 
     function addSibling() {
+      createSnapshot();
       if (!selectedNodeId) {
         showToast("Select a node first.");
         return;
@@ -1377,6 +1393,7 @@
     }
 
     function duplicateNode() {
+      createSnapshot();
       if (!selectedNodeId) {
         showToast("Select a node first.");
         return;
@@ -1433,6 +1450,7 @@
     }
 
     function confirmDeleteNode() {
+      createSnapshot();
       const targetId = selectedNodeId;
       if (targetId === null) {
         closeDeleteModal();
@@ -1647,6 +1665,11 @@
     });
 
     document.addEventListener("DOMContentLoaded", () => {
+      const savedTimeline = localStorage.getItem("roadmapTimeline");
+      if (savedTimeline) {
+        timeline = JSON.parse(savedTimeline);
+        renderTimeline();
+      }
       const input = document.getElementById("searchInput");
       input.addEventListener("input", () => {
         renderSearchResults(input.value);
@@ -1683,6 +1706,83 @@
       }
     });
 
+    function createSnapshot(label = "Edit") {
+  const snapshot = {
+    time: new Date().toLocaleTimeString(),
+    data: JSON.stringify(graphData)
+  };
+
+  timeline.unshift(snapshot);
+  if (timeline.length > 30) timeline.pop();
+
+  localStorage.setItem("roadmapTimeline", JSON.stringify(timeline));
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const el = document.getElementById("timelineList");
+  if (!el) return;
+
+  el.innerHTML = "";
+
+  timeline.forEach((snap, i) => {
+    const div = document.createElement("div");
+    div.textContent = `#${timeline.length - i} • ${snap.time}`;
+    div.style.cursor = "pointer";
+    div.style.padding = "4px";
+
+    div.onclick = () => {
+      selectedSnapshotIndex = i;
+      highlightDiff(i);
+    };
+
+    el.appendChild(div);
+  });
+}
+
+function restoreSnapshot() {
+  if (selectedSnapshotIndex === null) return;
+
+  const snap = timeline[selectedSnapshotIndex];
+  graphData = JSON.parse(snap.data);
+
+  rebuildDatasetsPreserveView();
+  setDirtyState(true);
+  showToast("Snapshot restored");
+}
+
+function highlightDiff(index) {
+  const viewer = document.getElementById("diffViewer");
+  if (!viewer) return;
+
+  const current = graphData.nodes;
+  const old = JSON.parse(timeline[index].data).nodes;
+
+  let output = "";
+
+  current.forEach(n => {
+    const prev = old.find(o => o.id === n.id);
+
+    if (!prev) {
+      output += `+ Added: ${n.label}\n`;
+      return;
+    }
+
+    if (prev.label !== n.label)
+      output += `~ Label: ${prev.label} → ${n.label}\n`;
+
+    if (prev.status !== n.status)
+      output += `~ Status: ${prev.status} → ${n.status}\n`;
+  });
+
+  old.forEach(n => {
+    if (!current.find(c => c.id === n.id)) {
+      output += `- Removed: ${n.label}\n`;
+    }
+  });
+
+  viewer.textContent = output || "No changes";
+}
     reloadFromGitHub();
   </script>
 </body>
