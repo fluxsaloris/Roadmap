@@ -1,892 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dungeon Call Roadmap</title>
-  <script>
-    if (window.innerWidth <= 768) {
-      window.location.replace("./viewer-mobile.html");
-    }
-  </script>
-  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      min-height: 100%;
-      background: #000 !important;
-      color: white;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Call Roadmap</title>
 
-    body {
-      position: relative;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%) !important;
-    }
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.35;
-      pointer-events: none;
-    }
+<style>
+html, body {
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:Arial;
+}
 
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      border: 2px solid #BE1A48;
-      border-radius: 14px;
-      pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.3);
-      margin: 6px;
-      z-index: 2;
-    }
+/* GRAPH */
+#graph {
+  position:fixed;
+  inset:0;
+}
 
-    #graph {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      background: transparent !important;
-    }
+/* TOP PANEL */
+#topPanel {
+  position:fixed;
+  top:18px;
+  left:18px;
+  width:360px;
+  background:rgba(15,15,15,0.9);
+  border:1px solid #2a2a2a;
+  border-radius:14px;
+  padding:16px;
+  z-index:10;
+}
 
-    #hero {
-      position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 20;
-      width: min(500px, calc(100vw - 40px));
-      background: rgba(15, 15, 15, 0.9);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-    }
+/* SEARCH */
+#searchInput {
+  width:100%;
+  padding:10px;
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:8px;
+}
 
-    #hero h1 {
-      margin: 0 0 6px;
-      font-size: 22px;
-      line-height: 1.2;
-      color: #fff;
-    }
+/* INFO BOX */
+#infoBox {
+  position:fixed;
+  right:18px;
+  top:18px;
+  width:300px;
+  background:#111;
+  border:1px solid #333;
+  border-radius:12px;
+  padding:14px;
+  display:none;
+  z-index:10;
+}
 
-    #hero p {
-      margin: 0 0 10px;
-      color: #bbb;
-      font-size: 14px;
-      line-height: 1.45;
-    }
+/* LOADING */
+#loadingOverlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
 
-    #searchWrap {
-      position: relative;
-      margin-top: 12px;
-    }
+.spinner {
+  width:40px;
+  height:40px;
+  border:3px solid #333;
+  border-top:3px solid #BE1A48;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
 
-    #searchInput {
-      width: 100%;
-      box-sizing: border-box;
-      background: #111;
-      color: #e5e5e5;
-      border: 1px solid #303030;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 14px;
-      outline: none;
-    }
-
-    #searchInput:focus {
-      border-color: #BE1A48;
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
-    }
-
-    #searchResults {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: rgba(18, 18, 18, 0.96);
-      border: 1px solid #2f2f2f;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      overflow: hidden;
-      max-height: 280px;
-      overflow-y: auto;
-      display: none;
-      z-index: 25;
-      backdrop-filter: blur(10px);
-    }
-
-    .searchResult {
-      padding: 10px 12px;
-      border-bottom: 1px solid #262626;
-      cursor: pointer;
-    }
-
-    .searchResult:last-child {
-      border-bottom: none;
-    }
-
-    .searchResult:hover {
-      background: rgba(190, 26, 72, 0.12);
-    }
-
-    .searchResultTitle {
-      font-size: 14px;
-      color: #f0f0f0;
-      margin-bottom: 4px;
-    }
-
-    .searchResultMeta {
-      font-size: 12px;
-      color: #9f9f9f;
-    }
-
-    #statusLine {
-      font-size: 12px;
-      color: #999;
-      margin-top: 10px;
-    }
-
-    #statsBar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .statCard {
-      background: rgba(20,20,20,0.9);
-      border: 1px solid #2c2c2c;
-      border-radius: 10px;
-      padding: 10px 12px;
-      min-width: 92px;
-    }
-
-    .statValue {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .statLabel {
-      margin-top: 3px;
-      font-size: 11px;
-      color: #9d9d9d;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    #progressWrap {
-      margin-top: 12px;
-    }
-
-    #progressText {
-      font-size: 12px;
-      color: #bbb;
-      margin-bottom: 6px;
-    }
-
-    #progressTrack {
-      width: 100%;
-      height: 10px;
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    #progressFill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #BE1A48, #ff4f86);
-      border-radius: 999px;
-      transition: width 0.25s ease;
-    }
-
-    #infoBox {
-      position: fixed;
-      width: clamp(240px, 28vw, 340px);
-      max-height: min(65vh, 460px);
-      overflow-y: auto;
-      background: rgba(20, 20, 20, 0.96);
-      border: 1px solid #2a2a2a;
-      backdrop-filter: blur(12px);
-      padding: 14px;
-      border-radius: 14px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      z-index: 20;
-      color: white;
-    }
-
-    #infoBox.hidden {
-      display: none;
-    }
-
-    #infoBox h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      line-height: 1.3;
-      color: #fff;
-    }
-
-    #infoBox p {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #d7d7d7;
-      white-space: pre-wrap;
-      margin: 10px 0 0;
-    }
-
-    #closeBtn {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      cursor: pointer;
-      color: #aaa;
-      font-size: 14px;
-    }
-
-    #statusBadge {
-      display: inline-block;
-      margin: 2px 0 8px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .smallNote {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #999;
-      line-height: 1.4;
-    }
-
-    #controls {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      min-width: 150px;
-    }
-
-    button:hover {
-      background: #171717;
-    }
-
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 26px;
-      transform: translateX(-50%) translateY(20px);
-      z-index: 50;
-      background: rgba(18, 18, 18, 0.95);
-      color: #f0f0f0;
-      border: 1px solid #363636;
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 13px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #errorPanel {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 40;
-      width: min(360px, calc(100vw - 40px));
-      background: rgba(35, 12, 18, 0.96);
-      border: 1px solid rgba(190, 26, 72, 0.5);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
-      backdrop-filter: blur(10px);
-      display: none;
-    }
-
-    #errorPanel.show {
-      display: block;
-    }
-
-    #errorPanelTitle {
-      font-size: 14px;
-      font-weight: 700;
-      color: #ffb3c9;
-      margin-bottom: 6px;
-    }
-
-    #errorPanelText {
-      font-size: 13px;
-      line-height: 1.45;
-      color: #f2d7df;
-    }
-  </style>
+@keyframes spin {
+  to { transform:rotate(360deg); }
+}
+</style>
 </head>
+
 <body>
-  <div id="graph"></div>
 
-  <div id="hero">
-    <h1>Dungeon Call Roadmap</h1>
-    <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
+<div id="graph"></div>
 
-    <div id="searchWrap">
-      <input id="searchInput" type="text" placeholder="Search roadmap nodes..." autocomplete="off" />
-      <div id="searchResults"></div>
-    </div>
+<div id="topPanel">
+  <h2>Dungeon Call</h2>
+  <input id="searchInput" placeholder="Search roadmap...">
+</div>
 
-    <div id="statsBar">
-      <div class="statCard">
-        <div class="statValue" id="statTotal">0</div>
-        <div class="statLabel">Total</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statComplete">0</div>
-        <div class="statLabel">Done</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statProgress">0</div>
-        <div class="statLabel">Progress</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statPending">0</div>
-        <div class="statLabel">Pending</div>
-      </div>
-    </div>
+<div id="infoBox"></div>
 
-    <div id="progressWrap">
-      <div id="progressText">Completion: 0%</div>
-      <div id="progressTrack">
-        <div id="progressFill"></div>
-      </div>
-    </div>
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+</div>
 
-    <div id="statusLine">Loading roadmap...</div>
-  </div>
+<script>
+const URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-  <div id="infoBox" class="hidden"></div>
-  <div id="toast"></div>
+let network, nodes, edges, graphData;
 
-  <div id="errorPanel">
-    <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
-    <div id="errorPanelText">Trying again when the page becomes active.</div>
-  </div>
+/* COLORS */
+function getColor(status){
+  if(status==="complete") return {background:"#00cc66"};
+  if(status==="progress") return {background:"#ffaa00"};
+  return {background:"#111"};
+}
 
-  <div id="controls">
-    <button onclick="toggleSelectedBranch()">Toggle Branch</button>
-    <button onclick="expandAll()">Expand All</button>
-    <button onclick="zoomIn()">Zoom +</button>
-    <button onclick="zoomOut()">Zoom -</button>
-    <button onclick="resetView()">Reset</button>
-    <button onclick="reloadGraph()">Refresh</button>
-  </div>
+/* LOAD */
+async function load(){
+  document.getElementById("loadingOverlay").style.display="flex";
 
-  <script>
-    const START_NODE_ID = 1;
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
+  const res = await fetch(URL+"?v="+Date.now());
+  graphData = await res.json();
 
-    let network;
-    let nodes;
-    let edges;
-    let fullGraphData = null;
-    let rawGraphData = null;
-    let selectedNodeId = null;
-    let toastTimer = null;
-    let staticPositions = null;
-    let highlightTimer = null;
+  initGraph();
 
-    const collapsedNodes = new Set();
-    const originalNodeMap = new Map();
-    const childMap = new Map();
-    const parentMap = new Map();
+  document.getElementById("loadingOverlay").style.display="none";
+}
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#999";
+/* INIT GRAPH */
+function initGraph(){
+  const useSaved = graphData.nodes.every(n => n.x!=null && n.y!=null);
+
+  nodes = new vis.DataSet(graphData.nodes.map(n => ({
+    id:n.id,
+    label:n.label,
+    x:n.x,
+    y:n.y,
+    fixed:useSaved,
+    color:getColor(n.status)
+  })));
+
+  edges = new vis.DataSet(graphData.edges);
+
+  network = new vis.Network(
+    document.getElementById("graph"),
+    {nodes,edges},
+    {
+      layout: useSaved ? {} : {
+        hierarchical:{direction:"LR"}
+      },
+      physics:false
+    }
+  );
+
+  network.on("click", params=>{
+    if(!params.nodes.length){
+      document.getElementById("infoBox").style.display="none";
+      return;
     }
 
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
-    }
+    const id=params.nodes[0];
+    const node=graphData.nodes.find(n=>n.id==id);
 
-    function showErrorPanel(message) {
-      document.getElementById("errorPanelText").textContent = message;
-      document.getElementById("errorPanel").classList.add("show");
-    }
+    const box=document.getElementById("infoBox");
+    box.innerHTML=`<h3>${node.label}</h3><p>${node.description}</p>`;
+    box.style.display="block";
+  });
+}
 
-    function hideErrorPanel() {
-      document.getElementById("errorPanel").classList.remove("show");
-    }
+/* SEARCH */
+document.getElementById("searchInput").addEventListener("input", e=>{
+  const q=e.target.value.toLowerCase();
 
-    function getColor(status) {
-      if (status === "complete") return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
-      return { background: "#111", border: "#333", font: { color: "#777" } };
-    }
+  const found=graphData.nodes.find(n=>n.label.toLowerCase().includes(q));
+  if(!found) return;
 
-    function getHighlightedColor(status) {
-      if (status === "complete") return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
-      return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
-    }
+  network.focus(found.id,{scale:1.2});
+});
 
-    function getStatusLabel(status) {
-      if (status === "complete") return "Done";
-      if (status === "progress") return "In Progress";
-      return "Not Started";
-    }
+/* AUTO REFRESH */
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden) load();
+});
 
-    function getStatusBadgeStyle(status) {
-      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      return "background:#181818;color:#999;border:1px solid #333;";
-    }
+load();
+</script>
 
-    function updateStats(graphData) {
-      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
-      const total = graphNodes.length;
-      const complete = graphNodes.filter(n => n.status === "complete").length;
-      const progress = graphNodes.filter(n => n.status === "progress").length;
-      const pending = total - complete - progress;
-      const percent = total ? Math.round((complete / total) * 100) : 0;
-
-      document.getElementById("statTotal").textContent = total;
-      document.getElementById("statComplete").textContent = complete;
-      document.getElementById("statProgress").textContent = progress;
-      document.getElementById("statPending").textContent = pending;
-      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
-      document.getElementById("progressFill").style.width = `${percent}%`;
-    }
-
-    function positionInfoBox(domX, domY) {
-      const box = document.getElementById("infoBox");
-      const padding = 12;
-
-      requestAnimationFrame(() => {
-        const rect = box.getBoundingClientRect();
-
-        let left = domX + 16;
-        let top = domY - 16;
-
-        if (left + rect.width > window.innerWidth - padding) left = domX - rect.width - 16;
-        if (top + rect.height > window.innerHeight - padding) top = window.innerHeight - rect.height - padding;
-        if (top < padding) top = padding;
-        if (left < padding) left = padding;
-
-        box.style.left = left + "px";
-        box.style.top = top + "px";
-      });
-    }
-
-    function buildMaps(data) {
-      originalNodeMap.clear();
-      childMap.clear();
-      parentMap.clear();
-
-      for (const node of data.nodes) {
-        originalNodeMap.set(node.id, { ...node });
-        childMap.set(node.id, []);
-      }
-
-      for (const edge of data.edges) {
-        if (!childMap.has(edge.from)) childMap.set(edge.from, []);
-        childMap.get(edge.from).push(edge.to);
-        parentMap.set(edge.to, edge.from);
-      }
-    }
-
-    function getDescendants(rootId) {
-      const result = [];
-      const stack = [...(childMap.get(rootId) || [])];
-
-      while (stack.length) {
-        const id = stack.pop();
-        result.push(id);
-        const children = childMap.get(id) || [];
-        for (const child of children) stack.push(child);
-      }
-
-      return result;
-    }
-
-    function getAncestorChain(nodeId) {
-      const ancestors = [];
-      let current = parentMap.get(nodeId);
-
-      while (current !== undefined) {
-        ancestors.push(current);
-        current = parentMap.get(current);
-      }
-
-      return ancestors;
-    }
-
-    function preserveCamera(callback) {
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      callback();
-
-      requestAnimationFrame(() => {
-        network.moveTo({
-          position: currentPosition,
-          scale: currentScale,
-          animation: false
-        });
-      });
-    }
-
-    function applyCollapseState() {
-      if (!fullGraphData) return;
-
-      const hiddenNodeIds = new Set();
-      for (const collapsedId of collapsedNodes) {
-        for (const descendant of getDescendants(collapsedId)) hiddenNodeIds.add(descendant);
-      }
-
-      const nodeUpdates = fullGraphData.nodes.map(node => {
-        const original = originalNodeMap.get(node.id);
-        return {
-          id: node.id,
-          hidden: hiddenNodeIds.has(node.id),
-          label: collapsedNodes.has(node.id) ? `${original.label}  [+/-]` : original.label
-        };
-      });
-
-      const edgeUpdates = fullGraphData.edges.map(edge => ({
-        id: edge.id,
-        hidden: hiddenNodeIds.has(edge.from) || hiddenNodeIds.has(edge.to)
-      }));
-
-      nodes.update(nodeUpdates);
-      edges.update(edgeUpdates);
-    }
-
-    function createNetworkData(rawData, useStaticPositions = false) {
-      const builtNodes = rawData.nodes.map(n => {
-        const base = {
-          id: n.id,
-          label: n.label,
-          shape: "box",
-          margin: 14,
-          color: getColor(n.status),
-          description: n.description,
-          status: n.status,
-          hidden: false
-        };
-
-        if (useStaticPositions && staticPositions && staticPositions[n.id]) {
-          base.x = staticPositions[n.id].x;
-          base.y = staticPositions[n.id].y;
-          base.fixed = { x: true, y: true };
-        }
-
-        return base;
-      });
-
-      const builtEdges = rawData.edges.map((e, index) => ({
-        id: index + 1,
-        from: e.from,
-        to: e.to,
-        hidden: false
-      }));
-
-      return { nodes: builtNodes, edges: builtEdges };
-    }
-
-    function createNetwork(data, useStaticPositions = false) {
-      const container = document.getElementById("graph");
-      if (network) network.destroy();
-
-      nodes = new vis.DataSet(data.nodes);
-      edges = new vis.DataSet(data.edges);
-
-      network = new vis.Network(
-        container,
-        { nodes, edges },
-        {
-          layout: useStaticPositions ? {} : {
-            hierarchical: {
-              direction: "LR",
-              levelSeparation: 250,
-              nodeSpacing: 200
-            }
-          },
-          physics: false,
-          interaction: {
-            dragNodes: false
-          }
-        }
-      );
-
-      network.on("click", function(params) {
-        const info = document.getElementById("infoBox");
-
-        if (!params.nodes.length) {
-          selectedNodeId = null;
-          info.classList.add("hidden");
-          return;
-        }
-
-        selectedNodeId = params.nodes[0];
-        openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
-      });
-    }
-
-    function openNodeInfo(nodeId, domX = 80, domY = 120) {
-      const info = document.getElementById("infoBox");
-      const node = nodes.get(nodeId);
-      if (!node) return;
-
-      selectedNodeId = nodeId;
-
-      info.innerHTML =
-        '<div id="closeBtn">✕</div>' +
-        `<h3>${node.label.replace("  [+/-]", "")}</h3>` +
-        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>` +
-        `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
-
-      info.classList.remove("hidden");
-      positionInfoBox(domX, domY);
-
-      document.getElementById("closeBtn").onclick = () => {
-        info.classList.add("hidden");
-      };
-    }
-
-    function highlightNode(nodeId) {
-      const original = originalNodeMap.get(nodeId);
-      if (!original) return;
-
-      nodes.update({
-        id: nodeId,
-        color: getHighlightedColor(original.status)
-      });
-
-      if (highlightTimer) clearTimeout(highlightTimer);
-      highlightTimer = setTimeout(() => {
-        const freshOriginal = originalNodeMap.get(nodeId);
-        if (!freshOriginal) return;
-        nodes.update({
-          id: nodeId,
-          color: getColor(freshOriginal.status)
-        });
-      }, 2000);
-    }
-
-    function renderSearchResults(query) {
-      const resultsBox = document.getElementById("searchResults");
-      resultsBox.innerHTML = "";
-
-      if (!query || !rawGraphData?.nodes?.length) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const matches = rawGraphData.nodes
-        .filter(node => (node.label || "").toLowerCase().includes(q))
-        .slice(0, 8);
-
-      if (!matches.length) {
-        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
-        resultsBox.style.display = "block";
-        return;
-      }
-
-      for (const match of matches) {
-        const item = document.createElement("div");
-        item.className = "searchResult";
-        item.innerHTML = `
-          <div class="searchResultTitle">${match.label}</div>
-          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
-        `;
-        item.onclick = () => {
-          jumpToNode(match.id);
-          resultsBox.style.display = "none";
-        };
-        resultsBox.appendChild(item);
-      }
-
-      resultsBox.style.display = "block";
-    }
-
-    function jumpToNode(nodeId) {
-      const ancestors = getAncestorChain(nodeId);
-
-      preserveCamera(() => {
-        for (const ancestor of ancestors) {
-          if (collapsedNodes.has(ancestor)) collapsedNodes.delete(ancestor);
-        }
-        applyCollapseState();
-      });
-
-      setTimeout(() => {
-        network.focus(nodeId, {
-          scale: 1.35,
-          animation: {
-            duration: 400,
-            easingFunction: "easeInOutQuad"
-          }
-        });
-        highlightNode(nodeId);
-        openNodeInfo(nodeId, window.innerWidth * 0.5, 140);
-      }, 60);
-    }
-
-    async function reloadGraph() {
-      try {
-        setStatus("Loading latest roadmap...");
-
-        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) throw new Error("Could not load roadmap.json");
-
-        rawGraphData = await res.json();
-        buildMaps(rawGraphData);
-        updateStats(rawGraphData);
-        collapsedNodes.clear();
-        staticPositions = null;
-        selectedNodeId = null;
-
-        fullGraphData = createNetworkData(rawGraphData, false);
-        createNetwork(fullGraphData, false);
-
-        setTimeout(() => {
-          network.focus(START_NODE_ID, { scale: 1.2, animation: false });
-
-          setTimeout(() => {
-            staticPositions = network.getPositions();
-            fullGraphData = createNetworkData(rawGraphData, true);
-            createNetwork(fullGraphData, true);
-            network.focus(START_NODE_ID, { scale: 1.2, animation: false });
-            hideErrorPanel();
-            setStatus("Loaded latest roadmap.");
-          }, 150);
-        }, 50);
-      } catch (err) {
-        console.error(err);
-        setStatus("Failed to load roadmap.", true);
-        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
-      }
-    }
-
-    function toggleSelectedBranch() {
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-
-      if (selectedNodeId === START_NODE_ID) {
-        showToast("You can't collapse the root.");
-        return;
-      }
-
-      preserveCamera(() => {
-        if (collapsedNodes.has(selectedNodeId)) {
-          collapsedNodes.delete(selectedNodeId);
-          setStatus("Branch expanded.");
-        } else {
-          collapsedNodes.add(selectedNodeId);
-          setStatus("Branch collapsed.");
-        }
-        applyCollapseState();
-      });
-    }
-
-    function expandAll() {
-      preserveCamera(() => {
-        collapsedNodes.clear();
-        applyCollapseState();
-        setStatus("All branches expanded.");
-      });
-    }
-
-    function zoomIn() {
-      network.moveTo({ scale: network.getScale() * 1.2 });
-    }
-
-    function zoomOut() {
-      network.moveTo({ scale: network.getScale() * 0.8 });
-    }
-
-    function resetView() {
-      network.focus(START_NODE_ID, { scale: 1.2, animation: false });
-      setStatus("View reset.");
-    }
-
-    document.addEventListener("click", (e) => {
-      const wrap = document.getElementById("searchWrap");
-      const results = document.getElementById("searchResults");
-      if (!wrap.contains(e.target)) {
-        results.style.display = "none";
-      }
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const input = document.getElementById("searchInput");
-      input.addEventListener("input", () => {
-        renderSearchResults(input.value);
-      });
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          document.getElementById("searchResults").style.display = "none";
-          input.blur();
-        }
-      });
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        reloadGraph();
-      }
-    });
-
-    reloadGraph();
-    setInterval(reloadGraph, 30000);
-  </script>
 </body>
 </html>
