@@ -61,7 +61,7 @@
       top: 18px;
       left: 18px;
       z-index: 20;
-      width: min(480px, calc(100vw - 40px));
+      width: min(520px, calc(100vw - 40px));
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -88,6 +88,17 @@
       font-size: 12px;
       color: #999;
       margin-top: 8px;
+    }
+
+    #dirtyIndicator {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #ffb3c9;
+      display: none;
+    }
+
+    #dirtyIndicator.show {
+      display: block;
     }
 
     #nodeEditor,
@@ -324,6 +335,7 @@
     <h1>Dungeon Call Editor</h1>
     <p>Edit roadmap nodes, update progress, and push changes live to GitHub.</p>
     <div id="statusBar">Loading latest roadmap from GitHub...</div>
+    <div id="dirtyIndicator">You have unsaved changes.</div>
   </div>
 
   <div id="nodeEditor">
@@ -382,11 +394,17 @@
     let nodeMap = {};
     let tree = null;
     let toastTimer = null;
+    let hasUnsavedChanges = false;
 
     function setStatus(message, isError = false) {
       const bar = document.getElementById("statusBar");
       bar.textContent = message;
       bar.style.color = isError ? "#ff8a8a" : "#999";
+    }
+
+    function setDirtyState(isDirty) {
+      hasUnsavedChanges = isDirty;
+      document.getElementById("dirtyIndicator").classList.toggle("show", isDirty);
     }
 
     function showToast(message) {
@@ -425,12 +443,8 @@
     }
 
     function getStatusBadgeStyle(status) {
-      if (status === "complete") {
-        return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      }
-      if (status === "progress") {
-        return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      }
+      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
+      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
       return "background:#181818;color:#999;border:1px solid #333;";
     }
 
@@ -444,14 +458,8 @@
         let left = domX + 16;
         let top = domY - 16;
 
-        if (left + rect.width > window.innerWidth - padding) {
-          left = domX - rect.width - 16;
-        }
-
-        if (top + rect.height > window.innerHeight - padding) {
-          top = window.innerHeight - rect.height - padding;
-        }
-
+        if (left + rect.width > window.innerWidth - padding) left = domX - rect.width - 16;
+        if (top + rect.height > window.innerHeight - padding) top = window.innerHeight - rect.height - padding;
         if (top < padding) top = padding;
         if (left < padding) left = padding;
 
@@ -572,11 +580,34 @@
       return { nodes: outNodes, edges: outEdges };
     }
 
-    function renderGraph() {
-      const graph = buildGraphFromTree(tree);
-      nodes.clear();
-      nodes.add(graph.nodes);
-      network.setData({ nodes, edges: graph.edges });
+    function preserveView(callback) {
+      const currentScale = network.getScale();
+      const currentPosition = network.getViewPosition();
+
+      callback();
+
+      requestAnimationFrame(() => {
+        network.moveTo({
+          position: currentPosition,
+          scale: currentScale,
+          animation: false
+        });
+      });
+    }
+
+    function renderGraph(preserveCamera = false) {
+      const doRender = () => {
+        const graph = buildGraphFromTree(tree);
+        nodes.clear();
+        nodes.add(graph.nodes);
+        network.setData({ nodes, edges: graph.edges });
+      };
+
+      if (preserveCamera) {
+        preserveView(doRender);
+      } else {
+        doRender();
+      }
     }
 
     async function reloadFromGitHub() {
@@ -593,11 +624,12 @@
 
         const graphData = await res.json();
         tree = buildTreeFromGraph(graphData);
-        renderGraph();
+        renderGraph(false);
         selectedNodeId = null;
         clearEditorFields();
         document.getElementById("infoBox").style.display = "none";
         hideErrorPanel();
+        setDirtyState(false);
         setStatus("Loaded latest roadmap from GitHub.");
       } catch (err) {
         console.error(err);
@@ -635,7 +667,8 @@
       node.description = document.getElementById("nodeDescription").value;
       node.status = document.getElementById("nodeStatus").value;
 
-      renderGraph();
+      renderGraph(true);
+      setDirtyState(true);
       setStatus("Node updated. Save when ready.");
       showToast("Node changes applied.");
     }
@@ -656,7 +689,8 @@
         children: []
       });
 
-      renderGraph();
+      renderGraph(true);
+      setDirtyState(true);
       setStatus("Child node added. Select it to edit details.");
       showToast("Child node added.");
     }
@@ -695,7 +729,8 @@
       selectedNodeId = null;
       clearEditorFields();
       document.getElementById("infoBox").style.display = "none";
-      renderGraph();
+      renderGraph(true);
+      setDirtyState(true);
       setStatus("Node deleted. Save when ready.");
       showToast("Node deleted.");
     }
@@ -722,6 +757,7 @@
         }
 
         hideErrorPanel();
+        setDirtyState(false);
         setStatus("Saved to GitHub.");
         showToast("Saved to GitHub.");
       } catch (err) {
