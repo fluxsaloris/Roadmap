@@ -397,8 +397,8 @@
       "label": "New Node",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1250,
-      "y": -1932
+      "x": 1449,
+      "y": -1711
     },
     {
       "id": 51,
@@ -410,11 +410,11 @@
     },
     {
       "id": 52,
-      "label": "New Node",
+      "label": "Elf",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1458,
-      "y": -1806
+      "x": 1775,
+      "y": -1881
     }
   ],
   "edges": [
