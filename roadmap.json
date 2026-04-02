@@ -6,7 +6,7 @@
       "status": "progress",
       "description": "The project has officially started and begun development. All changes will be listed on this page as well as all progress.",
       "x": 375,
-      "y": -1800
+      "y": -1650
     },
     {
       "id": 2,
@@ -14,7 +14,7 @@
       "status": "progress",
       "description": "Veilmar is the main city of Dungeon Call where the adventurers of the world reside. This is in development!",
       "x": 125,
-      "y": -100
+      "y": 50
     },
     {
       "id": 3,
@@ -22,7 +22,7 @@
       "status": "pending",
       "description": "Combat mechanics not started but intend to begin with magic.",
       "x": -125,
-      "y": -100
+      "y": 50
     },
     {
       "id": 4,
@@ -30,7 +30,7 @@
       "status": "pending",
       "description": "The magic system is going to the starting point for the combat system. Magic will have a huge variety but will start simple.",
       "x": -375,
-      "y": -100
+      "y": 50
     },
     {
       "id": 5,
@@ -38,7 +38,7 @@
       "status": "pending",
       "description": "This is going to the basics of magic before you move onto actual magic variety and specialty. You will manipulate mana in its raw form and this is where every mage will begin.",
       "x": -625,
-      "y": -100
+      "y": 50
     },
     {
       "id": 6,
@@ -46,7 +46,7 @@
       "status": "pending",
       "description": "Stemming from this node is where all of the magic specialisations will be categorised as a teaser for you all to see and how they progress.",
       "x": -875,
-      "y": 400
+      "y": 475
     },
     {
       "id": 7,
@@ -54,7 +54,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -1125,
-      "y": 900
+      "y": 975
     },
     {
       "id": 8,
@@ -62,7 +62,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -1375,
-      "y": 900
+      "y": 975
     },
     {
       "id": 9,
@@ -70,7 +70,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -875,
-      "y": 600
+      "y": 675
     },
     {
       "id": 10,
@@ -78,7 +78,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -875,
-      "y": 800
+      "y": 875
     },
     {
       "id": 11,
@@ -86,7 +86,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -875,
-      "y": 1000
+      "y": 1075
     },
     {
       "id": 12,
@@ -94,7 +94,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -875,
-      "y": 1200
+      "y": 1275
     },
     {
       "id": 13,
@@ -102,7 +102,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -875,
-      "y": 1400
+      "y": 1475
     },
     {
       "id": 14,
@@ -110,7 +110,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -625,
-      "y": 545
+      "y": 681
     },
     {
       "id": 15,
@@ -118,7 +118,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 100
+      "y": 250
     },
     {
       "id": 16,
@@ -126,7 +126,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 300
+      "y": 450
     },
     {
       "id": 17,
@@ -134,7 +134,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 500
+      "y": 650
     },
     {
       "id": 18,
@@ -142,7 +142,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 700
+      "y": 850
     },
     {
       "id": 19,
@@ -150,7 +150,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 900
+      "y": 1050
     },
     {
       "id": 20,
@@ -158,7 +158,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -375,
-      "y": 1100
+      "y": 1250
     },
     {
       "id": 21,
@@ -166,7 +166,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -625,
-      "y": 745
+      "y": 881
     },
     {
       "id": 22,
@@ -174,7 +174,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -625,
-      "y": 945
+      "y": 1081
     },
     {
       "id": 23,
@@ -182,7 +182,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": -625,
-      "y": 1145
+      "y": 1281
     },
     {
       "id": 24,
@@ -190,7 +190,7 @@
       "status": "pending",
       "description": "The tavern is going to be a place of rest for all of the players and NPCs alike and maybe you can discover thigns here...",
       "x": 375,
-      "y": -1600
+      "y": -1450
     },
     {
       "id": 25,
@@ -198,7 +198,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -1400
+      "y": -1250
     },
     {
       "id": 26,
@@ -206,7 +206,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -1200
+      "y": -1050
     },
     {
       "id": 27,
@@ -214,7 +214,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -1000
+      "y": -850
     },
     {
       "id": 28,
@@ -222,7 +222,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -800
+      "y": -650
     },
     {
       "id": 29,
@@ -230,7 +230,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -600
+      "y": -450
     },
     {
       "id": 30,
@@ -238,7 +238,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -400
+      "y": -250
     },
     {
       "id": 31,
@@ -246,7 +246,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": -200
+      "y": -50
     },
     {
       "id": 32,
@@ -254,7 +254,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 0
+      "y": 150
     },
     {
       "id": 33,
@@ -262,7 +262,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 200
+      "y": 350
     },
     {
       "id": 34,
@@ -270,7 +270,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 400
+      "y": 550
     },
     {
       "id": 35,
@@ -278,7 +278,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 600
+      "y": 750
     },
     {
       "id": 36,
@@ -286,7 +286,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 800
+      "y": 950
     },
     {
       "id": 37,
@@ -294,7 +294,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 1000
+      "y": 1150
     },
     {
       "id": 38,
@@ -302,7 +302,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 1200
+      "y": 1350
     },
     {
       "id": 39,
@@ -310,7 +310,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 1400
+      "y": 1550
     },
     {
       "id": 40,
@@ -318,7 +318,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 375,
-      "y": 1600
+      "y": 1750
     },
     {
       "id": 41,
@@ -326,7 +326,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 625,
-      "y": 1200
+      "y": 1350
     },
     {
       "id": 42,
@@ -334,7 +334,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 625,
-      "y": 1400
+      "y": 1550
     },
     {
       "id": 43,
@@ -342,7 +342,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 625,
-      "y": 1600
+      "y": 1750
     },
     {
       "id": 44,
@@ -350,7 +350,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 625,
-      "y": 1800
+      "y": 1950
     },
     {
       "id": 45,
@@ -358,7 +358,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 625,
-      "y": 2000
+      "y": 2150
     },
     {
       "id": 46,
@@ -366,7 +366,7 @@
       "status": "progress",
       "description": "This system will be where you manage your items but on the opposite side there will also be your player information such as stats.",
       "x": 625,
-      "y": -2000
+      "y": -1850
     },
     {
       "id": 47,
@@ -374,7 +374,7 @@
       "status": "progress",
       "description": "The custom language is going to be something similar to the language you see used in Orario of the Danmachi anime/manga except we have created our own for fun and copyright purposes.",
       "x": 875,
-      "y": -2000
+      "y": -1850
     },
     {
       "id": 48,
@@ -382,7 +382,7 @@
       "status": "pending",
       "description": "The character customisation process is going to allow you to pick your race, pick between multiple premade hair styles, body types and your size.",
       "x": 625,
-      "y": -1800
+      "y": -1650
     },
     {
       "id": 49,
@@ -390,7 +390,7 @@
       "status": "pending",
       "description": "The races for Dungeon Call will be a multitude of species making your character seem less fully human than kind of like a Demi-Human and they will be separate from the pure species found in the Dungeon.",
       "x": 875,
-      "y": -1800
+      "y": -1650
     },
     {
       "id": 50,
@@ -398,7 +398,7 @@
       "status": "pending",
       "description": "Pending Name",
       "x": 1125,
-      "y": -1800
+      "y": -1950
     },
     {
       "id": 51,
@@ -406,7 +406,7 @@
       "status": "pending",
       "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown.",
       "x": 625,
-      "y": -1600
+      "y": -1450
     },
     {
       "id": 53,
@@ -414,7 +414,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 1375,
-      "y": -2000
+      "y": -2150
     },
     {
       "id": 54,
@@ -422,7 +422,7 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 1375,
-      "y": -1800
+      "y": -1950
     },
     {
       "id": 55,
@@ -430,47 +430,31 @@
       "status": "pending",
       "description": "Coming Soon",
       "x": 1375,
-      "y": -1600
+      "y": -1750
     },
     {
       "id": 56,
       "label": "Fairy",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1115,
-      "y": -1730
+      "x": 1125,
+      "y": -1750
     },
     {
       "id": 57,
       "label": "Spirit",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1115,
-      "y": -1620
+      "x": 1125,
+      "y": -1550
     },
     {
       "id": 58,
       "label": "Lamia",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1116,
-      "y": -1522
-    },
-    {
-      "id": 59,
-      "label": "Dryad",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1128,
-      "y": -1868
-    },
-    {
-      "id": 60,
-      "label": "Dragon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1141,
-      "y": -1935
+      "x": 1125,
+      "y": -1350
     }
   ],
   "edges": [
@@ -697,14 +681,6 @@
     {
       "from": 49,
       "to": 58
-    },
-    {
-      "from": 49,
-      "to": 59
-    },
-    {
-      "from": 49,
-      "to": 60
     }
   ]
 }
