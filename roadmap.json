@@ -474,11 +474,19 @@
     },
     {
       "id": 61,
-      "label": "New Sibling",
+      "label": "Dwarf",
       "status": "pending",
       "description": "Coming Soon",
       "x": 1115,
       "y": -1180
+    },
+    {
+      "id": 62,
+      "label": "New Sibling",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1119,
+      "y": -1067
     }
   ],
   "edges": [
@@ -717,6 +725,10 @@
     {
       "from": 49,
       "to": 61
+    },
+    {
+      "from": 49,
+      "to": 62
     }
   ]
 }
