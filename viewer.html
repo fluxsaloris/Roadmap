@@ -455,6 +455,8 @@
   </div>
 
   <div id="controls">
+    <button onclick="toggleSelectedBranch()">Toggle Branch</button>
+    <button onclick="expandAll()">Expand All</button>
     <button onclick="zoomIn()">Zoom +</button>
     <button onclick="zoomOut()">Zoom -</button>
     <button onclick="resetView()">Reset</button>
@@ -471,6 +473,10 @@
     let graphData = { nodes: [], edges: [] };
     let toastTimer = null;
     let selectedNodeId = null;
+
+    const childMap = new Map();
+    const parentMap = new Map();
+    const collapsedNodes = new Set();
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
@@ -584,6 +590,23 @@
       };
     }
 
+    function rebuildMaps() {
+      childMap.clear();
+      parentMap.clear();
+
+      for (const node of graphData.nodes) {
+        childMap.set(Number(node.id), []);
+      }
+
+      for (const edge of graphData.edges) {
+        const from = Number(edge.from);
+        const to = Number(edge.to);
+        if (!childMap.has(from)) childMap.set(from, []);
+        childMap.get(from).push(to);
+        parentMap.set(to, from);
+      }
+    }
+
     function getRootId() {
       const childIds = new Set(graphData.edges.map(e => Number(e.to)));
       const root = graphData.nodes.find(n => !childIds.has(Number(n.id)));
@@ -595,12 +618,27 @@
         graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
     }
 
+    function getDescendants(rootId) {
+      const result = [];
+      const stack = [...(childMap.get(Number(rootId)) || [])];
+
+      while (stack.length) {
+        const id = stack.pop();
+        result.push(Number(id));
+        const children = childMap.get(Number(id)) || [];
+        for (const child of children) stack.push(Number(child));
+      }
+
+      return result;
+    }
+
     function buildNodes(useSavedPositions) {
       return graphData.nodes.map(n => {
         const color = getColor(n.status);
+        const isCollapsed = collapsedNodes.has(Number(n.id));
         const nodeData = {
           id: n.id,
-          label: n.label,
+          label: isCollapsed ? `${n.label}  [+/-]` : n.label,
           shape: "box",
           margin: 14,
           color,
@@ -609,7 +647,8 @@
             size: 14
           },
           description: n.description,
-          status: n.status
+          status: n.status,
+          hidden: false
         };
 
         if (useSavedPositions) {
@@ -628,7 +667,8 @@
         from: e.from,
         to: e.to,
         color: { color: "rgba(255,255,255,0.18)" },
-        smooth: false
+        smooth: false,
+        hidden: false
       }));
     }
 
@@ -676,7 +716,7 @@
           `<h3>${node.label}</h3>` +
           `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
           `<p>${node.description || "No description available."}</p>` +
-          `<div class="smallNote">Search for nodes or click around the roadmap to explore progress.</div>`;
+          `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
 
         info.classList.remove("hidden");
 
@@ -684,6 +724,27 @@
           info.classList.add("hidden");
         };
       });
+    }
+
+    function applyCollapseState() {
+      const hiddenNodeIds = new Set();
+
+      for (const collapsedId of collapsedNodes) {
+        for (const descendant of getDescendants(collapsedId)) {
+          hiddenNodeIds.add(Number(descendant));
+        }
+      }
+
+      nodesDS.update(graphData.nodes.map(n => ({
+        id: Number(n.id),
+        hidden: hiddenNodeIds.has(Number(n.id)),
+        label: collapsedNodes.has(Number(n.id)) ? `${n.label}  [+/-]` : n.label
+      })));
+
+      edgesDS.update(graphData.edges.map(e => ({
+        id: e.id,
+        hidden: hiddenNodeIds.has(Number(e.from)) || hiddenNodeIds.has(Number(e.to))
+      })));
     }
 
     function renderSearchResults(query) {
@@ -733,6 +794,14 @@
       const node = graphData.nodes.find(n => Number(n.id) === Number(nodeId));
       if (!node) return;
 
+      let current = parentMap.get(Number(nodeId));
+      while (current !== undefined) {
+        collapsedNodes.delete(Number(current));
+        current = parentMap.get(Number(current));
+      }
+
+      applyCollapseState();
+
       selectedNodeId = Number(nodeId);
 
       network.focus(Number(nodeId), {
@@ -743,10 +812,9 @@
         }
       });
 
-      const color = getColor(node.status);
       nodesDS.update({
         id: Number(nodeId),
-        color: color.highlight
+        color: getColor(node.status).highlight
       });
 
       setTimeout(() => {
@@ -788,10 +856,12 @@
         }
 
         graphData = normalizeGraphData(await res.json());
+        rebuildMaps();
         updateStats();
 
         const useSavedPositions = hasSavedPositions();
         createNetwork(useSavedPositions);
+        applyCollapseState();
 
         const rootId = getRootId();
         if (rootId !== null) {
@@ -812,6 +882,57 @@
         showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
         hideLoading();
       }
+    }
+
+    function toggleSelectedBranch() {
+      if (selectedNodeId === null) {
+        showToast("Select a node first.");
+        return;
+      }
+
+      const rootId = getRootId();
+      if (Number(selectedNodeId) === Number(rootId)) {
+        showToast("You can't collapse the root.");
+        return;
+      }
+
+      const currentScale = network.getScale();
+      const currentPosition = network.getViewPosition();
+
+      if (collapsedNodes.has(Number(selectedNodeId))) {
+        collapsedNodes.delete(Number(selectedNodeId));
+        setStatus("Branch expanded.");
+      } else {
+        collapsedNodes.add(Number(selectedNodeId));
+        setStatus("Branch collapsed.");
+      }
+
+      applyCollapseState();
+
+      requestAnimationFrame(() => {
+        network.moveTo({
+          position: currentPosition,
+          scale: currentScale,
+          animation: false
+        });
+      });
+    }
+
+    function expandAll() {
+      const currentScale = network.getScale();
+      const currentPosition = network.getViewPosition();
+
+      collapsedNodes.clear();
+      applyCollapseState();
+      setStatus("All branches expanded.");
+
+      requestAnimationFrame(() => {
+        network.moveTo({
+          position: currentPosition,
+          scale: currentScale,
+          animation: false
+        });
+      });
     }
 
     function zoomIn() {
