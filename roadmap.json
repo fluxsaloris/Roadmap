@@ -3,7 +3,7 @@
     {
       "id": 1,
       "label": "Dungeon Call",
-      "status": "complete",
+      "status": "progress",
       "description": "The project has officially started and begun development. All changes will be listed on this page as well as all progress.",
       "x": 500,
       "y": -1800
@@ -363,7 +363,7 @@
     {
       "id": 46,
       "label": "Inventory System & Stat System",
-      "status": "pending",
+      "status": "progress",
       "description": "This system will be where you manage your items but on the opposite side there will also be your player information such as stats.",
       "x": 583,
       "y": -2042
@@ -371,10 +371,10 @@
     {
       "id": 47,
       "label": "Custom Language",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1045,
-      "y": -2136
+      "status": "progress",
+      "description": "The custom language is going to be something similar to the language you see used in Orario of the Danmachi anime/manga except we have created our own for fun and copyright purposes.",
+      "x": 875,
+      "y": -2147
     },
     {
       "id": 48,
