@@ -466,11 +466,11 @@
     },
     {
       "id": 60,
-      "label": "New Node",
+      "label": "Dragon",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1118,
-      "y": -1928
+      "x": 1141,
+      "y": -1935
     }
   ],
   "edges": [
