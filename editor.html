@@ -61,7 +61,7 @@
       top: 18px;
       left: 18px;
       z-index: 20;
-      width: min(520px, calc(100vw - 40px));
+      width: min(560px, calc(100vw - 40px));
       background: rgba(15, 15, 15, 0.9);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -84,10 +84,74 @@
       line-height: 1.45;
     }
 
+    #searchWrap {
+      position: relative;
+      margin-top: 12px;
+    }
+
+    #searchInput {
+      width: 100%;
+      box-sizing: border-box;
+      background: #111;
+      color: #e5e5e5;
+      border: 1px solid #303030;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #searchInput:focus {
+      border-color: #BE1A48;
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+    }
+
+    #searchResults {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(18, 18, 18, 0.96);
+      border: 1px solid #2f2f2f;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      overflow: hidden;
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+      z-index: 25;
+      backdrop-filter: blur(10px);
+    }
+
+    .searchResult {
+      padding: 10px 12px;
+      border-bottom: 1px solid #262626;
+      cursor: pointer;
+    }
+
+    .searchResult:last-child {
+      border-bottom: none;
+    }
+
+    .searchResult:hover {
+      background: rgba(190, 26, 72, 0.12);
+    }
+
+    .searchResultTitle {
+      font-size: 14px;
+      color: #f0f0f0;
+      margin-bottom: 4px;
+    }
+
+    .searchResultMeta {
+      font-size: 12px;
+      color: #9f9f9f;
+    }
+
     #statusBar {
       font-size: 12px;
       color: #999;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     #dirtyIndicator {
@@ -105,7 +169,8 @@
     #editorPanel,
     #controls,
     #infoBox,
-    #errorPanel {
+    #errorPanel,
+    #deleteModal {
       z-index: 20;
     }
 
@@ -113,7 +178,7 @@
       position: fixed;
       top: 18px;
       right: 18px;
-      width: min(320px, calc(100vw - 40px));
+      width: min(340px, calc(100vw - 40px));
       background: rgba(20, 20, 20, 0.96);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -184,7 +249,7 @@
     }
 
     #editorPanel {
-      bottom: 170px;
+      bottom: 220px;
     }
 
     #controls {
@@ -199,7 +264,7 @@
       padding: 10px 12px;
       font-size: 14px;
       cursor: pointer;
-      min-width: 150px;
+      min-width: 160px;
     }
 
     button:hover {
@@ -309,6 +374,54 @@
       color: #f2d7df;
     }
 
+    #deleteModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+    }
+
+    #deleteModal.show {
+      display: flex;
+    }
+
+    #deleteModalCard {
+      width: min(420px, calc(100vw - 40px));
+      background: rgba(20, 20, 20, 0.97);
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.45);
+      backdrop-filter: blur(12px);
+    }
+
+    #deleteModalTitle {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    #deleteModalText {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #cfcfcf;
+    }
+
+    #deleteModalActions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+
+    #deleteConfirmBtn {
+      border-color: rgba(190, 26, 72, 0.5);
+      color: #ffb3c9;
+    }
+
     @media (max-width: 1100px) {
       #topPanel {
         width: calc(100vw - 36px);
@@ -323,7 +436,7 @@
       }
 
       #editorPanel {
-        bottom: 320px;
+        bottom: 380px;
       }
     }
   </style>
@@ -334,6 +447,12 @@
   <div id="topPanel">
     <h1>Dungeon Call Editor</h1>
     <p>Edit roadmap nodes, update progress, and push changes live to GitHub.</p>
+
+    <div id="searchWrap">
+      <input id="searchInput" type="text" placeholder="Search editor nodes..." autocomplete="off" />
+      <div id="searchResults"></div>
+    </div>
+
     <div id="statusBar">Loading latest roadmap from GitHub...</div>
     <div id="dirtyIndicator">You have unsaved changes.</div>
   </div>
@@ -369,9 +488,22 @@
     <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
+  <div id="deleteModal">
+    <div id="deleteModalCard">
+      <div id="deleteModalTitle">Delete node?</div>
+      <div id="deleteModalText">This will remove the selected node and everything under it.</div>
+      <div id="deleteModalActions">
+        <button onclick="closeDeleteModal()">Cancel</button>
+        <button id="deleteConfirmBtn" onclick="confirmDeleteNode()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div id="editorPanel">
     <button onclick="addChild()">Add Child</button>
-    <button onclick="deleteNode()">Delete Node</button>
+    <button onclick="addSibling()">Add Sibling</button>
+    <button onclick="duplicateNode()">Duplicate Node</button>
+    <button onclick="openDeleteModal()">Delete Node</button>
     <button onclick="saveRoadmap()">Save to GitHub</button>
     <button onclick="reloadFromGitHub()">Reload from GitHub</button>
     <button onclick="exportCurrentGraph()">Export JSON</button>
@@ -384,17 +516,29 @@
   </div>
 
   <script>
-    const START_NODE_ID = 1;
+    const START_NODE_LABEL = "Dungeon Call";
+    const START_NODE_SCALE = 1.2;
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
     let network;
     let nodes;
+    let edges;
+
     let selectedNodeId = null;
-    let nodeMap = {};
-    let tree = null;
+    let rootNode = null;
     let toastTimer = null;
     let hasUnsavedChanges = false;
+    let editorIdCounter = 1;
+
+    let nodeById = new Map();
+    let parentById = new Map();
+    let positionById = new Map();
+    let layoutLocked = false;
+
+    function nextEditorId() {
+      return `n_${editorIdCounter++}`;
+    }
 
     function setStatus(message, isError = false) {
       const bar = document.getElementById("statusBar");
@@ -436,6 +580,16 @@
       return { background: "#111", border: "#333", font: { color: "#777" } };
     }
 
+    function getHighlightColor(status) {
+      if (status === "complete") {
+        return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
+      }
+      if (status === "progress") {
+        return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
+      }
+      return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
+    }
+
     function getStatusLabel(status) {
       if (status === "complete") return "Done";
       if (status === "progress") return "In Progress";
@@ -454,7 +608,6 @@
 
       requestAnimationFrame(() => {
         const rect = box.getBoundingClientRect();
-
         let left = domX + 16;
         let top = domY - 16;
 
@@ -468,17 +621,57 @@
       });
     }
 
+    function clearEditorFields() {
+      document.getElementById("nodeLabel").value = "";
+      document.getElementById("nodeDescription").value = "";
+      document.getElementById("nodeStatus").value = "pending";
+    }
+
+    function loadSelectedNodeIntoEditor() {
+      const node = nodeById.get(selectedNodeId);
+      if (!node) {
+        clearEditorFields();
+        return;
+      }
+
+      document.getElementById("nodeLabel").value = node.label || "";
+      document.getElementById("nodeDescription").value = node.description || "";
+      document.getElementById("nodeStatus").value = node.status || "pending";
+    }
+
+    function flattenTree(root) {
+      const out = [];
+      function walk(node, parentId = null, depth = 0) {
+        nodeById.set(node._eid, node);
+        parentById.set(node._eid, parentId);
+        out.push({ node, parentId, depth });
+        for (const child of node.children || []) walk(child, node._eid, depth + 1);
+      }
+      nodeById.clear();
+      parentById.clear();
+      walk(root, null, 0);
+      return out;
+    }
+
+    function assignEditorIds(node) {
+      node._eid = nextEditorId();
+      if (!node.children) node.children = [];
+      for (const child of node.children) assignEditorIds(child);
+    }
+
     function buildTreeFromGraph(graphData) {
       const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
       const graphEdges = Array.isArray(graphData?.edges) ? graphData.edges : [];
 
       if (!graphNodes.length) {
-        return {
+        const root = {
+          _eid: nextEditorId(),
           label: "Dungeon Call",
           status: "complete",
           description: "Start",
           children: []
         };
+        return root;
       }
 
       const byId = {};
@@ -512,53 +705,20 @@
       const explicitRoot = graphNodes.find(n => !childIds.has(n.id));
       if (explicitRoot) rootId = explicitRoot.id;
 
-      return attach(rootId);
-    }
-
-    function buildGraphFromTree(treeRoot) {
-      let nextId = 1;
-      const outNodes = [];
-      const outEdges = [];
-      nodeMap = {};
-
-      function walk(node, parentId = null) {
-        if (!node.children) node.children = [];
-
-        const currentId = nextId++;
-        nodeMap[currentId] = node;
-
-        outNodes.push({
-          id: currentId,
-          label: node.label || "Unnamed",
-          shape: "box",
-          margin: 14,
-          color: getColor(node.status || "pending"),
-          description: node.description || "Coming Soon",
-          status: node.status || "pending"
-        });
-
-        if (parentId !== null) {
-          outEdges.push({ from: parentId, to: currentId });
-        }
-
-        for (const child of node.children) {
-          walk(child, currentId);
-        }
-      }
-
-      walk(treeRoot);
-      return { nodes: outNodes, edges: outEdges };
+      const root = attach(rootId);
+      assignEditorIds(root);
+      return root;
     }
 
     function buildGraphJSON() {
       const outNodes = [];
       const outEdges = [];
       let nextId = 1;
+      const exportIdMap = new Map();
 
-      function walk(node, parentId = null) {
-        if (!node.children) node.children = [];
-
+      function walk(node, parentExportId = null) {
         const currentId = nextId++;
+        exportIdMap.set(node._eid, currentId);
 
         outNodes.push({
           id: currentId,
@@ -567,17 +727,176 @@
           description: node.description || "Coming Soon"
         });
 
-        if (parentId !== null) {
-          outEdges.push({ from: parentId, to: currentId });
+        if (parentExportId !== null) {
+          outEdges.push({ from: parentExportId, to: currentId });
         }
 
-        for (const child of node.children) {
+        for (const child of node.children || []) {
           walk(child, currentId);
         }
       }
 
-      walk(tree);
+      walk(rootNode, null);
       return { nodes: outNodes, edges: outEdges };
+    }
+
+    function cloneSubtree(node) {
+      const copy = {
+        _eid: nextEditorId(),
+        label: node.label,
+        status: node.status,
+        description: node.description,
+        children: []
+      };
+
+      for (const child of node.children || []) {
+        copy.children.push(cloneSubtree(child));
+      }
+
+      return copy;
+    }
+
+    function getRootId() {
+      return rootNode ? rootNode._eid : null;
+    }
+
+    function findNodeById(id) {
+      return nodeById.get(id) || null;
+    }
+
+    function getParentNode(id) {
+      const parentId = parentById.get(id);
+      return parentId ? nodeById.get(parentId) : null;
+    }
+
+    function getChildrenCount(parentId) {
+      const parent = nodeById.get(parentId);
+      return parent?.children?.length || 0;
+    }
+
+    function ensurePosition(nodeId, parentId = null, siblingIndex = 0) {
+      if (positionById.has(nodeId)) return positionById.get(nodeId);
+
+      if (parentId && positionById.has(parentId)) {
+        const parentPos = positionById.get(parentId);
+        const pos = {
+          x: parentPos.x + 240,
+          y: parentPos.y + (siblingIndex * 110) - 40
+        };
+        positionById.set(nodeId, pos);
+        return pos;
+      }
+
+      const pos = { x: 0, y: 0 };
+      positionById.set(nodeId, pos);
+      return pos;
+    }
+
+    function buildNetworkData(useFixedPositions) {
+      const flat = flattenTree(rootNode);
+      const builtNodes = [];
+      const builtEdges = [];
+
+      for (const { node, parentId } of flat) {
+        let nodeData = {
+          id: node._eid,
+          label: node.label || "Unnamed",
+          shape: "box",
+          margin: 14,
+          color: getColor(node.status || "pending"),
+          description: node.description || "Coming Soon",
+          status: node.status || "pending"
+        };
+
+        if (useFixedPositions) {
+          const siblingIndex = parentId ? nodeById.get(parentId).children.findIndex(c => c._eid === node._eid) : 0;
+          const pos = ensurePosition(node._eid, parentId, siblingIndex);
+          nodeData.x = pos.x;
+          nodeData.y = pos.y;
+          nodeData.fixed = { x: true, y: true };
+        }
+
+        builtNodes.push(nodeData);
+
+        if (parentId) {
+          builtEdges.push({
+            id: `${parentId}->${node._eid}`,
+            from: parentId,
+            to: node._eid
+          });
+        }
+      }
+
+      return { nodes: builtNodes, edges: builtEdges };
+    }
+
+    function createNetwork(data, useFixedPositions) {
+      const container = document.getElementById("graph");
+
+      if (network) network.destroy();
+
+      nodes = new vis.DataSet(data.nodes);
+      edges = new vis.DataSet(data.edges);
+
+      network = new vis.Network(
+        container,
+        { nodes, edges },
+        {
+          layout: useFixedPositions ? {} : {
+            hierarchical: {
+              direction: "LR",
+              levelSeparation: 250,
+              nodeSpacing: 200
+            }
+          },
+          physics: false,
+          interaction: {
+            dragNodes: false
+          }
+        }
+      );
+
+      network.on("click", function(params) {
+        const info = document.getElementById("infoBox");
+
+        if (!params.nodes.length) {
+          selectedNodeId = null;
+          clearEditorFields();
+          info.style.display = "none";
+          return;
+        }
+
+        selectedNodeId = params.nodes[0];
+        loadSelectedNodeIntoEditor();
+        openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
+      });
+    }
+
+    function lockLayoutFromCurrentNetwork() {
+      const positions = network.getPositions();
+      for (const [id, pos] of Object.entries(positions)) {
+        positionById.set(id, { x: pos.x, y: pos.y });
+      }
+      layoutLocked = true;
+    }
+
+    function openNodeInfo(nodeId, domX = 80, domY = 120) {
+      const info = document.getElementById("infoBox");
+      const node = nodeById.get(nodeId);
+      if (!node) return;
+
+      info.innerHTML =
+        '<div id="closeBtn">✕</div>' +
+        `<h3>${node.label}</h3>` +
+        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
+        `<p>${node.description || "No description available."}</p>`;
+
+      info.style.display = "block";
+      positionInfoBox(domX, domY);
+
+      document.getElementById("closeBtn").onclick = () => {
+        info.style.display = "none";
+      };
     }
 
     function preserveView(callback) {
@@ -595,19 +914,50 @@
       });
     }
 
-    function renderGraph(preserveCamera = false) {
-      const doRender = () => {
-        const graph = buildGraphFromTree(tree);
-        nodes.clear();
-        nodes.add(graph.nodes);
-        network.setData({ nodes, edges: graph.edges });
-      };
+    function renderFixedGraph(preserveCamera = true, focusNodeId = null) {
+      const data = buildNetworkData(true);
 
-      if (preserveCamera) {
-        preserveView(doRender);
-      } else {
-        doRender();
-      }
+      const currentScale = network ? network.getScale() : START_NODE_SCALE;
+      const currentPosition = network ? network.getViewPosition() : { x: 0, y: 0 };
+
+      createNetwork(data, true);
+
+      requestAnimationFrame(() => {
+        if (focusNodeId) {
+          network.focus(focusNodeId, {
+            scale: Math.max(currentScale, 1.15),
+            animation: {
+              duration: 250,
+              easingFunction: "easeInOutQuad"
+            }
+          });
+        } else if (preserveCamera) {
+          network.moveTo({
+            position: currentPosition,
+            scale: currentScale,
+            animation: false
+          });
+        }
+      });
+    }
+
+    function markNodeHighlighted(nodeId) {
+      const node = nodeById.get(nodeId);
+      if (!node) return;
+
+      nodes.update({
+        id: nodeId,
+        color: getHighlightColor(node.status)
+      });
+
+      setTimeout(() => {
+        const freshNode = nodeById.get(nodeId);
+        if (!freshNode) return;
+        nodes.update({
+          id: nodeId,
+          color: getColor(freshNode.status)
+        });
+      }, 1800);
     }
 
     async function reloadFromGitHub() {
@@ -623,37 +973,36 @@
         }
 
         const graphData = await res.json();
-        tree = buildTreeFromGraph(graphData);
-        renderGraph(false);
+
+        editorIdCounter = 1;
+        positionById.clear();
+        layoutLocked = false;
         selectedNodeId = null;
-        clearEditorFields();
-        document.getElementById("infoBox").style.display = "none";
-        hideErrorPanel();
-        setDirtyState(false);
-        setStatus("Loaded latest roadmap from GitHub.");
+
+        rootNode = buildTreeFromGraph(graphData);
+
+        const initialData = buildNetworkData(false);
+        createNetwork(initialData, false);
+
+        setTimeout(() => {
+          network.focus(getRootId(), { scale: START_NODE_SCALE, animation: false });
+
+          setTimeout(() => {
+            lockLayoutFromCurrentNetwork();
+            renderFixedGraph(false);
+
+            clearEditorFields();
+            document.getElementById("infoBox").style.display = "none";
+            hideErrorPanel();
+            setDirtyState(false);
+            setStatus("Loaded latest roadmap from GitHub.");
+          }, 150);
+        }, 50);
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap from GitHub.", true);
         showErrorPanel("Roadmap refresh failed. Try refreshing again in a moment.");
       }
-    }
-
-    function loadSelectedNodeIntoEditor() {
-      if (!selectedNodeId || !nodeMap[selectedNodeId]) {
-        clearEditorFields();
-        return;
-      }
-
-      const node = nodeMap[selectedNodeId];
-      document.getElementById("nodeLabel").value = node.label || "";
-      document.getElementById("nodeDescription").value = node.description || "";
-      document.getElementById("nodeStatus").value = node.status || "pending";
-    }
-
-    function clearEditorFields() {
-      document.getElementById("nodeLabel").value = "";
-      document.getElementById("nodeDescription").value = "";
-      document.getElementById("nodeStatus").value = "pending";
     }
 
     function applyNodeChanges() {
@@ -662,12 +1011,16 @@
         return;
       }
 
-      const node = nodeMap[selectedNodeId];
+      const node = findNodeById(selectedNodeId);
+      if (!node) return;
+
       node.label = document.getElementById("nodeLabel").value.trim() || "Unnamed";
       node.description = document.getElementById("nodeDescription").value;
       node.status = document.getElementById("nodeStatus").value;
 
-      renderGraph(true);
+      renderFixedGraph(true, null);
+      openNodeInfo(selectedNodeId);
+      loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Node updated. Save when ready.");
       showToast("Node changes applied.");
@@ -679,57 +1032,168 @@
         return;
       }
 
-      const parent = nodeMap[selectedNodeId];
-      if (!parent.children) parent.children = [];
+      const parent = findNodeById(selectedNodeId);
+      if (!parent) return;
 
-      parent.children.push({
+      const newNode = {
+        _eid: nextEditorId(),
         label: "New Node",
         status: "pending",
         description: "Coming Soon",
         children: []
+      };
+
+      if (!parent.children) parent.children = [];
+      parent.children.push(newNode);
+
+      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
+      const siblingIndex = parent.children.length - 1;
+      positionById.set(newNode._eid, {
+        x: parentPos.x + 240,
+        y: parentPos.y + (siblingIndex * 110) - 40
       });
 
-      renderGraph(true);
+      selectedNodeId = newNode._eid;
+      renderFixedGraph(true, newNode._eid);
+      loadSelectedNodeIntoEditor();
       setDirtyState(true);
-      setStatus("Child node added. Select it to edit details.");
+      setStatus("Child node added. Edit its details now.");
       showToast("Child node added.");
     }
 
-    function deleteNode() {
+    function addSibling() {
       if (!selectedNodeId) {
         showToast("Select a node first.");
         return;
       }
 
-      const target = nodeMap[selectedNodeId];
+      const parent = getParentNode(selectedNodeId);
+      if (!parent) {
+        showToast("The root node can't have a sibling.");
+        return;
+      }
 
-      if (tree === target) {
+      const newNode = {
+        _eid: nextEditorId(),
+        label: "New Sibling",
+        status: "pending",
+        description: "Coming Soon",
+        children: []
+      };
+
+      parent.children.push(newNode);
+
+      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
+      const siblingIndex = parent.children.length - 1;
+      positionById.set(newNode._eid, {
+        x: parentPos.x + 240,
+        y: parentPos.y + (siblingIndex * 110) - 40
+      });
+
+      selectedNodeId = newNode._eid;
+      renderFixedGraph(true, newNode._eid);
+      loadSelectedNodeIntoEditor();
+      setDirtyState(true);
+      setStatus("Sibling node added. Edit its details now.");
+      showToast("Sibling node added.");
+    }
+
+    function duplicateNode() {
+      if (!selectedNodeId) {
+        showToast("Select a node first.");
+        return;
+      }
+
+      const node = findNodeById(selectedNodeId);
+      const parent = getParentNode(selectedNodeId);
+
+      if (!node) return;
+      if (!parent) {
+        showToast("You can't duplicate the root.");
+        return;
+      }
+
+      const duplicate = cloneSubtree(node);
+      parent.children.push(duplicate);
+
+      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
+      const siblingIndex = parent.children.length - 1;
+
+      function assignDuplicatePositions(subtree, baseX, baseY, depth = 0) {
+        positionById.set(subtree._eid, {
+          x: baseX + (depth * 220),
+          y: baseY
+        });
+
+        let childY = baseY - ((subtree.children.length - 1) * 55);
+        for (const child of subtree.children) {
+          assignDuplicatePositions(child, baseX, childY, depth + 1);
+          childY += 110;
+        }
+      }
+
+      assignDuplicatePositions(
+        duplicate,
+        parentPos.x + 240,
+        parentPos.y + (siblingIndex * 110) - 40
+      );
+
+      selectedNodeId = duplicate._eid;
+      renderFixedGraph(true, duplicate._eid);
+      loadSelectedNodeIntoEditor();
+      setDirtyState(true);
+      setStatus("Node duplicated.");
+      showToast("Node duplicated.");
+    }
+
+    function openDeleteModal() {
+      if (!selectedNodeId) {
+        showToast("Select a node first.");
+        return;
+      }
+
+      if (selectedNodeId === getRootId()) {
         showToast("You can't delete the root.");
         return;
       }
 
-      function removeFrom(parent) {
-        if (!parent.children) return false;
+      document.getElementById("deleteModal").classList.add("show");
+    }
 
-        const originalLength = parent.children.length;
-        parent.children = parent.children.filter(child => child !== target);
+    function closeDeleteModal() {
+      document.getElementById("deleteModal").classList.remove("show");
+    }
 
-        if (parent.children.length !== originalLength) {
-          return true;
-        }
+    function removeSubtreePositions(node) {
+      positionById.delete(node._eid);
+      for (const child of node.children || []) {
+        removeSubtreePositions(child);
+      }
+    }
 
-        for (const child of parent.children) {
-          if (removeFrom(child)) return true;
-        }
-
-        return false;
+    function confirmDeleteNode() {
+      const target = findNodeById(selectedNodeId);
+      if (!target) {
+        closeDeleteModal();
+        return;
       }
 
-      removeFrom(tree);
+      const parent = getParentNode(selectedNodeId);
+      if (!parent) {
+        closeDeleteModal();
+        showToast("You can't delete the root.");
+        return;
+      }
+
+      parent.children = parent.children.filter(child => child._eid !== target._eid);
+      removeSubtreePositions(target);
+
       selectedNodeId = null;
       clearEditorFields();
       document.getElementById("infoBox").style.display = "none";
-      renderGraph(true);
+      closeDeleteModal();
+
+      renderFixedGraph(true);
       setDirtyState(true);
       setStatus("Node deleted. Save when ready.");
       showToast("Node deleted.");
@@ -782,56 +1246,118 @@
     }
 
     function resetView() {
-      network.focus(START_NODE_ID, { scale: 1.2, animation: false });
+      const rootId = getRootId();
+      if (!rootId) return;
+      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
       setStatus("View reset.");
     }
 
-    nodes = new vis.DataSet();
-
-    network = new vis.Network(
-      document.getElementById("graph"),
-      { nodes: nodes, edges: [] },
-      {
-        layout: {
-          hierarchical: {
-            direction: "LR",
-            levelSeparation: 250,
-            nodeSpacing: 200
-          }
-        },
-        physics: false,
-        interaction: {
-          dragNodes: false
-        }
+    function flattenSearchNodes() {
+      if (!rootNode) return [];
+      const out = [];
+      function walk(node, depth = 0) {
+        out.push({ id: node._eid, label: node.label, status: node.status, depth });
+        for (const child of node.children || []) walk(child, depth + 1);
       }
-    );
+      walk(rootNode, 0);
+      return out;
+    }
 
-    network.on("click", function(params) {
-      const info = document.getElementById("infoBox");
+    function renderSearchResults(query) {
+      const resultsBox = document.getElementById("searchResults");
+      resultsBox.innerHTML = "";
 
-      if (!params.nodes.length) {
-        selectedNodeId = null;
-        clearEditorFields();
-        info.style.display = "none";
+      if (!query || !rootNode) {
+        resultsBox.style.display = "none";
         return;
       }
 
-      selectedNodeId = params.nodes[0];
-      const node = nodes.get(selectedNodeId);
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const matches = flattenSearchNodes()
+        .filter(n => (n.label || "").toLowerCase().includes(q))
+        .slice(0, 8);
+
+      if (!matches.length) {
+        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
+        resultsBox.style.display = "block";
+        return;
+      }
+
+      for (const match of matches) {
+        const item = document.createElement("div");
+        item.className = "searchResult";
+        item.innerHTML = `
+          <div class="searchResultTitle">${match.label}</div>
+          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
+        `;
+        item.onclick = () => {
+          jumpToNode(match.id);
+          resultsBox.style.display = "none";
+        };
+        resultsBox.appendChild(item);
+      }
+
+      resultsBox.style.display = "block";
+    }
+
+    function jumpToNode(nodeId) {
+      const node = findNodeById(nodeId);
+      if (!node) return;
+
+      selectedNodeId = nodeId;
       loadSelectedNodeIntoEditor();
 
-      info.innerHTML =
-        '<div id="closeBtn">✕</div>' +
-        `<h3>${node.label}</h3>` +
-        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>`;
+      network.focus(nodeId, {
+        scale: Math.max(network.getScale(), 1.15),
+        animation: {
+          duration: 350,
+          easingFunction: "easeInOutQuad"
+        }
+      });
 
-      info.style.display = "block";
-      positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
+      nodes.update({
+        id: nodeId,
+        color: getHighlightColor(node.status)
+      });
 
-      document.getElementById("closeBtn").onclick = () => {
-        info.style.display = "none";
-      };
+      setTimeout(() => {
+        const freshNode = findNodeById(nodeId);
+        if (!freshNode) return;
+        nodes.update({
+          id: nodeId,
+          color: getColor(freshNode.status)
+        });
+      }, 1800);
+
+      openNodeInfo(nodeId, window.innerWidth * 0.45, 130);
+      showToast("Jumped to node.");
+    }
+
+    document.addEventListener("click", (e) => {
+      const wrap = document.getElementById("searchWrap");
+      const results = document.getElementById("searchResults");
+      if (wrap && !wrap.contains(e.target)) {
+        results.style.display = "none";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("searchInput");
+      input.addEventListener("input", () => {
+        renderSearchResults(input.value);
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document.getElementById("searchResults").style.display = "none";
+          input.blur();
+        }
+      });
     });
 
     document.addEventListener("visibilitychange", () => {
