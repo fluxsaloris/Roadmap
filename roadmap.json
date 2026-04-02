@@ -471,6 +471,14 @@
       "description": "Coming Soon",
       "x": 1115,
       "y": -1290
+    },
+    {
+      "id": 61,
+      "label": "New Sibling",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1115,
+      "y": -1180
     }
   ],
   "edges": [
@@ -705,6 +713,10 @@
     {
       "from": 49,
       "to": 60
+    },
+    {
+      "from": 49,
+      "to": 61
     }
   ]
 }
