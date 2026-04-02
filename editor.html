@@ -1725,35 +1725,69 @@ function renderTimeline() {
 
   el.innerHTML = "";
 
+  if (!timeline.length) {
+    el.innerHTML = `<div style="color:#777;">No snapshots yet</div>`;
+    return;
+  }
+
   timeline.forEach((snap, i) => {
     const div = document.createElement("div");
     div.textContent = `#${timeline.length - i} • ${snap.time}`;
     div.style.cursor = "pointer";
-    div.style.padding = "4px";
+    div.style.padding = "6px 8px";
+    div.style.borderRadius = "8px";
+    div.style.marginBottom = "6px";
+    div.style.border = "1px solid #2a2a2a";
+    div.style.background = selectedSnapshotIndex === i ? "rgba(190, 26, 72, 0.18)" : "#111";
+    div.style.color = selectedSnapshotIndex === i ? "#fff" : "#ccc";
 
     div.onclick = () => {
       selectedSnapshotIndex = i;
+      renderTimeline();
       highlightDiff(i);
+      showToast(`Selected snapshot #${timeline.length - i}`);
     };
 
     el.appendChild(div);
   });
+
+  if (selectedSnapshotIndex === null && timeline.length > 0) {
+    selectedSnapshotIndex = 0;
+    renderTimeline();
+    highlightDiff(0);
+  }
 }
 
 function restoreSnapshot() {
-  if (selectedSnapshotIndex === null) return;
+  if (selectedSnapshotIndex === null || !timeline[selectedSnapshotIndex]) {
+    showToast("Select a timeline snapshot first.");
+    return;
+  }
+
+  pushHistory();
 
   const snap = timeline[selectedSnapshotIndex];
   graphData = JSON.parse(snap.data);
 
   rebuildDatasetsPreserveView();
   setDirtyState(true);
-  showToast("Snapshot restored");
+
+  selectedNodeId = null;
+  clearEditorFields();
+  document.getElementById("infoBox").style.display = "none";
+
+  showToast(`Restored snapshot #${timeline.length - selectedSnapshotIndex}`);
+  setStatus("Snapshot restored. Save when ready.");
 }
 
 function highlightDiff(index) {
   const viewer = document.getElementById("diffViewer");
   if (!viewer) return;
+
+  if (!timeline[index]) {
+    viewer.textContent = "No snapshot selected.";
+    return;
+  }
 
   const current = graphData.nodes;
   const old = JSON.parse(timeline[index].data).nodes;
@@ -1768,11 +1802,17 @@ function highlightDiff(index) {
       return;
     }
 
-    if (prev.label !== n.label)
+    if (prev.label !== n.label) {
       output += `~ Label: ${prev.label} → ${n.label}\n`;
+    }
 
-    if (prev.status !== n.status)
+    if (prev.status !== n.status) {
       output += `~ Status: ${prev.status} → ${n.status}\n`;
+    }
+
+    if ((prev.description || "") !== (n.description || "")) {
+      output += `~ Description changed: ${n.label}\n`;
+    }
   });
 
   old.forEach(n => {
@@ -1781,7 +1821,7 @@ function highlightDiff(index) {
     }
   });
 
-  viewer.textContent = output || "No changes";
+  viewer.textContent = output || "No differences from the selected snapshot.";
 }
     reloadFromGitHub();
   </script>
