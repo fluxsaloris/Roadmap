@@ -418,11 +418,19 @@
     },
     {
       "id": 54,
+      "label": "Half Elf",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1689,
+      "y": -1682
+    },
+    {
+      "id": 55,
       "label": "New Node",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 1691,
-      "y": -1629
+      "x": 1697,
+      "y": -1796
     }
   ],
   "edges": [
@@ -633,6 +641,10 @@
     {
       "from": 50,
       "to": 54
+    },
+    {
+      "from": 50,
+      "to": 55
     }
   ]
 }
