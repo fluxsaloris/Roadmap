@@ -119,7 +119,7 @@
       max-height: 280px;
       overflow-y: auto;
       display: none;
-      z-index: 25;
+      z-index: 30;
       backdrop-filter: blur(10px);
     }
 
@@ -165,20 +165,18 @@
       display: block;
     }
 
-    #nodeEditor,
-    #editorPanel,
-    #controls,
-    #infoBox,
-    #errorPanel,
-    #deleteModal {
-      z-index: 20;
-    }
-
-    #nodeEditor {
+    #rightSidebar {
       position: fixed;
       top: 18px;
       right: 18px;
       width: min(340px, calc(100vw - 40px));
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel {
       background: rgba(20, 20, 20, 0.96);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
@@ -187,10 +185,18 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.5);
     }
 
-    #nodeEditor h3 {
+    .panel h3 {
       margin: 0 0 12px;
       font-size: 18px;
       color: #fff;
+    }
+
+    .panelTitleSmall {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #bcbcbc;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     #nodeEditor label {
@@ -227,11 +233,6 @@
       resize: vertical;
     }
 
-    #nodeEditor button {
-      width: 100%;
-      margin-top: 12px;
-    }
-
     .editorNote {
       margin-top: 10px;
       font-size: 12px;
@@ -239,21 +240,10 @@
       line-height: 1.4;
     }
 
-    #editorPanel,
-    #controls {
-      position: fixed;
-      right: 18px;
-      display: flex;
-      flex-direction: column;
+    .buttonGrid {
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 8px;
-    }
-
-    #editorPanel {
-      bottom: 220px;
-    }
-
-    #controls {
-      bottom: 18px;
     }
 
     button {
@@ -264,11 +254,19 @@
       padding: 10px 12px;
       font-size: 14px;
       cursor: pointer;
-      min-width: 160px;
+      width: 100%;
     }
 
     button:hover {
       background: #171717;
+    }
+
+    #controls {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: min(340px, calc(100vw - 40px));
+      z-index: 20;
     }
 
     #infoBox {
@@ -284,6 +282,7 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.5);
       color: white;
       display: none;
+      z-index: 25;
     }
 
     #infoBox h3 {
@@ -355,6 +354,7 @@
       box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
       backdrop-filter: blur(10px);
       display: none;
+      z-index: 60;
     }
 
     #errorPanel.show {
@@ -381,7 +381,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 60;
+      z-index: 70;
     }
 
     #deleteModal.show {
@@ -427,16 +427,19 @@
         width: calc(100vw - 36px);
       }
 
-      #nodeEditor {
-        top: auto;
-        bottom: 18px;
-        left: 18px;
-        right: 18px;
+      #rightSidebar,
+      #controls {
+        position: static;
         width: auto;
       }
 
-      #editorPanel {
-        bottom: 380px;
+      body {
+        overflow: auto;
+        min-height: 100vh;
+      }
+
+      #graph {
+        position: fixed;
       }
     }
   </style>
@@ -457,26 +460,56 @@
     <div id="dirtyIndicator">You have unsaved changes.</div>
   </div>
 
-  <div id="nodeEditor">
-    <h3>Node Editor</h3>
+  <div id="rightSidebar">
+    <div id="nodeEditor" class="panel">
+      <h3>Node Editor</h3>
 
-    <label for="nodeLabel">Label</label>
-    <input id="nodeLabel" type="text" placeholder="Select a node..." />
+      <label for="nodeLabel">Label</label>
+      <input id="nodeLabel" type="text" placeholder="Select a node..." />
 
-    <label for="nodeDescription">Description</label>
-    <textarea id="nodeDescription" placeholder="Node description..."></textarea>
+      <label for="nodeDescription">Description</label>
+      <textarea id="nodeDescription" placeholder="Node description..."></textarea>
 
-    <label for="nodeStatus">Status</label>
-    <select id="nodeStatus">
-      <option value="pending">Pending</option>
-      <option value="progress">In Progress</option>
-      <option value="complete">Complete</option>
-    </select>
+      <label for="nodeStatus">Status</label>
+      <select id="nodeStatus">
+        <option value="pending">Pending</option>
+        <option value="progress">In Progress</option>
+        <option value="complete">Complete</option>
+      </select>
 
-    <button onclick="applyNodeChanges()">Apply Changes</button>
+      <button onclick="applyNodeChanges()">Apply Changes</button>
 
-    <div class="editorNote">
-      Click a node in the graph to load it here.
+      <div class="editorNote">
+        Click a node in the graph to load it here.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitleSmall">Node Actions</div>
+      <div class="buttonGrid">
+        <button onclick="addChild()">Add Child</button>
+        <button onclick="addSibling()">Add Sibling</button>
+        <button onclick="duplicateNode()">Duplicate Node</button>
+        <button onclick="openDeleteModal()">Delete Node</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitleSmall">Project Actions</div>
+      <div class="buttonGrid">
+        <button onclick="saveRoadmap()">Save to GitHub</button>
+        <button onclick="reloadFromGitHub()">Reload from GitHub</button>
+        <button onclick="exportCurrentGraph()">Export JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls" class="panel">
+    <div class="panelTitleSmall">View Controls</div>
+    <div class="buttonGrid">
+      <button onclick="zoomIn()">Zoom +</button>
+      <button onclick="zoomOut()">Zoom -</button>
+      <button onclick="resetView()">Reset</button>
     </div>
   </div>
 
@@ -499,24 +532,7 @@
     </div>
   </div>
 
-  <div id="editorPanel">
-    <button onclick="addChild()">Add Child</button>
-    <button onclick="addSibling()">Add Sibling</button>
-    <button onclick="duplicateNode()">Duplicate Node</button>
-    <button onclick="openDeleteModal()">Delete Node</button>
-    <button onclick="saveRoadmap()">Save to GitHub</button>
-    <button onclick="reloadFromGitHub()">Reload from GitHub</button>
-    <button onclick="exportCurrentGraph()">Export JSON</button>
-  </div>
-
-  <div id="controls">
-    <button onclick="zoomIn()">Zoom +</button>
-    <button onclick="zoomOut()">Zoom -</button>
-    <button onclick="resetView()">Reset</button>
-  </div>
-
   <script>
-    const START_NODE_LABEL = "Dungeon Call";
     const START_NODE_SCALE = 1.2;
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
@@ -530,11 +546,11 @@
     let toastTimer = null;
     let hasUnsavedChanges = false;
     let editorIdCounter = 1;
+    let layoutInitialized = false;
 
     let nodeById = new Map();
     let parentById = new Map();
     let positionById = new Map();
-    let layoutLocked = false;
 
     function nextEditorId() {
       return `n_${editorIdCounter++}`;
@@ -571,22 +587,14 @@
     }
 
     function getColor(status) {
-      if (status === "complete") {
-        return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
-      }
-      if (status === "progress") {
-        return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
-      }
+      if (status === "complete") return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
+      if (status === "progress") return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
       return { background: "#111", border: "#333", font: { color: "#777" } };
     }
 
     function getHighlightColor(status) {
-      if (status === "complete") {
-        return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
-      }
-      if (status === "progress") {
-        return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
-      }
+      if (status === "complete") return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
+      if (status === "progress") return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
       return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
     }
 
@@ -633,24 +641,9 @@
         clearEditorFields();
         return;
       }
-
       document.getElementById("nodeLabel").value = node.label || "";
       document.getElementById("nodeDescription").value = node.description || "";
       document.getElementById("nodeStatus").value = node.status || "pending";
-    }
-
-    function flattenTree(root) {
-      const out = [];
-      function walk(node, parentId = null, depth = 0) {
-        nodeById.set(node._eid, node);
-        parentById.set(node._eid, parentId);
-        out.push({ node, parentId, depth });
-        for (const child of node.children || []) walk(child, node._eid, depth + 1);
-      }
-      nodeById.clear();
-      parentById.clear();
-      walk(root, null, 0);
-      return out;
     }
 
     function assignEditorIds(node) {
@@ -664,14 +657,13 @@
       const graphEdges = Array.isArray(graphData?.edges) ? graphData.edges : [];
 
       if (!graphNodes.length) {
-        const root = {
+        return {
           _eid: nextEditorId(),
           label: "Dungeon Call",
           status: "complete",
           description: "Start",
           children: []
         };
-        return root;
       }
 
       const byId = {};
@@ -710,16 +702,29 @@
       return root;
     }
 
-    function buildGraphJSON() {
+    function flattenTree(root) {
+      const out = [];
+      nodeById.clear();
+      parentById.clear();
+
+      function walk(node, parentId = null) {
+        nodeById.set(node._eid, node);
+        parentById.set(node._eid, parentId);
+        out.push({ node, parentId });
+        for (const child of node.children || []) walk(child, node._eid);
+      }
+
+      walk(root);
+      return out;
+    }
+
+    function buildExportJSON() {
       const outNodes = [];
       const outEdges = [];
       let nextId = 1;
-      const exportIdMap = new Map();
 
       function walk(node, parentExportId = null) {
         const currentId = nextId++;
-        exportIdMap.set(node._eid, currentId);
-
         outNodes.push({
           id: currentId,
           label: node.label || "Unnamed",
@@ -736,32 +741,22 @@
         }
       }
 
-      walk(rootNode, null);
+      walk(rootNode);
       return { nodes: outNodes, edges: outEdges };
     }
 
     function cloneSubtree(node) {
-      const copy = {
+      return {
         _eid: nextEditorId(),
         label: node.label,
         status: node.status,
         description: node.description,
-        children: []
+        children: (node.children || []).map(cloneSubtree)
       };
-
-      for (const child of node.children || []) {
-        copy.children.push(cloneSubtree(child));
-      }
-
-      return copy;
     }
 
     function getRootId() {
       return rootNode ? rootNode._eid : null;
-    }
-
-    function findNodeById(id) {
-      return nodeById.get(id) || null;
     }
 
     function getParentNode(id) {
@@ -769,27 +764,19 @@
       return parentId ? nodeById.get(parentId) : null;
     }
 
-    function getChildrenCount(parentId) {
-      const parent = nodeById.get(parentId);
-      return parent?.children?.length || 0;
-    }
+    function ensureChildPositions(parent) {
+      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
+      const children = parent.children || [];
+      const total = children.length;
 
-    function ensurePosition(nodeId, parentId = null, siblingIndex = 0) {
-      if (positionById.has(nodeId)) return positionById.get(nodeId);
-
-      if (parentId && positionById.has(parentId)) {
-        const parentPos = positionById.get(parentId);
-        const pos = {
-          x: parentPos.x + 240,
-          y: parentPos.y + (siblingIndex * 110) - 40
-        };
-        positionById.set(nodeId, pos);
-        return pos;
-      }
-
-      const pos = { x: 0, y: 0 };
-      positionById.set(nodeId, pos);
-      return pos;
+      children.forEach((child, index) => {
+        if (!positionById.has(child._eid)) {
+          positionById.set(child._eid, {
+            x: parentPos.x + 240,
+            y: parentPos.y + (index - (total - 1) / 2) * 110
+          });
+        }
+      });
     }
 
     function buildNetworkData(useFixedPositions) {
@@ -798,7 +785,7 @@
       const builtEdges = [];
 
       for (const { node, parentId } of flat) {
-        let nodeData = {
+        const nodeData = {
           id: node._eid,
           label: node.label || "Unnamed",
           shape: "box",
@@ -808,9 +795,8 @@
           status: node.status || "pending"
         };
 
-        if (useFixedPositions) {
-          const siblingIndex = parentId ? nodeById.get(parentId).children.findIndex(c => c._eid === node._eid) : 0;
-          const pos = ensurePosition(node._eid, parentId, siblingIndex);
+        if (useFixedPositions && positionById.has(node._eid)) {
+          const pos = positionById.get(node._eid);
           nodeData.x = pos.x;
           nodeData.y = pos.y;
           nodeData.fixed = { x: true, y: true };
@@ -830,19 +816,17 @@
       return { nodes: builtNodes, edges: builtEdges };
     }
 
-    function createNetwork(data, useFixedPositions) {
-      const container = document.getElementById("graph");
-
+    function createInitialNetwork(data, useFixedLayout) {
       if (network) network.destroy();
 
       nodes = new vis.DataSet(data.nodes);
       edges = new vis.DataSet(data.edges);
 
       network = new vis.Network(
-        container,
+        document.getElementById("graph"),
         { nodes, edges },
         {
-          layout: useFixedPositions ? {} : {
+          layout: useFixedLayout ? {} : {
             hierarchical: {
               direction: "LR",
               levelSeparation: 250,
@@ -858,7 +842,6 @@
 
       network.on("click", function(params) {
         const info = document.getElementById("infoBox");
-
         if (!params.nodes.length) {
           selectedNodeId = null;
           clearEditorFields();
@@ -877,7 +860,46 @@
       for (const [id, pos] of Object.entries(positions)) {
         positionById.set(id, { x: pos.x, y: pos.y });
       }
-      layoutLocked = true;
+      layoutInitialized = true;
+    }
+
+    function syncGraphIncremental(preserveCamera = true, focusNodeId = null) {
+      const currentScale = network.getScale();
+      const currentPosition = network.getViewPosition();
+
+      const data = buildNetworkData(true);
+      const newNodeIds = new Set(data.nodes.map(n => n.id));
+      const newEdgeIds = new Set(data.edges.map(e => e.id));
+
+      const existingNodeIds = new Set(nodes.getIds());
+      const existingEdgeIds = new Set(edges.getIds());
+
+      const nodesToRemove = [...existingNodeIds].filter(id => !newNodeIds.has(id));
+      const edgesToRemove = [...existingEdgeIds].filter(id => !newEdgeIds.has(id));
+
+      if (nodesToRemove.length) nodes.remove(nodesToRemove);
+      if (edgesToRemove.length) edges.remove(edgesToRemove);
+
+      nodes.update(data.nodes);
+      edges.update(data.edges);
+
+      requestAnimationFrame(() => {
+        if (focusNodeId) {
+          network.focus(focusNodeId, {
+            scale: Math.max(currentScale, 1.12),
+            animation: {
+              duration: 220,
+              easingFunction: "easeInOutQuad"
+            }
+          });
+        } else if (preserveCamera) {
+          network.moveTo({
+            position: currentPosition,
+            scale: currentScale,
+            animation: false
+          });
+        }
+      });
     }
 
     function openNodeInfo(nodeId, domX = 80, domY = 120) {
@@ -899,49 +921,7 @@
       };
     }
 
-    function preserveView(callback) {
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      callback();
-
-      requestAnimationFrame(() => {
-        network.moveTo({
-          position: currentPosition,
-          scale: currentScale,
-          animation: false
-        });
-      });
-    }
-
-    function renderFixedGraph(preserveCamera = true, focusNodeId = null) {
-      const data = buildNetworkData(true);
-
-      const currentScale = network ? network.getScale() : START_NODE_SCALE;
-      const currentPosition = network ? network.getViewPosition() : { x: 0, y: 0 };
-
-      createNetwork(data, true);
-
-      requestAnimationFrame(() => {
-        if (focusNodeId) {
-          network.focus(focusNodeId, {
-            scale: Math.max(currentScale, 1.15),
-            animation: {
-              duration: 250,
-              easingFunction: "easeInOutQuad"
-            }
-          });
-        } else if (preserveCamera) {
-          network.moveTo({
-            position: currentPosition,
-            scale: currentScale,
-            animation: false
-          });
-        }
-      });
-    }
-
-    function markNodeHighlighted(nodeId) {
+    function highlightNode(nodeId) {
       const node = nodeById.get(nodeId);
       if (!node) return;
 
@@ -951,11 +931,11 @@
       });
 
       setTimeout(() => {
-        const freshNode = nodeById.get(nodeId);
-        if (!freshNode) return;
+        const fresh = nodeById.get(nodeId);
+        if (!fresh) return;
         nodes.update({
           id: nodeId,
-          color: getColor(freshNode.status)
+          color: getColor(fresh.status)
         });
       }, 1800);
     }
@@ -968,36 +948,36 @@
           cache: "no-store"
         });
 
-        if (!res.ok) {
-          throw new Error("Could not load roadmap.json from GitHub");
-        }
+        if (!res.ok) throw new Error("Could not load roadmap.json from GitHub");
 
         const graphData = await res.json();
 
         editorIdCounter = 1;
         positionById.clear();
-        layoutLocked = false;
         selectedNodeId = null;
+        layoutInitialized = false;
 
         rootNode = buildTreeFromGraph(graphData);
 
         const initialData = buildNetworkData(false);
-        createNetwork(initialData, false);
+        createInitialNetwork(initialData, false);
 
         setTimeout(() => {
           network.focus(getRootId(), { scale: START_NODE_SCALE, animation: false });
 
           setTimeout(() => {
             lockLayoutFromCurrentNetwork();
-            renderFixedGraph(false);
+            const fixedData = buildNetworkData(true);
+            createInitialNetwork(fixedData, true);
 
+            network.focus(getRootId(), { scale: START_NODE_SCALE, animation: false });
             clearEditorFields();
             document.getElementById("infoBox").style.display = "none";
             hideErrorPanel();
             setDirtyState(false);
             setStatus("Loaded latest roadmap from GitHub.");
-          }, 150);
-        }, 50);
+          }, 120);
+        }, 40);
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap from GitHub.", true);
@@ -1011,14 +991,14 @@
         return;
       }
 
-      const node = findNodeById(selectedNodeId);
+      const node = nodeById.get(selectedNodeId);
       if (!node) return;
 
       node.label = document.getElementById("nodeLabel").value.trim() || "Unnamed";
       node.description = document.getElementById("nodeDescription").value;
       node.status = document.getElementById("nodeStatus").value;
 
-      renderFixedGraph(true, null);
+      syncGraphIncremental(true, null);
       openNodeInfo(selectedNodeId);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
@@ -1032,7 +1012,7 @@
         return;
       }
 
-      const parent = findNodeById(selectedNodeId);
+      const parent = nodeById.get(selectedNodeId);
       if (!parent) return;
 
       const newNode = {
@@ -1043,22 +1023,17 @@
         children: []
       };
 
-      if (!parent.children) parent.children = [];
+      parent.children = parent.children || [];
       parent.children.push(newNode);
-
-      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
-      const siblingIndex = parent.children.length - 1;
-      positionById.set(newNode._eid, {
-        x: parentPos.x + 240,
-        y: parentPos.y + (siblingIndex * 110) - 40
-      });
+      ensureChildPositions(parent);
 
       selectedNodeId = newNode._eid;
-      renderFixedGraph(true, newNode._eid);
+      syncGraphIncremental(true, newNode._eid);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Child node added. Edit its details now.");
       showToast("Child node added.");
+      highlightNode(newNode._eid);
     }
 
     function addSibling() {
@@ -1082,20 +1057,15 @@
       };
 
       parent.children.push(newNode);
-
-      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
-      const siblingIndex = parent.children.length - 1;
-      positionById.set(newNode._eid, {
-        x: parentPos.x + 240,
-        y: parentPos.y + (siblingIndex * 110) - 40
-      });
+      ensureChildPositions(parent);
 
       selectedNodeId = newNode._eid;
-      renderFixedGraph(true, newNode._eid);
+      syncGraphIncremental(true, newNode._eid);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Sibling node added. Edit its details now.");
       showToast("Sibling node added.");
+      highlightNode(newNode._eid);
     }
 
     function duplicateNode() {
@@ -1104,46 +1074,25 @@
         return;
       }
 
-      const node = findNodeById(selectedNodeId);
+      const source = nodeById.get(selectedNodeId);
       const parent = getParentNode(selectedNodeId);
 
-      if (!node) return;
-      if (!parent) {
+      if (!source || !parent) {
         showToast("You can't duplicate the root.");
         return;
       }
 
-      const duplicate = cloneSubtree(node);
-      parent.children.push(duplicate);
+      const copy = cloneSubtree(source);
+      parent.children.push(copy);
+      ensureChildPositions(parent);
 
-      const parentPos = positionById.get(parent._eid) || { x: 0, y: 0 };
-      const siblingIndex = parent.children.length - 1;
-
-      function assignDuplicatePositions(subtree, baseX, baseY, depth = 0) {
-        positionById.set(subtree._eid, {
-          x: baseX + (depth * 220),
-          y: baseY
-        });
-
-        let childY = baseY - ((subtree.children.length - 1) * 55);
-        for (const child of subtree.children) {
-          assignDuplicatePositions(child, baseX, childY, depth + 1);
-          childY += 110;
-        }
-      }
-
-      assignDuplicatePositions(
-        duplicate,
-        parentPos.x + 240,
-        parentPos.y + (siblingIndex * 110) - 40
-      );
-
-      selectedNodeId = duplicate._eid;
-      renderFixedGraph(true, duplicate._eid);
+      selectedNodeId = copy._eid;
+      syncGraphIncremental(true, copy._eid);
       loadSelectedNodeIntoEditor();
       setDirtyState(true);
       setStatus("Node duplicated.");
       showToast("Node duplicated.");
+      highlightNode(copy._eid);
     }
 
     function openDeleteModal() {
@@ -1172,7 +1121,7 @@
     }
 
     function confirmDeleteNode() {
-      const target = findNodeById(selectedNodeId);
+      const target = nodeById.get(selectedNodeId);
       if (!target) {
         closeDeleteModal();
         return;
@@ -1193,7 +1142,7 @@
       document.getElementById("infoBox").style.display = "none";
       closeDeleteModal();
 
-      renderFixedGraph(true);
+      syncGraphIncremental(true, null);
       setDirtyState(true);
       setStatus("Node deleted. Save when ready.");
       showToast("Node deleted.");
@@ -1203,22 +1152,16 @@
       try {
         setStatus("Saving to GitHub...");
 
-        const data = buildGraphJSON();
+        const data = buildExportJSON();
 
         const res = await fetch(SAVE_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ data })
         });
 
         const text = await res.text();
-
-        if (!res.ok) {
-          console.error(text);
-          throw new Error(text || "Save failed");
-        }
+        if (!res.ok) throw new Error(text || "Save failed");
 
         hideErrorPanel();
         setDirtyState(false);
@@ -1232,8 +1175,7 @@
     }
 
     function exportCurrentGraph() {
-      const data = buildGraphJSON();
-      console.log(JSON.stringify(data, null, 2));
+      console.log(JSON.stringify(buildExportJSON(), null, 2));
       showToast("Graph JSON printed to console.");
     }
 
@@ -1253,13 +1195,12 @@
     }
 
     function flattenSearchNodes() {
-      if (!rootNode) return [];
       const out = [];
       function walk(node, depth = 0) {
         out.push({ id: node._eid, label: node.label, status: node.status, depth });
         for (const child of node.children || []) walk(child, depth + 1);
       }
-      walk(rootNode, 0);
+      if (rootNode) walk(rootNode);
       return out;
     }
 
@@ -1306,34 +1247,21 @@
     }
 
     function jumpToNode(nodeId) {
-      const node = findNodeById(nodeId);
+      const node = nodeById.get(nodeId);
       if (!node) return;
 
       selectedNodeId = nodeId;
       loadSelectedNodeIntoEditor();
 
       network.focus(nodeId, {
-        scale: Math.max(network.getScale(), 1.15),
+        scale: Math.max(network.getScale(), 1.12),
         animation: {
-          duration: 350,
+          duration: 280,
           easingFunction: "easeInOutQuad"
         }
       });
 
-      nodes.update({
-        id: nodeId,
-        color: getHighlightColor(node.status)
-      });
-
-      setTimeout(() => {
-        const freshNode = findNodeById(nodeId);
-        if (!freshNode) return;
-        nodes.update({
-          id: nodeId,
-          color: getColor(freshNode.status)
-        });
-      }, 1800);
-
+      highlightNode(nodeId);
       openNodeInfo(nodeId, window.innerWidth * 0.45, 130);
       showToast("Jumped to node.");
     }
