@@ -530,11 +530,19 @@
     },
     {
       "id": 68,
-      "label": "New Node",
+      "label": "Player Labyrinth",
       "status": "pending",
       "description": "Coming Soon",
       "x": 1115,
       "y": -1165
+    },
+    {
+      "id": 69,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1115,
+      "y": -1055
     }
   ],
   "edges": [
@@ -801,6 +809,10 @@
     {
       "from": 66,
       "to": 68
+    },
+    {
+      "from": 66,
+      "to": 69
     }
   ]
 }
