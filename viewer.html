@@ -715,60 +715,67 @@
       });
     }
 
-    function createNetwork(useSavedPositions) {
-      if (network) network.destroy();
+function createNetwork(useSavedPositions) {
+  if (network) network.destroy();
 
-      nodesDS = new vis.DataSet(buildNodes(useSavedPositions));
-      edgesDS = new vis.DataSet(buildEdges());
+  nodesDS = new vis.DataSet(buildNodes(useSavedPositions));
+  edgesDS = new vis.DataSet(buildEdges());
 
-      network = new vis.Network(
-        document.getElementById("graph"),
-        { nodes: nodesDS, edges: edgesDS },
-        {
-          layout: useSavedPositions ? {} : {
-            hierarchical: {
-              direction: "LR",
-              levelSeparation: 250,
-              nodeSpacing: 200
-            }
-          },
-          physics: false,
-          interaction: {
-            dragNodes: false,
-            dragView: true,
-            zoomView: true
-          }
+  network = new vis.Network(
+    document.getElementById("graph"),
+    { nodes: nodesDS, edges: edgesDS },
+    {
+      layout: useSavedPositions ? {} : {
+        hierarchical: {
+          direction: "LR",
+          levelSeparation: 250,
+          nodeSpacing: 200
         }
-      );
-
-      network.on("click", function(params) {
-        const info = document.getElementById("infoBox");
-
-        if (!params.nodes.length) {
-          selectedNodeId = null;
-          info.classList.add("hidden");
-          return;
+      },
+      physics: false,
+      interaction: {
+        dragNodes: false,
+        dragView: true,
+        zoomView: true
+      },
+      edges: {
+        smooth: false,
+        width: 2,
+        color: {
+          inherit: false
         }
-
-        selectedNodeId = Number(params.nodes[0]);
-        const node = getNodeById(selectedNodeId);
-        if (!node) return;
-
-        info.innerHTML =
-          '<div id="closeBtn">✕</div>' +
-          `<h3>${node.label}</h3>` +
-          `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-          `<p>${node.description || "No description available."}</p>` +
-          `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
-
-        info.classList.remove("hidden");
-        positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
-
-        document.getElementById("closeBtn").onclick = () => {
-          info.classList.add("hidden");
-        };
-      });
+      }
     }
+  );
+
+  network.on("click", function(params) {
+    const info = document.getElementById("infoBox");
+
+    if (!params.nodes.length) {
+      selectedNodeId = null;
+      info.classList.add("hidden");
+      return;
+    }
+
+    selectedNodeId = Number(params.nodes[0]);
+    const node = getNodeById(selectedNodeId);
+    if (!node) return;
+
+    info.innerHTML =
+      '<div id="closeBtn">✕</div>' +
+      `<h3>${node.label}</h3>` +
+      `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
+      `<p>${node.description || "No description available."}</p>` +
+      `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
+
+    info.classList.remove("hidden");
+    positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
+
+    document.getElementById("closeBtn").onclick = () => {
+      info.classList.add("hidden");
+    };
+  });
+}
 
     function applyCollapseState() {
       const hiddenNodeIds = new Set();
