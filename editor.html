@@ -4,22 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dungeon Call Roadmap Editor</title>
-  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
+    :root {
+      --bg: #000;
+      --panel: rgba(18, 18, 18, 0.92);
+      --panel-2: rgba(24, 24, 24, 0.95);
+      --border: #2a2a2a;
+      --text: #f2f2f2;
+      --muted: #a5a5a5;
+      --accent: #BE1A48;
+    }
+
+    * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #000 !important;
-      color: white;
-      overflow: hidden;
+      min-height: 100%;
+      background: #000;
+      color: var(--text);
       font-family: Arial, sans-serif;
     }
 
     body {
       position: relative;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%) !important;
+      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      overflow-x: hidden;
     }
 
     body::before {
@@ -32,7 +42,7 @@
         radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
         radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
         radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.35;
+      opacity: 0.28;
       pointer-events: none;
     }
 
@@ -40,192 +50,309 @@
       content: "";
       position: fixed;
       inset: 0;
-      border: 2px solid #BE1A48;
+      border: 2px solid var(--accent);
       border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.3);
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.25);
       margin: 6px;
-      z-index: 2;
-    }
-
-    #graph {
-      position: fixed;
-      inset: 0;
       z-index: 1;
-      background: transparent !important;
     }
 
-    #topPanel {
-      position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 20;
-      width: min(560px, calc(100vw - 420px));
-      min-width: 320px;
+    #app {
+      position: relative;
+      z-index: 2;
+      max-width: 1650px;
+      margin: 0 auto;
+      padding: 22px 18px 40px;
+    }
+
+    .hero {
       background: rgba(15, 15, 15, 0.9);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      margin-bottom: 18px;
     }
 
-    #topPanel h1 {
-      margin: 0 0 6px;
-      font-size: 22px;
-      line-height: 1.2;
-      color: #fff;
+    .heroTop {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
-    #topPanel p {
-      margin: 0 0 10px;
-      color: #bbb;
-      font-size: 14px;
-      line-height: 1.45;
+    .heroTitle {
+      min-width: 320px;
+      flex: 1;
     }
 
-    #searchWrap {
-      position: relative;
-      margin-top: 12px;
+    .heroTitle h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .heroTitle p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 840px;
+    }
+
+    .statusBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .status-pending {
+      background: #181818;
+      border-color: #333;
+      color: #999;
+    }
+
+    .status-progress {
+      background: #3d2b06;
+      border-color: #9a6a00;
+      color: #ffd37a;
+    }
+
+    .status-complete {
+      background: #123a24;
+      border-color: #1e6c41;
+      color: #7dffb0;
+    }
+
+    .heroControls {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1.2fr auto;
+      gap: 12px;
     }
 
     #searchInput {
       width: 100%;
-      box-sizing: border-box;
       background: #111;
       color: #e5e5e5;
       border: 1px solid #303030;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 12px;
+      padding: 12px 14px;
       font-size: 14px;
       outline: none;
     }
 
     #searchInput:focus {
-      border-color: #BE1A48;
+      border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
-    #searchResults {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: rgba(18, 18, 18, 0.96);
-      border: 1px solid #2f2f2f;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      overflow: hidden;
-      max-height: 280px;
-      overflow-y: auto;
-      display: none;
-      z-index: 30;
-      backdrop-filter: blur(10px);
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .searchResult {
-      padding: 10px 12px;
-      border-bottom: 1px solid #262626;
+    button {
+      background: #111;
+      color: #ddd;
+      border: 1px solid #2b2b2b;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
       cursor: pointer;
     }
 
-    .searchResult:last-child {
-      border-bottom: none;
+    button:hover {
+      background: #171717;
     }
 
-    .searchResult:hover {
-      background: rgba(190, 26, 72, 0.12);
-    }
-
-    .searchResultTitle {
-      font-size: 14px;
-      color: #f0f0f0;
-      margin-bottom: 4px;
-    }
-
-    .searchResultMeta {
-      font-size: 12px;
-      color: #9f9f9f;
-    }
-
-    #statusBar {
-      font-size: 12px;
-      color: #999;
-      margin-top: 10px;
-    }
-
-    #dirtyIndicator {
-      margin-top: 8px;
-      font-size: 12px;
+    .dangerBtn {
+      border-color: rgba(190, 26, 72, 0.45);
       color: #ffb3c9;
-      display: none;
     }
 
-    #dirtyIndicator.show {
-      display: block;
-    }
-
-    #rightSidebar {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      bottom: 18px;
-      width: 340px;
-      z-index: 20;
+    .stats {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 12px;
-      overflow-y: auto;
-      padding-right: 2px;
+      margin-top: 16px;
     }
 
-    #rightSidebar::-webkit-scrollbar {
-      width: 8px;
+    .statCard {
+      background: rgba(20,20,20,0.9);
+      border: 1px solid #2c2c2c;
+      border-radius: 12px;
+      padding: 12px 14px;
+      min-width: 110px;
     }
 
-    #rightSidebar::-webkit-scrollbar-thumb {
-      background: #2b2b2b;
-      border-radius: 999px;
-    }
-
-    .panel {
-      background: rgba(20, 20, 20, 0.96);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 14px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    }
-
-    .panel h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
+    .statValue {
+      font-size: 20px;
+      font-weight: 700;
       color: #fff;
     }
 
-    .panelTitleSmall {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: #bcbcbc;
+    .statLabel {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #9d9d9d;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
-    #nodeEditor label {
-      display: block;
-      margin: 10px 0 6px;
+    #statusLine {
+      margin-top: 12px;
       font-size: 12px;
-      color: #bbb;
+      color: #999;
     }
 
-    #nodeEditor input,
-    #nodeEditor textarea,
-    #nodeEditor select,
-    #infoBox input,
-    #infoBox textarea,
-    #infoBox select {
+    .rootCard {
+      background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
+      border: 1px solid #313131;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.35);
+    }
+
+    .rootHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .rootTitle {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .rootDescription {
+      margin: 0;
+      color: #cfcfcf;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    #panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      min-height: 240px;
+    }
+
+    .panel.hiddenBySearch {
+      display: none;
+    }
+
+    .panelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .panelHeaderText h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .panelDescription {
+      margin: 0;
+      color: #bdbdbd;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .panelBody {
+      margin-top: 14px;
+    }
+
+    .treeNode {
+      background: rgba(22,22,22,0.96);
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .treeNode.matched {
+      border-color: rgba(255, 209, 102, 0.7);
+      box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.28);
+    }
+
+    .treeNodeHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .treeNodeTitle {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .treeNodeDescription {
+      margin: 0;
+      color: #adadad;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .childrenWrap {
+      margin-top: 10px;
+      padding-left: 14px;
+      border-left: 1px solid #2a2a2a;
+    }
+
+    .nodeActions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .editorGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .editorGrid input,
+    .editorGrid textarea,
+    .editorGrid select {
       width: 100%;
-      box-sizing: border-box;
       background: #111;
       color: #e5e5e5;
       border: 1px solid #303030;
@@ -236,253 +363,28 @@
       font-family: inherit;
     }
 
-    #nodeEditor input:focus,
-    #nodeEditor textarea:focus,
-    #nodeEditor select:focus,
-    #infoBox input:focus,
-    #infoBox textarea:focus,
-    #infoBox select:focus {
-      border-color: #BE1A48;
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
-    }
-
-    #nodeEditor textarea,
-    #infoBox textarea {
-      min-height: 110px;
+    .editorGrid textarea {
+      min-height: 90px;
       resize: vertical;
     }
 
-    .editorNote {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #8d8d8d;
-      line-height: 1.4;
+    .editorGrid input:focus,
+    .editorGrid textarea:focus,
+    .editorGrid select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
-    .buttonGrid {
+    .smallRow {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .buttonRow {
-      display: flex;
-      gap: 10px;
-    }
-
-    .buttonRow button {
-      flex: 1;
-    }
-
-    button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    button:hover {
-      background: #171717;
-    }
-
-    #infoBox {
-      position: fixed;
-      width: clamp(260px, 28vw, 360px);
-      max-height: min(72vh, 560px);
-      overflow-y: auto;
-      background: rgba(20, 20, 20, 0.96);
-      border: 1px solid #2a2a2a;
-      backdrop-filter: blur(12px);
-      padding: 14px;
-      border-radius: 14px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      color: white;
-      display: none;
-      z-index: 25;
-    }
-
-    #infoBox h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      line-height: 1.3;
-      color: #fff;
-      padding-right: 22px;
-    }
-
-    #infoBox p {
+    .emptyState {
+      color: #888;
       font-size: 13px;
-      line-height: 1.5;
-      color: #d7d7d7;
-      white-space: pre-wrap;
-      margin: 10px 0 0;
-    }
-
-    #closeBtn {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      cursor: pointer;
-      color: #aaa;
-      font-size: 14px;
-    }
-
-    #statusBadge {
-      display: inline-block;
-      margin: 2px 0 8px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .infoInlineEditor {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #2c2c2c;
-    }
-
-    .infoInlineEditor label {
-      display: block;
-      margin: 10px 0 6px;
-      font-size: 12px;
-      color: #bbb;
-    }
-
-    .infoNote {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #8f8f8f;
-    }
-
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 26px;
-      transform: translateX(-50%) translateY(20px);
-      z-index: 50;
-      background: rgba(18, 18, 18, 0.95);
-      color: #f0f0f0;
-      border: 1px solid #363636;
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 13px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #autoSaveBanner {
-      position: fixed;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-12px);
-      z-index: 90;
-      background: rgba(17, 17, 17, 0.96);
-      color: #f0f0f0;
-      border: 1px solid #363636;
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 13px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    #autoSaveBanner.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #errorPanel {
-      position: fixed;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(420px, calc(100vw - 40px));
-      background: rgba(35, 12, 18, 0.96);
-      border: 1px solid rgba(190, 26, 72, 0.5);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
-      backdrop-filter: blur(10px);
-      display: none;
-      z-index: 60;
-    }
-
-    #errorPanel.show {
-      display: block;
-    }
-
-    #errorPanelTitle {
-      font-size: 14px;
-      font-weight: 700;
-      color: #ffb3c9;
-      margin-bottom: 6px;
-    }
-
-    #errorPanelText {
-      font-size: 13px;
-      line-height: 1.45;
-      color: #f2d7df;
-    }
-
-    #deleteModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 70;
-    }
-
-    #deleteModal.show {
-      display: flex;
-    }
-
-    #deleteModalCard {
-      width: min(420px, calc(100vw - 40px));
-      background: rgba(20, 20, 20, 0.97);
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.45);
-      backdrop-filter: blur(12px);
-    }
-
-    #deleteModalTitle {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    #deleteModalText {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #cfcfcf;
-    }
-
-    #deleteModalActions {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      justify-content: flex-end;
-    }
-
-    #deleteConfirmBtn {
-      border-color: rgba(190, 26, 72, 0.5);
-      color: #ffb3c9;
+      padding-top: 10px;
     }
 
     #loadingOverlay {
@@ -521,127 +423,58 @@
       margin: 0 auto 14px;
     }
 
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 40;
+      width: min(360px, calc(100vw - 40px));
+      background: rgba(35, 12, 18, 0.96);
+      border: 1px solid rgba(190, 26, 72, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffb3c9;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #f2d7df;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 1150px) {
-      #topPanel { width: calc(100vw - 36px); }
-      #rightSidebar { width: 300px; }
+    @media (max-width: 1100px) {
+      #panels {
+        grid-template-columns: 1fr;
+      }
+
+      .heroControls {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="graph"></div>
-
-  <div id="topPanel">
-    <h1>Dungeon Call Editor</h1>
-    <p>Edit roadmap nodes, update progress, and push changes live to GitHub.</p>
-
-    <div id="searchWrap">
-      <input id="searchInput" type="text" placeholder="Search editor nodes..." autocomplete="off" />
-      <div id="searchResults"></div>
-    </div>
-
-    <div id="statusBar">Loading latest roadmap from GitHub...</div>
-    <div id="dirtyIndicator">You have unsaved changes.</div>
-  </div>
-
-  <div id="rightSidebar">
-    <div id="nodeEditor" class="panel">
-      <h3>Node Editor</h3>
-
-      <label for="nodeLabel">Label</label>
-      <input id="nodeLabel" type="text" placeholder="Select a node..." />
-
-      <label for="nodeDescription">Description</label>
-      <textarea id="nodeDescription" placeholder="Node description..."></textarea>
-
-      <label for="nodeStatus">Status</label>
-      <select id="nodeStatus">
-        <option value="pending">Pending</option>
-        <option value="progress">In Progress</option>
-        <option value="complete">Complete</option>
-      </select>
-
-      <button onclick="applyNodeChanges()">Apply Changes</button>
-
-      <div class="editorNote">
-        Click a node in the graph to load it here. Drag nodes to reposition them. Position changes are saved into roadmap.json.
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">Node Actions</div>
-      <div class="buttonGrid">
-        <button onclick="addChild()">Add Child</button>
-        <button onclick="addSibling()">Add Sibling</button>
-        <button onclick="duplicateNode()">Duplicate Node</button>
-        <button onclick="openDeleteModal()">Delete Node</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">Project Actions</div>
-      <div class="buttonGrid">
-        <button onclick="saveRoadmap(false)">Save to GitHub</button>
-        <button onclick="reloadFromGitHub()">Reload from GitHub</button>
-        <button onclick="exportCurrentGraph()">Export JSON</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">Editor Tools</div>
-      <div class="buttonGrid">
-        <div class="buttonRow">
-          <button onclick="undo()">Undo</button>
-          <button onclick="redo()">Redo</button>
-        </div>
-        <button onclick="toggleFocusMode()">Toggle Focus Mode</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">View Controls</div>
-      <div class="buttonGrid">
-        <button onclick="zoomIn()">Zoom +</button>
-        <button onclick="zoomOut()">Zoom -</button>
-        <button onclick="resetView()">Reset</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">Timeline</div>
-      <div id="timelineList" style="max-height:160px;overflow-y:auto;font-size:12px;"></div>
-      <button onclick="restoreSnapshot()">Restore Selected</button>
-    </div>
-
-    <div class="panel">
-      <div class="panelTitleSmall">Diff Viewer</div>
-      <div id="diffViewer" style="font-size:12px;color:#ccc;white-space:pre-wrap;"></div>
-    </div>
-  </div>
-
-  <div id="infoBox"></div>
-  <div id="toast"></div>
-  <div id="autoSaveBanner">Auto-saved</div>
-
-  <div id="errorPanel">
-    <div id="errorPanelTitle">Couldn’t load roadmap</div>
-    <div id="errorPanelText">Try refreshing or check your connection.</div>
-  </div>
-
-  <div id="deleteModal">
-    <div id="deleteModalCard">
-      <div id="deleteModalTitle">Delete node?</div>
-      <div id="deleteModalText">This will remove the selected node and everything under it.</div>
-      <div id="deleteModalActions">
-        <button onclick="closeDeleteModal()">Cancel</button>
-        <button id="deleteConfirmBtn" onclick="confirmDeleteNode()">Delete</button>
-      </div>
-    </div>
-  </div>
-
   <div id="loadingOverlay">
     <div id="loadingCard">
       <div class="spinner"></div>
@@ -649,116 +482,83 @@
     </div>
   </div>
 
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t load roadmap</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
+  </div>
+
+  <div id="app">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="heroTitle">
+          <h1>Dungeon Call Editor</h1>
+          <p>Rebuilt as a panel editor instead of a graph. Edit each roadmap section directly, add children inline, and save changes back to GitHub.</p>
+        </div>
+        <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
+      </div>
+
+      <div class="heroControls">
+        <input id="searchInput" type="text" placeholder="Search roadmap panels and items..." autocomplete="off" />
+        <div class="toolbar">
+          <button onclick="expandAllSections()">Expand All</button>
+          <button onclick="collapseAllSections()">Collapse All</button>
+          <button onclick="saveRoadmap()">Save to GitHub</button>
+          <button onclick="reloadRoadmap()">Reload</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="statCard">
+          <div class="statValue" id="statTotal">0</div>
+          <div class="statLabel">Total</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statComplete">0</div>
+          <div class="statLabel">Done</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statProgress">0</div>
+          <div class="statLabel">Progress</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statPending">0</div>
+          <div class="statLabel">Pending</div>
+        </div>
+      </div>
+
+      <div id="statusLine">Loading roadmap...</div>
+    </section>
+
+    <section id="rootPanel" class="rootCard"></section>
+    <section id="panels"></section>
+  </div>
+
   <script>
-    const START_NODE_SCALE = 1.05;
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    let network;
-    let nodesDS;
-    let edgesDS;
-
     let graphData = { nodes: [], edges: [] };
-    let selectedNodeId = null;
-    let timeline = [];
-    let selectedSnapshotIndex = null;
-    let toastTimer = null;
-    let autoSaveBannerTimer = null;
+    let childMap = new Map();
+    let nodeMap = new Map();
+    let parentMap = new Map();
+    let rootId = null;
+    let expandedNodes = new Set();
+    let currentSearch = "";
     let hasUnsavedChanges = false;
-    let loadingLocked = false;
-    let autoSaveTimer = null;
-    let focusModeEnabled = false;
-    let dragHistoryCaptured = false;
-
-    let historyStack = [];
-    let redoStack = [];
-
-    function cloneGraphData(data) {
-      return JSON.parse(JSON.stringify(data));
-    }
-
-    function pushHistory() {
-      historyStack.push(cloneGraphData(graphData));
-      if (historyStack.length > 100) historyStack.shift();
-      redoStack = [];
-    }
-
-    function undo() {
-      if (!historyStack.length) {
-        showToast("Nothing to undo.");
-        return;
-      }
-      redoStack.push(cloneGraphData(graphData));
-      graphData = historyStack.pop();
-      selectedNodeId = null;
-      clearEditorFields();
-      document.getElementById("infoBox").style.display = "none";
-      rebuildDatasetsPreserveView();
-      setDirtyState(true);
-      setStatus("Undo applied.");
-      showToast("Undo");
-    }
-
-    function redo() {
-      if (!redoStack.length) {
-        showToast("Nothing to redo.");
-        return;
-      }
-      historyStack.push(cloneGraphData(graphData));
-      graphData = redoStack.pop();
-      selectedNodeId = null;
-      clearEditorFields();
-      document.getElementById("infoBox").style.display = "none";
-      rebuildDatasetsPreserveView();
-      setDirtyState(true);
-      setStatus("Redo applied.");
-      showToast("Redo");
-    }
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
       document.getElementById("loadingOverlay").style.display = "flex";
-      loadingLocked = true;
     }
 
     function hideLoading() {
       document.getElementById("loadingOverlay").style.display = "none";
-      loadingLocked = false;
     }
 
-    function setStatus(message, isError = false) {
-      const bar = document.getElementById("statusBar");
-      bar.textContent = message;
-      bar.style.color = isError ? "#ff8a8a" : "#999";
-    }
-
-    function triggerAutoSave() {
-      clearTimeout(autoSaveTimer);
-      if (!hasUnsavedChanges) return;
-      autoSaveTimer = setTimeout(() => saveRoadmap(true), 4000);
-    }
-
-    function setDirtyState(isDirty) {
-      hasUnsavedChanges = isDirty;
-      document.getElementById("dirtyIndicator").classList.toggle("show", isDirty);
-      if (isDirty) triggerAutoSave();
-      else clearTimeout(autoSaveTimer);
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
-    }
-
-    function showAutoSaveBanner(message = "Auto-saved") {
-      const banner = document.getElementById("autoSaveBanner");
-      banner.textContent = message;
-      banner.classList.add("show");
-      if (autoSaveBannerTimer) clearTimeout(autoSaveBannerTimer);
-      autoSaveBannerTimer = setTimeout(() => banner.classList.remove("show"), 2200);
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("statusLine");
+      el.textContent = text;
+      el.style.color = isError ? "#ff8a8a" : "#999";
     }
 
     function showErrorPanel(message) {
@@ -770,89 +570,68 @@
       document.getElementById("errorPanel").classList.remove("show");
     }
 
-    function getColor(status) {
-      if (status === "complete") return { background: "#00cc66", border: "#00994d", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffaa00", border: "#cc8800", font: { color: "#222" } };
-      return { background: "#111", border: "#333", font: { color: "#777" } };
+    function markDirty() {
+      hasUnsavedChanges = true;
+      setStatus("You have unsaved changes.");
     }
 
-    function getHighlightColor(status) {
-      if (status === "complete") return { background: "#2cff8f", border: "#adffd0", font: { color: "#003322" } };
-      if (status === "progress") return { background: "#ffd166", border: "#fff0bd", font: { color: "#222" } };
-      return { background: "#2a2a2a", border: "#ff78a5", font: { color: "#fff" } };
-    }
-
-    function getDimColor(status) {
-      if (status === "complete") return { background: "#183025", border: "#284338", font: { color: "#8ea79b" } };
-      if (status === "progress") return { background: "#3a331f", border: "#554a28", font: { color: "#c5b98e" } };
-      return { background: "#171717", border: "#2c2c2c", font: { color: "#777" } };
-    }
-
-    function getStatusLabel(status) {
-      if (status === "complete") return "Done";
-      if (status === "progress") return "In Progress";
-      return "Not Started";
-    }
-
-    function getStatusBadgeStyle(status) {
-      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      return "background:#181818;color:#999;border:1px solid #333;";
-    }
-
-    function positionInfoBox(domX, domY) {
-      const box = document.getElementById("infoBox");
-      const padding = 12;
-      requestAnimationFrame(() => {
-        const rect = box.getBoundingClientRect();
-        let left = domX + 16;
-        let top = domY - 16;
-        if (left + rect.width > window.innerWidth - padding) left = domX - rect.width - 16;
-        if (top + rect.height > window.innerHeight - padding) top = window.innerHeight - rect.height - padding;
-        if (top < padding) top = padding;
-        if (left < padding) left = padding;
-        box.style.left = left + "px";
-        box.style.top = top + "px";
-      });
-    }
-
-    function clearEditorFields() {
-      document.getElementById("nodeLabel").value = "";
-      document.getElementById("nodeDescription").value = "";
-      document.getElementById("nodeStatus").value = "pending";
+    function clearDirty() {
+      hasUnsavedChanges = false;
+      setStatus("Loaded latest roadmap.");
     }
 
     function normalizeGraphData(raw) {
       const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
       const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-      const nodes = rawNodes.map(n => ({
-        id: Number(n.id),
-        label: n.label || "Unnamed",
-        status: n.status || "pending",
-        description: n.description || "Coming Soon",
-        x: typeof n.x === "number" ? n.x : null,
-        y: typeof n.y === "number" ? n.y : null
-      }));
-      const edges = rawEdges.map((e, index) => ({
-        id: `${e.from}->${e.to}-${index}`,
-        from: Number(e.from),
-        to: Number(e.to)
-      }));
-      return { nodes, edges };
+
+      return {
+        nodes: rawNodes.map(n => ({
+          id: Number(n.id),
+          label: n.label || "Unnamed",
+          status: n.status || "pending",
+          description: n.description || "Coming Soon",
+          x: typeof n.x === "number" ? n.x : null,
+          y: typeof n.y === "number" ? n.y : null
+        })),
+        edges: rawEdges.map((e, index) => ({
+          id: `${e.from}->${e.to}-${index}`,
+          from: Number(e.from),
+          to: Number(e.to)
+        }))
+      };
     }
 
-    function getNodeById(id) {
-      return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
-    }
+    function rebuildMaps() {
+      childMap = new Map();
+      nodeMap = new Map();
+      parentMap = new Map();
 
-    function getChildrenOf(parentId) {
-      const childIds = graphData.edges.filter(e => Number(e.from) === Number(parentId)).map(e => Number(e.to));
-      return graphData.nodes.filter(n => childIds.includes(Number(n.id)));
-    }
+      for (const node of graphData.nodes) {
+        nodeMap.set(Number(node.id), node);
+        childMap.set(Number(node.id), []);
+      }
 
-    function getParentId(nodeId) {
-      const edge = graphData.edges.find(e => Number(e.to) === Number(nodeId));
-      return edge ? Number(edge.from) : null;
+      for (const edge of graphData.edges) {
+        const from = Number(edge.from);
+        const to = Number(edge.to);
+        if (!childMap.has(from)) childMap.set(from, []);
+        childMap.get(from).push(to);
+        parentMap.set(to, from);
+      }
+
+      for (const [id, kids] of childMap.entries()) {
+        kids.sort((a, b) => {
+          const na = nodeMap.get(a);
+          const nb = nodeMap.get(b);
+          const ax = typeof na?.x === "number" ? na.x : 0;
+          const bx = typeof nb?.x === "number" ? nb.x : 0;
+          if (ax !== bx) return ax - bx;
+          const ay = typeof na?.y === "number" ? na.y : 0;
+          const by = typeof nb?.y === "number" ? nb.y : 0;
+          if (ay !== by) return ay - by;
+          return (na?.label || "").localeCompare(nb?.label || "");
+        });
+      }
     }
 
     function getRootId() {
@@ -861,176 +640,35 @@
       return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
     }
 
-    function getNextNodeId() {
-      if (!graphData.nodes.length) return 1;
-      return Math.max(...graphData.nodes.map(n => Number(n.id))) + 1;
+    function getNodeById(id) {
+      return nodeMap.get(Number(id)) || null;
     }
 
-    function buildNetworkNodes(useFixedPositions) {
-      return graphData.nodes.map(n => {
-        const nodeData = {
-          id: Number(n.id),
-          label: n.label,
-          shape: "box",
-          margin: 14,
-          color: getColor(n.status),
-          description: n.description,
-          status: n.status,
-          widthConstraint: { minimum: 70, maximum: 180 }
-        };
-        if (useFixedPositions && typeof n.x === "number" && typeof n.y === "number") {
-          nodeData.x = n.x;
-          nodeData.y = n.y;
-          nodeData.fixed = { x: false, y: false };
-        }
-        return nodeData;
-      });
+    function getChildren(id) {
+      return childMap.get(Number(id)) || [];
     }
 
-    function buildNetworkEdges() {
-      return graphData.edges.map(e => ({
-        id: e.id,
-        from: Number(e.from),
-        to: Number(e.to),
-        smooth: {
-          enabled: true,
-          type: "cubicBezier",
-          forceDirection: "vertical",
-          roundness: 0.2
-        },
-        color: {
-          color: "rgba(255, 180, 0, 0.45)",
-          highlight: "#ffd166"
-        },
-        width: 1.5
-      }));
+    function getStatusLabel(status) {
+      if (status === "complete") return "Done";
+      if (status === "progress") return "In Progress";
+      return "Pending";
     }
 
-    function hasSavedPositions() {
-      return graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
-    }
+    function updateStats() {
+      const total = graphData.nodes.length;
+      const complete = graphData.nodes.filter(n => n.status === "complete").length;
+      const progress = graphData.nodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
 
-    function createNetwork(useFixedPositions) {
-      if (network) network.destroy();
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statComplete").textContent = complete;
+      document.getElementById("statProgress").textContent = progress;
+      document.getElementById("statPending").textContent = pending;
 
-      nodesDS = new vis.DataSet(buildNetworkNodes(useFixedPositions));
-      edgesDS = new vis.DataSet(buildNetworkEdges());
-
-      network = new vis.Network(
-        document.getElementById("graph"),
-        { nodes: nodesDS, edges: edgesDS },
-        {
-          layout: useFixedPositions ? {} : {
-            hierarchical: {
-              direction: "LR",
-              levelSeparation: 250,
-              nodeSpacing: 220
-            }
-          },
-          physics: false,
-          interaction: {
-            dragNodes: useFixedPositions,
-            dragView: true,
-            zoomView: true
-          }
-        }
-      );
-
-      network.on("click", function(params) {
-        const info = document.getElementById("infoBox");
-        if (!params.nodes.length) {
-          selectedNodeId = null;
-          clearEditorFields();
-          info.style.display = "none";
-          applyFocusMode();
-          return;
-        }
-        selectedNodeId = Number(params.nodes[0]);
-        loadSelectedNodeIntoEditor();
-        openNodeInfo(selectedNodeId, params.pointer.DOM.x, params.pointer.DOM.y);
-        applyFocusMode();
-      });
-
-      network.on("dragStart", function(params) {
-        if (!params.nodes || !params.nodes.length || loadingLocked) return;
-        if (!dragHistoryCaptured) {
-          pushHistory();
-          dragHistoryCaptured = true;
-        }
-      });
-
-      network.on("dragEnd", function(params) {
-        if (!params.nodes || !params.nodes.length || loadingLocked) return;
-        const positions = network.getPositions(params.nodes);
-        for (const nodeId of params.nodes) {
-          const graphNode = getNodeById(Number(nodeId));
-          if (graphNode && positions[nodeId]) {
-            graphNode.x = positions[nodeId].x;
-            graphNode.y = positions[nodeId].y;
-          }
-        }
-        dragHistoryCaptured = false;
-        setDirtyState(true);
-        setStatus("Node position updated. Save when ready.");
-        applyFocusMode();
-      });
-    }
-
-    function rebuildDatasetsPreserveView(focusNodeId = null) {
-      if (!network) return;
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      const nextNodes = buildNetworkNodes(true);
-      const nextEdges = buildNetworkEdges();
-
-      nodesDS.clear();
-      edgesDS.clear();
-      nodesDS.add(nextNodes);
-      edgesDS.add(nextEdges);
-
-      applyFocusMode(false);
-
-      requestAnimationFrame(() => {
-        if (focusNodeId) {
-          network.focus(Number(focusNodeId), {
-            scale: Math.max(currentScale, 1.02),
-            animation: { duration: 220, easingFunction: "easeInOutQuad" }
-          });
-        } else {
-          network.moveTo({ position: currentPosition, scale: currentScale, animation: false });
-        }
-      });
-    }
-
-    function openNodeInfo(nodeId, domX = 80, domY = 120) {
-      const info = document.getElementById("infoBox");
-      const node = getNodeById(nodeId);
-      if (!node) return;
-
-      info.innerHTML =
-        '<div id="closeBtn">✕</div>' +
-        `<h3>${escapeHtml(node.label)}</h3>` +
-        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${escapeHtml(node.description || "No description available.")}</p>` +
-        `<div class="infoInlineEditor">
-          <label for="infoInlineLabel">Quick Edit Label</label>
-          <input id="infoInlineLabel" type="text" value="${escapeHtml(node.label)}" />
-          <label for="infoInlineDescription">Quick Edit Description</label>
-          <textarea id="infoInlineDescription">${escapeHtml(node.description || "")}</textarea>
-          <label for="infoInlineStatus">Quick Edit Status</label>
-          <select id="infoInlineStatus">
-            <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
-            <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
-            <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
-          </select>
-          <button onclick="applyInlineInfoChanges()">Apply From Panel</button>
-          <div class="infoNote">This lets you edit directly from the node popup too.</div>
-        </div>`;
-
-      info.style.display = "block";
-      positionInfoBox(domX, domY);
-      document.getElementById("closeBtn").onclick = () => { info.style.display = "none"; };
+      const rootNode = getNodeById(rootId);
+      const badge = document.getElementById("rootStatusBadge");
+      badge.className = `statusBadge status-${rootNode?.status || "pending"}`;
+      badge.textContent = getStatusLabel(rootNode?.status || "pending");
     }
 
     function escapeHtml(value) {
@@ -1042,310 +680,282 @@
         .replaceAll("'", "&#039;");
     }
 
-    function applyInlineInfoChanges() {
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
+    function matchesSearch(node, search) {
+      if (!search) return true;
+      const hay = `${node.label} ${node.description}`.toLowerCase();
+      return hay.includes(search);
+    }
+
+    function subtreeMatches(id, search) {
+      const node = getNodeById(id);
+      if (!node) return false;
+      if (matchesSearch(node, search)) return true;
+      return getChildren(id).some(childId => subtreeMatches(childId, search));
+    }
+
+    function createStatusBadge(status) {
+      return `<span class="statusBadge status-${status}">${getStatusLabel(status)}</span>`;
+    }
+
+    function countDescendants(id) {
+      let count = 0;
+      const stack = [...getChildren(id)];
+      while (stack.length) {
+        const current = stack.pop();
+        count++;
+        stack.push(...getChildren(current));
       }
-      pushHistory();
-      const node = getNodeById(selectedNodeId);
+      return count;
+    }
+
+    function updateNodeFromInputs(id) {
+      const node = getNodeById(id);
       if (!node) return;
 
-      node.label = document.getElementById("infoInlineLabel").value.trim() || "Unnamed";
-      node.description = document.getElementById("infoInlineDescription").value;
-      node.status = document.getElementById("infoInlineStatus").value;
+      const labelEl = document.getElementById(`label-${id}`);
+      const descEl = document.getElementById(`desc-${id}`);
+      const statusEl = document.getElementById(`status-${id}`);
 
-      loadSelectedNodeIntoEditor();
-      rebuildDatasetsPreserveView();
-      setDirtyState(true);
-      setStatus("Node updated from popup. Save when ready.");
-      showToast("Quick edit applied.");
+      node.label = (labelEl?.value || "").trim() || "Unnamed";
+      node.description = descEl?.value || "";
+      node.status = statusEl?.value || "pending";
+
+      rebuildMaps();
+      updateStats();
+      renderRootPanel();
+      renderPanels();
+      markDirty();
     }
 
-    function highlightNode(nodeId) {
-      const node = getNodeById(nodeId);
-      if (!node) return;
-      nodesDS.update({ id: nodeId, color: getHighlightColor(node.status) });
-      setTimeout(() => {
-        const fresh = getNodeById(nodeId);
-        if (!fresh) return;
-        applyFocusMode();
-      }, 1800);
-    }
+    function addChild(id) {
+      const newId = graphData.nodes.length
+        ? Math.max(...graphData.nodes.map(n => Number(n.id))) + 1
+        : 1;
 
-    function loadSelectedNodeIntoEditor() {
-      const node = getNodeById(selectedNodeId);
-      if (!node) {
-        clearEditorFields();
-        return;
-      }
-      document.getElementById("nodeLabel").value = node.label || "";
-      document.getElementById("nodeDescription").value = node.description || "";
-      document.getElementById("nodeStatus").value = node.status || "pending";
-    }
-
-    function applyFocusMode(showToastMessage = false) {
-      if (!nodesDS) return;
-      if (!focusModeEnabled || !selectedNodeId) {
-        nodesDS.update(graphData.nodes.map(node => ({ id: node.id, color: getColor(node.status) })));
-        if (showToastMessage) showToast("Focus mode off.");
-        return;
-      }
-      nodesDS.update(graphData.nodes.map(node => ({
-        id: node.id,
-        color: Number(node.id) === Number(selectedNodeId) ? getHighlightColor(node.status) : getDimColor(node.status)
-      })));
-      if (showToastMessage) showToast("Focus mode on.");
-    }
-
-    function toggleFocusMode() {
-      focusModeEnabled = !focusModeEnabled;
-      applyFocusMode(true);
-      setStatus(focusModeEnabled ? "Focus mode enabled." : "Focus mode disabled.");
-    }
-
-    async function reloadFromGitHub() {
-      try {
-        showLoading("Syncing latest roadmap...");
-        setStatus("Loading latest roadmap from GitHub...");
-
-        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) throw new Error("Could not load roadmap.json from GitHub");
-
-        graphData = normalizeGraphData(await res.json());
-        selectedNodeId = null;
-        historyStack = [];
-        redoStack = [];
-
-        createNetwork(hasSavedPositions());
-        const rootId = getRootId();
-        if (rootId !== null && network) {
-          network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-        }
-
-        hideErrorPanel();
-        clearEditorFields();
-        document.getElementById("infoBox").style.display = "none";
-        setDirtyState(false);
-        setStatus("Loaded latest roadmap from GitHub.");
-        hideLoading();
-      } catch (err) {
-        console.error(err);
-        setStatus("Failed to load roadmap from GitHub.", true);
-        showErrorPanel("Roadmap refresh failed. Try refreshing again in a moment.");
-        hideLoading();
-      }
-    }
-
-    function applyNodeChanges() {
-      createSnapshot();
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-      pushHistory();
-      const node = getNodeById(selectedNodeId);
-      if (!node) return;
-
-      node.label = document.getElementById("nodeLabel").value.trim() || "Unnamed";
-      node.description = document.getElementById("nodeDescription").value;
-      node.status = document.getElementById("nodeStatus").value;
-
-      rebuildDatasetsPreserveView();
-      openNodeInfo(selectedNodeId);
-      loadSelectedNodeIntoEditor();
-      setDirtyState(true);
-      setStatus("Node updated. Save when ready.");
-      showToast("Node changes applied.");
-    }
-
-    function addChild() {
-      createSnapshot();
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-      pushHistory();
-
-      const parent = getNodeById(selectedNodeId);
-      if (!parent) return;
-      const siblingCount = getChildrenOf(parent.id).length;
-      const newId = getNextNodeId();
-
-      const newNode = {
+      graphData.nodes.push({
         id: newId,
         label: "New Node",
         status: "pending",
         description: "Coming Soon",
-        x: (typeof parent.x === "number" ? parent.x : 0) + 120,
-        y: (typeof parent.y === "number" ? parent.y : 0) + ((siblingCount + 1) * 110)
-      };
+        x: null,
+        y: null
+      });
 
-      graphData.nodes.push(newNode);
-      graphData.edges.push({ id: `${parent.id}->${newId}-${Date.now()}`, from: parent.id, to: newId });
+      graphData.edges.push({
+        id: `${id}->${newId}-${Date.now()}`,
+        from: Number(id),
+        to: Number(newId)
+      });
 
-      selectedNodeId = newId;
-      rebuildDatasetsPreserveView(newId);
-      loadSelectedNodeIntoEditor();
-      setDirtyState(true);
-      setStatus("Child node added. Edit its details now.");
-      showToast("Child node added.");
-      highlightNode(newId);
+      expandedNodes.add(Number(id));
+      rebuildMaps();
+      updateStats();
+      renderPanels();
+      markDirty();
     }
 
-    function addSibling() {
-      createSnapshot();
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-      pushHistory();
-
-      const parentId = getParentId(selectedNodeId);
-      if (parentId === null) {
-        showToast("The root can't have a sibling.");
+    function deleteNode(id) {
+      if (Number(id) === Number(rootId)) {
+        alert("You can't delete the root node.");
         return;
       }
 
-      const parent = getNodeById(parentId);
-      const siblingCount = getChildrenOf(parentId).length;
-      const newId = getNextNodeId();
+      const idsToDelete = new Set();
+      const stack = [Number(id)];
 
-      const newNode = {
-        id: newId,
-        label: "New Sibling",
-        status: "pending",
-        description: "Coming Soon",
-        x: (typeof parent.x === "number" ? parent.x : 0) + 120,
-        y: (typeof parent.y === "number" ? parent.y : 0) + ((siblingCount + 1) * 110)
-      };
-
-      graphData.nodes.push(newNode);
-      graphData.edges.push({ id: `${parentId}->${newId}-${Date.now()}`, from: parentId, to: newId });
-
-      selectedNodeId = newId;
-      rebuildDatasetsPreserveView(newId);
-      loadSelectedNodeIntoEditor();
-      setDirtyState(true);
-      setStatus("Sibling node added. Edit its details now.");
-      showToast("Sibling node added.");
-      highlightNode(newId);
-    }
-
-    function duplicateSubtree(oldId, newParentId, offsetX = 120, offsetY = 120) {
-      const source = getNodeById(oldId);
-      if (!source) return null;
-
-      const newId = getNextNodeId();
-      const copy = {
-        id: newId,
-        label: source.label + " Copy",
-        status: source.status,
-        description: source.description,
-        x: (typeof source.x === "number" ? source.x : 0) + offsetX,
-        y: (typeof source.y === "number" ? source.y : 0) + offsetY
-      };
-
-      graphData.nodes.push(copy);
-
-      if (newParentId !== null) {
-        graphData.edges.push({
-          id: `${newParentId}->${newId}-${Date.now()}-${Math.random()}`,
-          from: newParentId,
-          to: newId
-        });
-      }
-
-      const children = getChildrenOf(oldId);
-      for (const child of children) duplicateSubtree(child.id, newId, offsetX, offsetY);
-      return newId;
-    }
-
-    function duplicateNode() {
-      createSnapshot();
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-      pushHistory();
-
-      const parentId = getParentId(selectedNodeId);
-      if (parentId === null) {
-        showToast("You can't duplicate the root.");
-        return;
-      }
-
-      const newRootId = duplicateSubtree(selectedNodeId, parentId, 140, 120);
-      selectedNodeId = newRootId;
-      rebuildDatasetsPreserveView(newRootId);
-      loadSelectedNodeIntoEditor();
-      setDirtyState(true);
-      setStatus("Node duplicated.");
-      showToast("Node duplicated.");
-      highlightNode(newRootId);
-    }
-
-    function openDeleteModal() {
-      if (!selectedNodeId) {
-        showToast("Select a node first.");
-        return;
-      }
-      if (selectedNodeId === getRootId()) {
-        showToast("You can't delete the root.");
-        return;
-      }
-      document.getElementById("deleteModal").classList.add("show");
-    }
-
-    function closeDeleteModal() {
-      document.getElementById("deleteModal").classList.remove("show");
-    }
-
-    function getDescendants(nodeId) {
-      const result = [];
-      const stack = [nodeId];
       while (stack.length) {
         const current = stack.pop();
-        result.push(current);
-        const children = getChildrenOf(current);
-        for (const child of children) stack.push(child.id);
-      }
-      return result;
-    }
-
-    function confirmDeleteNode() {
-      createSnapshot();
-      const targetId = selectedNodeId;
-      if (targetId === null) {
-        closeDeleteModal();
-        return;
-      }
-      pushHistory();
-
-      if (targetId === getRootId()) {
-        closeDeleteModal();
-        showToast("You can't delete the root.");
-        return;
+        idsToDelete.add(current);
+        for (const childId of getChildren(current)) stack.push(childId);
       }
 
-      const idsToDelete = new Set(getDescendants(targetId));
       graphData.nodes = graphData.nodes.filter(n => !idsToDelete.has(Number(n.id)));
-      graphData.edges = graphData.edges.filter(e => !idsToDelete.has(Number(e.from)) && !idsToDelete.has(Number(e.to)));
+      graphData.edges = graphData.edges.filter(
+        e => !idsToDelete.has(Number(e.from)) && !idsToDelete.has(Number(e.to))
+      );
 
-      selectedNodeId = null;
-      clearEditorFields();
-      document.getElementById("infoBox").style.display = "none";
-      closeDeleteModal();
-
-      rebuildDatasetsPreserveView();
-      setDirtyState(true);
-      setStatus("Node deleted. Save when ready.");
-      showToast("Node deleted.");
+      rebuildMaps();
+      updateStats();
+      renderPanels();
+      markDirty();
     }
 
-    async function saveRoadmap(isAutoSave = false) {
+    function toggleSection(id) {
+      if (expandedNodes.has(id)) expandedNodes.delete(id);
+      else expandedNodes.add(id);
+      renderPanels();
+    }
+
+    function renderTreeNode(id, search) {
+      const node = getNodeById(id);
+      if (!node) return "";
+
+      const children = getChildren(id).filter(childId => subtreeMatches(childId, search));
+      const selfMatch = matchesSearch(node, search);
+      const subtreeMatch = selfMatch || children.length > 0;
+      if (!subtreeMatch) return "";
+
+      const isExpanded = expandedNodes.has(id) || !!search;
+      const hasChildren = children.length > 0;
+      const matchedClass = selfMatch ? " matched" : "";
+
+      return `
+        <div class="treeNode${matchedClass}">
+          <div class="treeNodeHeader">
+            <div>
+              <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
+            </div>
+            ${createStatusBadge(node.status)}
+          </div>
+
+          <div class="editorGrid">
+            <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
+            <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
+            <select id="status-${id}">
+              <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
+              <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
+              <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
+            </select>
+          </div>
+
+          <div class="nodeActions">
+            <button onclick="updateNodeFromInputs(${id})">Apply</button>
+            <button onclick="addChild(${id})">Add Child</button>
+            ${hasChildren ? `<button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>` : ""}
+            ${Number(id) !== Number(rootId) ? `<button class="dangerBtn" onclick="deleteNode(${id})">Delete</button>` : ""}
+          </div>
+
+          ${hasChildren && isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search)).join("")}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function renderRootPanel() {
+      const rootNode = getNodeById(rootId);
+      if (!rootNode) return;
+
+      document.getElementById("rootPanel").innerHTML = `
+        <div class="rootHeader">
+          <div>
+            <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+          </div>
+          ${createStatusBadge(rootNode.status)}
+        </div>
+        <div class="editorGrid">
+          <input id="label-${rootNode.id}" type="text" value="${escapeHtml(rootNode.label)}" placeholder="Label" />
+          <textarea id="desc-${rootNode.id}" placeholder="Description">${escapeHtml(rootNode.description || "")}</textarea>
+          <select id="status-${rootNode.id}">
+            <option value="pending" ${rootNode.status === "pending" ? "selected" : ""}>Pending</option>
+            <option value="progress" ${rootNode.status === "progress" ? "selected" : ""}>In Progress</option>
+            <option value="complete" ${rootNode.status === "complete" ? "selected" : ""}>Complete</option>
+          </select>
+        </div>
+        <div class="nodeActions">
+          <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
+          <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
+        </div>
+      `;
+    }
+
+    function renderPanels() {
+      const panelsEl = document.getElementById("panels");
+      const mainChildren = getChildren(rootId);
+      const search = currentSearch.trim().toLowerCase();
+
+      panelsEl.innerHTML = mainChildren.map(id => {
+        const node = getNodeById(id);
+        if (!node) return "";
+
+        const visible = subtreeMatches(id, search);
+        const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
+        const descendants = countDescendants(id);
+
+        return `
+          <article class="panel${visible ? "" : " hiddenBySearch"}">
+            <div class="panelHeader">
+              <div class="panelHeaderText">
+                <h2>${escapeHtml(node.label)}</h2>
+                <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+              </div>
+              ${createStatusBadge(node.status)}
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+              <span class="statusBadge status-pending">${descendants} sub-items</span>
+              <span class="statusBadge status-pending">${childIds.length} direct children</span>
+            </div>
+
+            <div class="editorGrid">
+              <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
+              <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
+              <select id="status-${id}">
+                <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
+                <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
+              </select>
+            </div>
+
+            <div class="nodeActions">
+              <button onclick="updateNodeFromInputs(${id})">Apply</button>
+              <button onclick="addChild(${id})">Add Child</button>
+              <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
+            </div>
+
+            <div class="panelBody">
+              ${childIds.length
+                ? childIds.map(childId => renderTreeNode(childId, search)).join("")
+                : `<div class="emptyState">No child items yet.</div>`
+              }
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function expandAllSections() {
+      for (const node of graphData.nodes) {
+        if (getChildren(node.id).length) expandedNodes.add(node.id);
+      }
+      renderPanels();
+    }
+
+    function collapseAllSections() {
+      expandedNodes.clear();
+      renderPanels();
+    }
+
+    async function reloadRoadmap() {
       try {
-        setStatus(isAutoSave ? "Auto-saving to GitHub..." : "Saving to GitHub...");
+        showLoading("Loading roadmap...");
+        setStatus("Loading latest roadmap...");
+
+        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        if (!res.ok) throw new Error("Could not load roadmap.json");
+
+        graphData = normalizeGraphData(await res.json());
+        rebuildMaps();
+        rootId = getRootId();
+        updateStats();
+        renderRootPanel();
+        renderPanels();
+
+        hideErrorPanel();
+        clearDirty();
+        hideLoading();
+      } catch (err) {
+        console.error(err);
+        setStatus("Failed to load roadmap.", true);
+        showErrorPanel("Roadmap refresh failed. Try again in a moment.");
+        hideLoading();
+      }
+    }
+
+    async function saveRoadmap() {
+      try {
+        setStatus("Saving to GitHub...");
 
         const payload = {
           nodes: graphData.nodes.map(n => ({
@@ -1356,7 +966,10 @@
             x: n.x,
             y: n.y
           })),
-          edges: graphData.edges.map(e => ({ from: e.from, to: e.to }))
+          edges: graphData.edges.map(e => ({
+            from: e.from,
+            to: e.to
+          }))
         };
 
         const res = await fetch(SAVE_URL, {
@@ -1369,10 +982,7 @@
         if (!res.ok) throw new Error(text || "Save failed");
 
         hideErrorPanel();
-        setDirtyState(false);
-        setStatus(isAutoSave ? "Auto-saved to GitHub." : "Saved to GitHub.");
-        if (isAutoSave) showAutoSaveBanner("Auto-saved to GitHub");
-        else showToast("Saved to GitHub.");
+        clearDirty();
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
@@ -1380,233 +990,28 @@
       }
     }
 
-    function exportCurrentGraph() {
-      const payload = {
-        nodes: graphData.nodes.map(n => ({
-          id: n.id,
-          label: n.label,
-          status: n.status,
-          description: n.description,
-          x: n.x,
-          y: n.y
-        })),
-        edges: graphData.edges.map(e => ({ from: e.from, to: e.to }))
-      };
-      console.log(JSON.stringify(payload, null, 2));
-      showToast("Graph JSON printed to console.");
-    }
-
-    function zoomIn() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 1.2 });
-    }
-
-    function zoomOut() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 0.8 });
-    }
-
-    function resetView() {
-      const rootId = getRootId();
-      if (rootId === null || !network) return;
-      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-      setStatus("View reset.");
-    }
-
-    function renderSearchResults(query) {
-      const resultsBox = document.getElementById("searchResults");
-      resultsBox.innerHTML = "";
-
-      if (!query || !graphData.nodes.length) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const matches = graphData.nodes.filter(n => (n.label || "").toLowerCase().includes(q)).slice(0, 8);
-
-      if (!matches.length) {
-        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
-        resultsBox.style.display = "block";
-        return;
-      }
-
-      for (const match of matches) {
-        const item = document.createElement("div");
-        item.className = "searchResult";
-        item.innerHTML = `
-          <div class="searchResultTitle">${escapeHtml(match.label)}</div>
-          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
-        `;
-        item.onclick = () => {
-          jumpToNode(match.id);
-          resultsBox.style.display = "none";
-        };
-        resultsBox.appendChild(item);
-      }
-
-      resultsBox.style.display = "block";
-    }
-
-    function jumpToNode(nodeId) {
-      const node = getNodeById(nodeId);
-      if (!node || !network) return;
-
-      selectedNodeId = Number(nodeId);
-      loadSelectedNodeIntoEditor();
-
-      network.focus(Number(nodeId), {
-        scale: Math.max(network.getScale(), 1.05),
-        animation: { duration: 280, easingFunction: "easeInOutQuad" }
-      });
-
-      highlightNode(Number(nodeId));
-      openNodeInfo(Number(nodeId), window.innerWidth * 0.45, 130);
-      applyFocusMode();
-      showToast("Jumped to node.");
-    }
-
-    document.addEventListener("click", (e) => {
-      const wrap = document.getElementById("searchWrap");
-      const results = document.getElementById("searchResults");
-      if (wrap && !wrap.contains(e.target)) results.style.display = "none";
-    });
-
     document.addEventListener("DOMContentLoaded", () => {
-      const savedTimeline = localStorage.getItem("roadmapTimeline");
-      if (savedTimeline) {
-        timeline = JSON.parse(savedTimeline);
-        renderTimeline();
-      }
-
       const input = document.getElementById("searchInput");
-      input.addEventListener("input", () => renderSearchResults(input.value));
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          document.getElementById("searchResults").style.display = "none";
-          input.blur();
-        }
+      input.addEventListener("input", () => {
+        currentSearch = input.value || "";
+        renderPanels();
       });
-    });
-
-    document.addEventListener("keydown", (e) => {
-      const ctrlOrCmd = e.ctrlKey || e.metaKey;
-      if (ctrlOrCmd && !e.shiftKey && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        undo();
-      }
-      if ((ctrlOrCmd && e.key.toLowerCase() === "y") || (ctrlOrCmd && e.shiftKey && e.key.toLowerCase() === "z")) {
-        e.preventDefault();
-        redo();
-      }
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) reloadFromGitHub();
+      if (!document.hidden) reloadRoadmap();
     });
 
-    function createSnapshot() {
-      const snapshot = { time: new Date().toLocaleTimeString(), data: JSON.stringify(graphData) };
-      timeline.unshift(snapshot);
-      if (timeline.length > 30) timeline.pop();
-      localStorage.setItem("roadmapTimeline", JSON.stringify(timeline));
-      renderTimeline();
-    }
+    window.updateNodeFromInputs = updateNodeFromInputs;
+    window.addChild = addChild;
+    window.deleteNode = deleteNode;
+    window.toggleSection = toggleSection;
+    window.expandAllSections = expandAllSections;
+    window.collapseAllSections = collapseAllSections;
+    window.reloadRoadmap = reloadRoadmap;
+    window.saveRoadmap = saveRoadmap;
 
-    function renderTimeline() {
-      const el = document.getElementById("timelineList");
-      if (!el) return;
-      el.innerHTML = "";
-
-      if (!timeline.length) {
-        el.innerHTML = `<div style="color:#777;">No snapshots yet</div>`;
-        return;
-      }
-
-      timeline.forEach((snap, i) => {
-        const div = document.createElement("div");
-        div.textContent = `#${timeline.length - i} • ${snap.time}`;
-        div.style.cursor = "pointer";
-        div.style.padding = "6px 8px";
-        div.style.borderRadius = "8px";
-        div.style.marginBottom = "6px";
-        div.style.border = "1px solid #2a2a2a";
-        div.style.background = selectedSnapshotIndex === i ? "rgba(190, 26, 72, 0.18)" : "#111";
-        div.style.color = selectedSnapshotIndex === i ? "#fff" : "#ccc";
-
-        div.onclick = () => {
-          selectedSnapshotIndex = i;
-          renderTimeline();
-          highlightDiff(i);
-          showToast(`Selected snapshot #${timeline.length - i}`);
-        };
-
-        el.appendChild(div);
-      });
-
-      if (selectedSnapshotIndex === null && timeline.length > 0) {
-        selectedSnapshotIndex = 0;
-        renderTimeline();
-        highlightDiff(0);
-      }
-    }
-
-    function restoreSnapshot() {
-      if (selectedSnapshotIndex === null || !timeline[selectedSnapshotIndex]) {
-        showToast("Select a timeline snapshot first.");
-        return;
-      }
-
-      pushHistory();
-      const snap = timeline[selectedSnapshotIndex];
-      graphData = JSON.parse(snap.data);
-
-      rebuildDatasetsPreserveView();
-      setDirtyState(true);
-      selectedNodeId = null;
-      clearEditorFields();
-      document.getElementById("infoBox").style.display = "none";
-
-      showToast(`Restored snapshot #${timeline.length - selectedSnapshotIndex}`);
-      setStatus("Snapshot restored. Save when ready.");
-    }
-
-    function highlightDiff(index) {
-      const viewer = document.getElementById("diffViewer");
-      if (!viewer) return;
-      if (!timeline[index]) {
-        viewer.textContent = "No snapshot selected.";
-        return;
-      }
-
-      const current = graphData.nodes;
-      const old = JSON.parse(timeline[index].data).nodes;
-      let output = "";
-
-      current.forEach(n => {
-        const prev = old.find(o => o.id === n.id);
-        if (!prev) {
-          output += `+ Added: ${n.label}\n`;
-          return;
-        }
-        if (prev.label !== n.label) output += `~ Label: ${prev.label} → ${n.label}\n`;
-        if (prev.status !== n.status) output += `~ Status: ${prev.status} → ${n.status}\n`;
-        if ((prev.description || "") !== (n.description || "")) output += `~ Description changed: ${n.label}\n`;
-      });
-
-      old.forEach(n => {
-        if (!current.find(c => c.id === n.id)) output += `- Removed: ${n.label}\n`;
-      });
-
-      viewer.textContent = output || "No differences from the selected snapshot.";
-    }
-
-    reloadFromGitHub();
+    reloadRoadmap();
   </script>
 </body>
 </html>
