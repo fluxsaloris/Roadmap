@@ -8,7 +8,6 @@
     :root {
       --bg: #000;
       --panel: rgba(18, 18, 18, 0.92);
-      --panel-2: rgba(24, 24, 24, 0.95);
       --border: #2a2a2a;
       --text: #f2f2f2;
       --muted: #a5a5a5;
@@ -128,9 +127,9 @@
     }
 
     .status-complete {
-      background: rgba(120, 30, 55, 0.22);
-      border-color: rgba(255, 120, 165, 0.5);
-      color: #ffd3e1;
+      background: rgba(57, 255, 20, 0.16);
+      border-color: rgba(57, 255, 20, 0.72);
+      color: #b8ffab;
     }
 
     .heroControls {
@@ -180,6 +179,10 @@
     .dangerBtn {
       border-color: rgba(190, 26, 72, 0.45);
       color: #ffb3c9;
+    }
+
+    .subtleBtn {
+      color: #cfcfcf;
     }
 
     .stats {
@@ -241,13 +244,6 @@
       margin: 0;
     }
 
-    .rootDescription {
-      margin: 0;
-      color: #cfcfcf;
-      line-height: 1.6;
-      font-size: 14px;
-    }
-
     #panels {
       display: grid;
       grid-template-columns: repeat(2, minmax(320px, 1fr));
@@ -274,8 +270,8 @@
     }
 
     .panel.status-panel-complete {
-      border-color: rgba(255, 120, 165, 0.28);
-      box-shadow: 0 0 18px rgba(255, 120, 165, 0.06);
+      border-color: rgba(57, 255, 20, 0.42);
+      box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
     }
 
     .panel.hiddenBySearch {
@@ -307,6 +303,45 @@
       margin-top: 14px;
     }
 
+    .panelTopMeta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .progressWrap {
+      margin: 12px 0 14px;
+    }
+
+    .progressText {
+      font-size: 12px;
+      color: #bdbdbd;
+      margin-bottom: 6px;
+    }
+
+    .progressTrack {
+      width: 100%;
+      height: 10px;
+      background: #101010;
+      border: 1px solid #2a2a2a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progressFill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #BE1A48, #ff4f86);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .panel.status-panel-complete .progressFill,
+    .treeNode.completeNode .progressFill {
+      background: linear-gradient(90deg, #39ff14, #8dff77);
+    }
+
     .treeNode {
       background: rgba(22,22,22,0.96);
       border: 1px solid #2a2a2a;
@@ -315,9 +350,14 @@
       margin-top: 10px;
     }
 
+    .treeNode.completeNode {
+      border-color: rgba(57, 255, 20, 0.34);
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+    }
+
     .treeNode.matched {
-      border-color: rgba(255, 209, 102, 0.7);
-      box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.28);
+      border-color: rgba(190, 26, 72, 0.62);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.24);
     }
 
     .treeNodeHeader {
@@ -333,14 +373,6 @@
       margin: 0;
       font-size: 15px;
       line-height: 1.35;
-    }
-
-    .treeNodeDescription {
-      margin: 0;
-      color: #adadad;
-      font-size: 13px;
-      line-height: 1.5;
-      white-space: pre-wrap;
     }
 
     .childrenWrap {
@@ -387,12 +419,6 @@
     .editorGrid select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
-    }
-
-    .smallRow {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
     }
 
     .metaChip {
@@ -519,7 +545,7 @@
       <div class="heroTop">
         <div class="heroTitle">
           <h1>Dungeon Call Editor</h1>
-          <p>Rebuilt as a panel editor instead of a graph. Edit each roadmap section directly, add children inline, and save changes back to GitHub.</p>
+          <p>Panel-based roadmap editor with per-category completion, nested progress bars, and simple top-level reordering.</p>
         </div>
         <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
       </div>
@@ -681,6 +707,29 @@
       return "Pending";
     }
 
+    function getCompletionStats(id) {
+      const ids = [Number(id)];
+      const stack = [Number(id)];
+
+      while (stack.length) {
+        const current = stack.pop();
+        const children = getChildren(current);
+        for (const childId of children) {
+          ids.push(Number(childId));
+          stack.push(Number(childId));
+        }
+      }
+
+      const nodes = ids.map(getNodeById).filter(Boolean);
+      const total = nodes.length;
+      const complete = nodes.filter(n => n.status === "complete").length;
+      const progress = nodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
+      const percent = total ? Math.round((complete / total) * 100) : 0;
+
+      return { total, complete, progress, pending, percent };
+    }
+
     function updateStats() {
       const total = graphData.nodes.length;
       const complete = graphData.nodes.filter(n => n.status === "complete").length;
@@ -735,6 +784,29 @@
       return count;
     }
 
+    function moveTopLevelPanel(id, direction) {
+      const topLevel = getChildren(rootId).slice();
+      const currentIndex = topLevel.indexOf(Number(id));
+      if (currentIndex === -1) return;
+
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= topLevel.length) return;
+
+      const node = getNodeById(id);
+      const targetNode = getNodeById(topLevel[targetIndex]);
+      if (!node || !targetNode) return;
+
+      const nodeX = typeof node.x === "number" ? node.x : currentIndex;
+      const targetX = typeof targetNode.x === "number" ? targetNode.x : targetIndex;
+
+      node.x = targetX;
+      targetNode.x = nodeX;
+
+      rebuildMaps();
+      renderPanels();
+      markDirty();
+    }
+
     function updateNodeFromInputs(id) {
       const node = getNodeById(id);
       if (!node) return;
@@ -777,6 +849,7 @@
       expandedNodes.add(Number(id));
       rebuildMaps();
       updateStats();
+      renderRootPanel();
       renderPanels();
       markDirty();
     }
@@ -803,6 +876,7 @@
 
       rebuildMaps();
       updateStats();
+      renderRootPanel();
       renderPanels();
       markDirty();
     }
@@ -811,6 +885,17 @@
       if (expandedNodes.has(id)) expandedNodes.delete(id);
       else expandedNodes.add(id);
       renderPanels();
+    }
+
+    function renderProgressBar(stats) {
+      return `
+        <div class="progressWrap">
+          <div class="progressText">${stats.complete} / ${stats.total} complete (${stats.percent}%)</div>
+          <div class="progressTrack">
+            <div class="progressFill" style="width:${stats.percent}%"></div>
+          </div>
+        </div>
+      `;
     }
 
     function renderTreeNode(id, search) {
@@ -825,15 +910,23 @@
       const isExpanded = expandedNodes.has(id) || !!search;
       const hasChildren = children.length > 0;
       const matchedClass = selfMatch ? " matched" : "";
+      const stats = getCompletionStats(id);
 
       return `
-        <div class="treeNode${matchedClass}">
+        <div class="treeNode${matchedClass}${node.status === "complete" ? " completeNode" : ""}">
           <div class="treeNodeHeader">
             <div>
               <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
             </div>
             ${createStatusBadge(node.status)}
           </div>
+
+          <div class="smallRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="metaChip">${stats.total - 1} nested</span>
+            <span class="metaChip">${stats.percent}% done</span>
+          </div>
+
+          ${renderProgressBar(stats)}
 
           <div class="editorGrid">
             <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
@@ -860,6 +953,7 @@
     function renderRootPanel() {
       const rootNode = getNodeById(rootId);
       if (!rootNode) return;
+      const stats = getCompletionStats(rootId);
 
       document.getElementById("rootPanel").innerHTML = `
         <div class="rootHeader">
@@ -868,6 +962,14 @@
           </div>
           ${createStatusBadge(rootNode.status)}
         </div>
+
+        <div class="panelTopMeta">
+          <span class="metaChip">${stats.total - 1} total sub-items</span>
+          <span class="metaChip">${stats.percent}% complete</span>
+        </div>
+
+        ${renderProgressBar(stats)}
+
         <div class="editorGrid">
           <input id="label-${rootNode.id}" type="text" value="${escapeHtml(rootNode.label)}" placeholder="Label" />
           <textarea id="desc-${rootNode.id}" placeholder="Description">${escapeHtml(rootNode.description || "")}</textarea>
@@ -877,6 +979,7 @@
             <option value="complete" ${rootNode.status === "complete" ? "selected" : ""}>Complete</option>
           </select>
         </div>
+
         <div class="nodeActions">
           <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
           <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
@@ -889,13 +992,14 @@
       const mainChildren = getChildren(rootId);
       const search = currentSearch.trim().toLowerCase();
 
-      panelsEl.innerHTML = mainChildren.map(id => {
+      panelsEl.innerHTML = mainChildren.map((id, index) => {
         const node = getNodeById(id);
         if (!node) return "";
 
         const visible = subtreeMatches(id, search);
         const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
         const descendants = countDescendants(id);
+        const stats = getCompletionStats(id);
 
         return `
           <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
@@ -907,10 +1011,13 @@
               ${createStatusBadge(node.status)}
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <div class="panelTopMeta">
               <span class="metaChip">${descendants} sub-items</span>
               <span class="metaChip">${childIds.length} direct children</span>
+              <span class="metaChip">${stats.percent}% complete</span>
             </div>
+
+            ${renderProgressBar(stats)}
 
             <div class="editorGrid">
               <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
@@ -925,6 +1032,8 @@
             <div class="nodeActions">
               <button onclick="updateNodeFromInputs(${id})">Apply</button>
               <button onclick="addChild(${id})">Add Child</button>
+              <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
+              <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
               <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
             </div>
 
@@ -1037,6 +1146,7 @@
     window.collapseAllSections = collapseAllSections;
     window.reloadRoadmap = reloadRoadmap;
     window.saveRoadmap = saveRoadmap;
+    window.moveTopLevelPanel = moveTopLevelPanel;
 
     reloadRoadmap();
   </script>
