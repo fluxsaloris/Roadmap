@@ -1596,12 +1596,17 @@ function autoArrange() {
     });
   }
 
-  function getSubtreeSize(nodeId) {
+  function getSubtreeSize(nodeId, seen = new Set()) {
+    if (seen.has(nodeId)) return 0;
+    seen.add(nodeId);
+
     const children = childrenMap.get(Number(nodeId)) || [];
     let size = 1;
+
     for (const childId of children) {
-      size += getSubtreeSize(childId);
+      size += getSubtreeSize(childId, new Set(seen));
     }
+
     return size;
   }
 
@@ -1625,7 +1630,10 @@ function autoArrange() {
 
   const trunk = [];
   let current = rootId;
-  while (current !== null) {
+  const trunkSeen = new Set();
+
+  while (current !== null && !trunkSeen.has(current)) {
+    trunkSeen.add(current);
     trunk.push(current);
     current = getMainChild(current);
   }
@@ -1637,7 +1645,10 @@ function autoArrange() {
     node.y = START_Y;
   });
 
-  function layoutBranch(nodeId, baseX, baseY, direction) {
+  function layoutBranch(nodeId, baseX, baseY, direction, seen = new Set()) {
+    if (seen.has(nodeId)) return;
+    seen.add(nodeId);
+
     const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
     if (!children.length) return;
 
@@ -1651,7 +1662,7 @@ function autoArrange() {
       child.x = branchX;
       child.y = branchY;
 
-      layoutBranch(childId, branchX, branchY, direction);
+      layoutBranch(childId, branchX, branchY, direction, new Set(seen));
     });
   }
 
@@ -1696,213 +1707,6 @@ function autoArrange() {
 
   setTimeout(() => {
     network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-
-    if (selectedNodeId !== null) {
-      loadSelectedNodeIntoEditor();
-      applyFocusMode();
-    }
-
-    hideLoading();
-    setDirtyState(true);
-    setStatus("Roadmap auto-arranged. Save when ready.");
-    showToast("Roadmap auto-arranged.");
-  }, 120);
-}
-
-  function sortChildren(ids) {
-    return [...ids].sort((a, b) => {
-      const nodeA = getNodeById(a);
-      const nodeB = getNodeById(b);
-      return (nodeA?.label || "").localeCompare(nodeB?.label || "");
-    });
-  }
-
-  function getSubtreeSize(nodeId) {
-    const children = childrenMap.get(Number(nodeId)) || [];
-    let size = 1;
-    for (const childId of children) {
-      size += getSubtreeSize(childId);
-    }
-    return size;
-  }
-
-  // Pick the "main timeline child" as the child with the biggest subtree
-  function getMainChild(nodeId) {
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    if (!children.length) return null;
-
-    let best = children[0];
-    let bestSize = getSubtreeSize(best);
-
-    for (let i = 1; i < children.length; i++) {
-      const size = getSubtreeSize(children[i]);
-      if (size > bestSize) {
-        best = children[i];
-        bestSize = size;
-      }
-    }
-
-    return best;
-  }
-
-  // Build the main trunk from root through largest-child chain
-  const trunk = [];
-  let current = rootId;
-  while (current !== null) {
-    trunk.push(current);
-    current = getMainChild(current);
-  }
-
-  // Place main trunk horizontally
-  trunk.forEach((nodeId, index) => {
-    const node = getNodeById(nodeId);
-    if (!node) return;
-    node.x = START_X + index * MAIN_X_GAP;
-    node.y = START_Y;
-  });
-
-  // Layout side branches recursively
-  function layoutBranch(nodeId, baseX, baseY, direction) {
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    if (!children.length) return;
-
-    children.forEach((childId, index) => {
-      const child = getNodeById(childId);
-      if (!child) return;
-
-      const branchY =
-        baseY + direction * ((index + 1) * BRANCH_Y_GAP);
-
-      const branchX =
-        baseX + BRANCH_X_GAP;
-
-      child.x = branchX;
-      child.y = branchY;
-
-      // Alternate sub-branches slightly but keep same general side
-      const nextDirection = direction;
-      layoutBranch(childId, branchX, branchY, nextDirection);
-    });
-  }
-
-  // For every trunk node, place non-trunk children as branches
-  trunk.forEach((nodeId, trunkIndex) => {
-    const node = getNodeById(nodeId);
-    if (!node) return;
-
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    const mainChild = getMainChild(nodeId);
-
-    const sideChildren = children.filter(id => id !== mainChild);
-
-    const upper = [];
-    const lower = [];
-
-    sideChildren.forEach((id, i) => {
-      if (i % 2 === 0) upper.push(id);
-      else lower.push(id);
-    });
-
-    upper.forEach((childId, i) => {
-      const child = getNodeById(childId);
-      if (!child) return;
-
-      child.x = node.x + BRANCH_X_GAP;
-      child.y = node.y - ((i + 1) * BRANCH_Y_GAP);
-
-      layoutBranch(childId, child.x, child.y, -1);
-    });
-
-    lower.forEach((childId, i) => {
-      const child = getNodeById(childId);
-      if (!child) return;
-
-      child.x = node.x + BRANCH_X_GAP;
-      child.y = node.y + ((i + 1) * BRANCH_Y_GAP);
-
-      layoutBranch(childId, child.x, child.y, 1);
-    });
-  });
-
-  rebuildDatasetsPreserveView(rootId);
-
-  setTimeout(() => {
-    network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-
-    if (selectedNodeId !== null) {
-      loadSelectedNodeIntoEditor();
-      applyFocusMode();
-    }
-
-    hideLoading();
-    setDirtyState(true);
-    setStatus("Roadmap auto-arranged. Save when ready.");
-    showToast("Roadmap auto-arranged.");
-  }, 120);
-}
-
-  function getSubtreeHeight(nodeId) {
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    if (!children.length) return 1;
-
-    let total = 0;
-    for (const childId of children) {
-      total += getSubtreeHeight(childId);
-    }
-
-    return Math.max(1, total);
-  }
-
-  function layoutSubtree(nodeId, depth, centerY) {
-    const node = getNodeById(nodeId);
-    if (!node) return;
-
-    node.x = START_X + depth * HORIZONTAL_GAP;
-    node.y = centerY;
-
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    if (!children.length) return;
-
-    const childHeights = children.map(childId => getSubtreeHeight(childId));
-    const totalUnits = childHeights.reduce((sum, h) => sum + h, 0);
-
-    let currentTop = centerY - ((totalUnits - 1) * CHILD_GAP) / 2;
-
-    children.forEach((childId, index) => {
-      const units = childHeights[index];
-      const childCenter = currentTop + ((units - 1) * CHILD_GAP) / 2;
-      layoutSubtree(childId, depth + 1, childCenter);
-      currentTop += units * CHILD_GAP;
-    });
-  }
-
-  const topLevelChildren = sortChildren(childrenMap.get(Number(rootId)) || []);
-  const topLaneHeights = topLevelChildren.map(childId => getSubtreeHeight(childId));
-  const totalTopUnits = topLaneHeights.reduce((sum, h) => sum + h, 0);
-
-  const rootNode = getNodeById(rootId);
-  if (rootNode) {
-    rootNode.x = START_X;
-    rootNode.y = START_Y;
-  }
-
-  if (topLevelChildren.length) {
-    let currentTop = START_Y - ((totalTopUnits - 1) * LANE_GAP) / 2;
-
-    topLevelChildren.forEach((childId, index) => {
-      const laneUnits = topLaneHeights[index];
-      const laneCenter = currentTop + ((laneUnits - 1) * LANE_GAP) / 2;
-      layoutSubtree(childId, 1, laneCenter);
-      currentTop += laneUnits * LANE_GAP;
-    });
-  }
-
-  rebuildDatasetsPreserveView(rootId);
-
-  setTimeout(() => {
-    if (rootId !== null) {
-      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-    }
 
     if (selectedNodeId !== null) {
       loadSelectedNodeIntoEditor();
