@@ -1,590 +1,132 @@
 {
   "nodes": [
-    {
-      "id": 1,
-      "label": "Dungeon Call",
-      "status": "progress",
-      "description": "Project start",
-      "x": 0,
-      "y": 0
-    },
-    {
-      "id": 48,
-      "label": "Character Customisation",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": 0
-    },
-    {
-      "id": 49,
-      "label": "Races",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": -120
-    },
-    {
-      "id": 50,
-      "label": "Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": -240
-    },
-    {
-      "id": 53,
-      "label": "High Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 160,
-      "y": -360
-    },
-    {
-      "id": 54,
-      "label": "Half Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": -360
-    },
-    {
-      "id": 55,
-      "label": "Pure Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": -360
-    },
-    {
-      "id": 56,
-      "label": "Fairy",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 160,
-      "y": -240
-    },
-    {
-      "id": 57,
-      "label": "Spirit",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": -240
-    },
-    {
-      "id": 58,
-      "label": "Lamia",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": -240
-    },
-    {
-      "id": 59,
-      "label": "Dragon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 160,
-      "y": -120
-    },
-    {
-      "id": 60,
-      "label": "Lizard",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": -120
-    },
-    {
-      "id": 61,
-      "label": "Dwarf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": -120
-    },
-    {
-      "id": 62,
-      "label": "Tiefling",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 160,
-      "y": 0
-    },
-    {
-      "id": 63,
-      "label": "Owl",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 280,
-      "y": 0
-    },
-    {
-      "id": 64,
-      "label": "Ogre",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": 0
-    },
-    {
-      "id": 65,
-      "label": "Demon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 520,
-      "y": 0
-    },
-    {
-      "id": 51,
-      "label": "Dungeon",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 0
-    },
-    {
-      "id": 66,
-      "label": "Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 120
-    },
-    {
-      "id": 67,
-      "label": "Labyrinth Ownership",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 240
-    },
-    {
-      "id": 69,
-      "label": "Player Labyrinths",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 440,
-      "y": 360
-    },
-    {
-      "id": 70,
-      "label": "NPC Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 360
-    },
-    {
-      "id": 68,
-      "label": "Labyrinth NPCs",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 680,
-      "y": 240
-    },
-    {
-      "id": 71,
-      "label": "Worker",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 620,
-      "y": 360
-    },
-    {
-      "id": 72,
-      "label": "Warrior",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 700,
-      "y": 360
-    },
-    {
-      "id": 73,
-      "label": "Hunter",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 780,
-      "y": 360
-    },
-    {
-      "id": 76,
-      "label": "Events",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 500,
-      "y": 240
-    },
-    {
-      "id": 78,
-      "label": "Wave Defence",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 500,
-      "y": 360
-    },
-    {
-      "id": 77,
-      "label": "Mechanics",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": 240
-    },
-    {
-      "id": 79,
-      "label": "Farming",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 400,
-      "y": 360
-    },
-    {
-      "id": 46,
-      "label": "Inventory System & Stat System",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 840,
-      "y": 0
-    },
-    {
-      "id": 47,
-      "label": "Custom Language",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 840,
-      "y": -120
-    },
-    {
-      "id": 2,
-      "label": "Veilmar",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 0
-    },
-    {
-      "id": 3,
-      "label": "Combat",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 120
-    },
-    {
-      "id": 4,
-      "label": "Magic Combat",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 240
-    },
-    {
-      "id": 5,
-      "label": "Mana Control",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 360
-    },
-    {
-      "id": 6,
-      "label": "Mana Specialisations",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 480
-    },
-    {
-      "id": 7,
-      "label": "Black Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 600
-    },
-    {
-      "id": 8,
-      "label": "Blood Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1000,
-      "y": 720
-    },
-    {
-      "id": 9,
-      "label": "Necromancy",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 720
-    },
-    {
-      "id": 10,
-      "label": "Curse Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1240,
-      "y": 720
-    },
-    {
-      "id": 14,
-      "label": "White Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1240,
-      "y": 600
-    },
-    {
-      "id": 15,
-      "label": "Barrier Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1240,
-      "y": 720
-    },
-    {
-      "id": 16,
-      "label": "Divination",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1340,
-      "y": 720
-    },
-    {
-      "id": 40,
-      "label": "Magic Towers",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1240,
-      "y": 120
-    },
-    {
-      "id": 41,
-      "label": "Black Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1240,
-      "y": 240
-    },
-    {
-      "id": 42,
-      "label": "White Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1340,
-      "y": 240
-    },
-    {
-      "id": 32,
-      "label": "Marketplace",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1000,
-      "y": 120
-    },
-    {
-      "id": 24,
-      "label": "Tavern",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 900,
-      "y": 120
-    }
+    { "id": 1, "label": "Dungeon Call", "status": "progress", "description": "Project start", "x": 0, "y": 0 },
+
+    { "id": 48, "label": "Character Customisation", "status": "pending", "description": "", "x": 320, "y": 0 },
+    { "id": 49, "label": "Races", "status": "pending", "description": "", "x": 320, "y": -140 },
+    { "id": 50, "label": "Elf", "status": "pending", "description": "", "x": 320, "y": -280 },
+
+    { "id": 53, "label": "High Elf", "status": "pending", "description": "", "x": 180, "y": -420 },
+    { "id": 54, "label": "Half Elf", "status": "pending", "description": "", "x": 320, "y": -420 },
+    { "id": 55, "label": "Pure Elf", "status": "pending", "description": "", "x": 460, "y": -420 },
+
+    { "id": 56, "label": "Fairy", "status": "pending", "description": "", "x": 80, "y": -140 },
+    { "id": 57, "label": "Spirit", "status": "pending", "description": "", "x": 80, "y": -280 },
+    { "id": 58, "label": "Lamia", "status": "pending", "description": "", "x": 560, "y": -140 },
+    { "id": 59, "label": "Dragon", "status": "pending", "description": "", "x": 180, "y": -140 },
+    { "id": 60, "label": "Lizard", "status": "pending", "description": "", "x": 180, "y": -280 },
+    { "id": 61, "label": "Dwarf", "status": "pending", "description": "", "x": 460, "y": -280 },
+    { "id": 62, "label": "Tiefling", "status": "pending", "description": "", "x": 560, "y": -280 },
+    { "id": 63, "label": "Owl", "status": "pending", "description": "", "x": 460, "y": -140 },
+    { "id": 64, "label": "Ogre", "status": "pending", "description": "", "x": 560, "y": -420 },
+    { "id": 65, "label": "Demon", "status": "pending", "description": "", "x": 700, "y": -140 },
+
+    { "id": 51, "label": "Dungeon", "status": "progress", "description": "", "x": 720, "y": 0 },
+    { "id": 66, "label": "Labyrinth", "status": "pending", "description": "", "x": 720, "y": 140 },
+    { "id": 67, "label": "Labyrinth Ownership", "status": "pending", "description": "", "x": 720, "y": 280 },
+
+    { "id": 69, "label": "Player Labyrinths", "status": "pending", "description": "", "x": 580, "y": 420 },
+    { "id": 70, "label": "NPC Labyrinth", "status": "pending", "description": "", "x": 720, "y": 420 },
+
+    { "id": 68, "label": "Labyrinth NPCs", "status": "pending", "description": "", "x": 900, "y": 280 },
+    { "id": 71, "label": "Worker", "status": "pending", "description": "", "x": 820, "y": 420 },
+    { "id": 72, "label": "Warrior", "status": "pending", "description": "", "x": 920, "y": 420 },
+    { "id": 73, "label": "Hunter", "status": "pending", "description": "", "x": 1020, "y": 420 },
+
+    { "id": 76, "label": "Events", "status": "pending", "description": "", "x": 540, "y": 280 },
+    { "id": 78, "label": "Wave Defence", "status": "pending", "description": "", "x": 540, "y": 420 },
+
+    { "id": 77, "label": "Mechanics", "status": "pending", "description": "", "x": 380, "y": 280 },
+    { "id": 79, "label": "Farming", "status": "pending", "description": "", "x": 380, "y": 420 },
+
+    { "id": 46, "label": "Inventory System & Stat System", "status": "progress", "description": "", "x": 1120, "y": 0 },
+    { "id": 47, "label": "Custom Language", "status": "progress", "description": "", "x": 1120, "y": -140 },
+
+    { "id": 2, "label": "Veilmar", "status": "progress", "description": "", "x": 1520, "y": 0 },
+
+    { "id": 3, "label": "Combat", "status": "pending", "description": "", "x": 1520, "y": 140 },
+    { "id": 4, "label": "Magic Combat", "status": "pending", "description": "", "x": 1520, "y": 280 },
+    { "id": 5, "label": "Mana Control", "status": "pending", "description": "", "x": 1520, "y": 420 },
+    { "id": 6, "label": "Mana Specialisations", "status": "pending", "description": "", "x": 1520, "y": 560 },
+
+    { "id": 7, "label": "Black Magic", "status": "pending", "description": "", "x": 1520, "y": 700 },
+    { "id": 8, "label": "Blood Magic", "status": "pending", "description": "", "x": 1380, "y": 840 },
+    { "id": 9, "label": "Necromancy", "status": "pending", "description": "", "x": 1520, "y": 840 },
+    { "id": 10, "label": "Curse Magic", "status": "pending", "description": "", "x": 1660, "y": 840 },
+
+    { "id": 14, "label": "White Magic", "status": "pending", "description": "", "x": 1700, "y": 700 },
+    { "id": 15, "label": "Barrier Magic", "status": "pending", "description": "", "x": 1700, "y": 840 },
+    { "id": 16, "label": "Divination", "status": "pending", "description": "", "x": 1840, "y": 840 },
+
+    { "id": 40, "label": "Magic Towers", "status": "pending", "description": "", "x": 1700, "y": 140 },
+    { "id": 41, "label": "Black Tower", "status": "pending", "description": "", "x": 1620, "y": 280 },
+    { "id": 42, "label": "White Tower", "status": "pending", "description": "", "x": 1780, "y": 280 },
+
+    { "id": 32, "label": "Marketplace", "status": "pending", "description": "", "x": 1380, "y": 140 },
+    { "id": 24, "label": "Tavern", "status": "pending", "description": "", "x": 1260, "y": 140 }
   ],
+
   "edges": [
-    {
-      "from": 1,
-      "to": 48
-    },
-    {
-      "from": 48,
-      "to": 49
-    },
-    {
-      "from": 49,
-      "to": 50
-    },
-    {
-      "from": 50,
-      "to": 53
-    },
-    {
-      "from": 50,
-      "to": 54
-    },
-    {
-      "from": 50,
-      "to": 55
-    },
-    {
-      "from": 49,
-      "to": 56
-    },
-    {
-      "from": 49,
-      "to": 57
-    },
-    {
-      "from": 49,
-      "to": 58
-    },
-    {
-      "from": 49,
-      "to": 59
-    },
-    {
-      "from": 49,
-      "to": 60
-    },
-    {
-      "from": 49,
-      "to": 61
-    },
-    {
-      "from": 49,
-      "to": 62
-    },
-    {
-      "from": 49,
-      "to": 63
-    },
-    {
-      "from": 49,
-      "to": 64
-    },
-    {
-      "from": 49,
-      "to": 65
-    },
-    {
-      "from": 1,
-      "to": 51
-    },
-    {
-      "from": 51,
-      "to": 66
-    },
-    {
-      "from": 66,
-      "to": 67
-    },
-    {
-      "from": 67,
-      "to": 69
-    },
-    {
-      "from": 67,
-      "to": 70
-    },
-    {
-      "from": 66,
-      "to": 68
-    },
-    {
-      "from": 68,
-      "to": 71
-    },
-    {
-      "from": 68,
-      "to": 72
-    },
-    {
-      "from": 68,
-      "to": 73
-    },
-    {
-      "from": 66,
-      "to": 76
-    },
-    {
-      "from": 76,
-      "to": 78
-    },
-    {
-      "from": 66,
-      "to": 77
-    },
-    {
-      "from": 77,
-      "to": 79
-    },
-    {
-      "from": 1,
-      "to": 46
-    },
-    {
-      "from": 46,
-      "to": 47
-    },
-    {
-      "from": 1,
-      "to": 2
-    },
-    {
-      "from": 2,
-      "to": 3
-    },
-    {
-      "from": 3,
-      "to": 4
-    },
-    {
-      "from": 4,
-      "to": 5
-    },
-    {
-      "from": 5,
-      "to": 6
-    },
-    {
-      "from": 6,
-      "to": 7
-    },
-    {
-      "from": 7,
-      "to": 8
-    },
-    {
-      "from": 7,
-      "to": 9
-    },
-    {
-      "from": 7,
-      "to": 10
-    },
-    {
-      "from": 6,
-      "to": 14
-    },
-    {
-      "from": 14,
-      "to": 15
-    },
-    {
-      "from": 14,
-      "to": 16
-    },
-    {
-      "from": 2,
-      "to": 40
-    },
-    {
-      "from": 40,
-      "to": 41
-    },
-    {
-      "from": 40,
-      "to": 42
-    },
-    {
-      "from": 2,
-      "to": 32
-    },
-    {
-      "from": 2,
-      "to": 24
-    }
+    { "from": 1, "to": 48 },
+    { "from": 48, "to": 49 },
+    { "from": 49, "to": 50 },
+
+    { "from": 50, "to": 53 },
+    { "from": 50, "to": 54 },
+    { "from": 50, "to": 55 },
+
+    { "from": 49, "to": 56 },
+    { "from": 49, "to": 57 },
+    { "from": 49, "to": 58 },
+    { "from": 49, "to": 59 },
+    { "from": 49, "to": 60 },
+    { "from": 49, "to": 61 },
+    { "from": 49, "to": 62 },
+    { "from": 49, "to": 63 },
+    { "from": 49, "to": 64 },
+    { "from": 49, "to": 65 },
+
+    { "from": 1, "to": 51 },
+    { "from": 51, "to": 66 },
+    { "from": 66, "to": 67 },
+
+    { "from": 67, "to": 69 },
+    { "from": 67, "to": 70 },
+
+    { "from": 66, "to": 68 },
+    { "from": 68, "to": 71 },
+    { "from": 68, "to": 72 },
+    { "from": 68, "to": 73 },
+
+    { "from": 66, "to": 76 },
+    { "from": 76, "to": 78 },
+
+    { "from": 66, "to": 77 },
+    { "from": 77, "to": 79 },
+
+    { "from": 1, "to": 46 },
+    { "from": 46, "to": 47 },
+
+    { "from": 1, "to": 2 },
+    { "from": 2, "to": 3 },
+    { "from": 3, "to": 4 },
+    { "from": 4, "to": 5 },
+    { "from": 5, "to": 6 },
+
+    { "from": 6, "to": 7 },
+    { "from": 7, "to": 8 },
+    { "from": 7, "to": 9 },
+    { "from": 7, "to": 10 },
+
+    { "from": 6, "to": 14 },
+    { "from": 14, "to": 15 },
+    { "from": 14, "to": 16 },
+
+    { "from": 2, "to": 40 },
+    { "from": 40, "to": 41 },
+    { "from": 40, "to": 42 },
+
+    { "from": 2, "to": 32 },
+    { "from": 2, "to": 24 }
   ]
 }
