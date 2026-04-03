@@ -1562,36 +1562,116 @@
       setStatus("View reset.");
     }
 
-    function autoArrange() {
-      pushHistory();
+function autoArrange() {
+  pushHistory();
 
-      const rootId = getRootId();
-      const previousSelected = selectedNodeId;
+  const rootId = getRootId();
+  if (rootId === null) {
+    showToast("Nothing to arrange.");
+    return;
+  }
 
-      showLoading("Auto arranging roadmap...");
+  showLoading("Auto arranging roadmap...");
 
-      createNetwork(false);
+  const HORIZONTAL_GAP = 260;
+  const LANE_GAP = 240;
+  const CHILD_GAP = 95;
+  const START_X = 0;
+  const START_Y = 0;
 
-      setTimeout(() => {
-        lockCurrentLayoutIntoGraphData();
-        createNetwork(true);
+  const childrenMap = new Map();
+  graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
+  graphData.edges.forEach(edge => {
+    const from = Number(edge.from);
+    const to = Number(edge.to);
+    if (!childrenMap.has(from)) childrenMap.set(from, []);
+    childrenMap.get(from).push(to);
+  });
 
-        if (previousSelected !== null) {
-          selectedNodeId = previousSelected;
-          loadSelectedNodeIntoEditor();
-          applyFocusMode();
-        }
+  function sortChildren(ids) {
+    return [...ids].sort((a, b) => {
+      const nodeA = getNodeById(a);
+      const nodeB = getNodeById(b);
+      const labelA = (nodeA?.label || "").toLowerCase();
+      const labelB = (nodeB?.label || "").toLowerCase();
+      return labelA.localeCompare(labelB);
+    });
+  }
 
-        if (rootId !== null) {
-          network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-        }
+  function getSubtreeHeight(nodeId) {
+    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
+    if (!children.length) return 1;
 
-        hideLoading();
-        setDirtyState(true);
-        setStatus("Auto arranged. Save when ready.");
-        showToast("Auto arranged.");
-      }, 350);
+    let total = 0;
+    for (const childId of children) {
+      total += getSubtreeHeight(childId);
     }
+
+    return Math.max(1, total);
+  }
+
+  function layoutSubtree(nodeId, depth, centerY) {
+    const node = getNodeById(nodeId);
+    if (!node) return;
+
+    node.x = START_X + depth * HORIZONTAL_GAP;
+    node.y = centerY;
+
+    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
+    if (!children.length) return;
+
+    const childHeights = children.map(childId => getSubtreeHeight(childId));
+    const totalUnits = childHeights.reduce((sum, h) => sum + h, 0);
+
+    let currentTop = centerY - ((totalUnits - 1) * CHILD_GAP) / 2;
+
+    children.forEach((childId, index) => {
+      const units = childHeights[index];
+      const childCenter = currentTop + ((units - 1) * CHILD_GAP) / 2;
+      layoutSubtree(childId, depth + 1, childCenter);
+      currentTop += units * CHILD_GAP;
+    });
+  }
+
+  const topLevelChildren = sortChildren(childrenMap.get(Number(rootId)) || []);
+  const topLaneHeights = topLevelChildren.map(childId => getSubtreeHeight(childId));
+  const totalTopUnits = topLaneHeights.reduce((sum, h) => sum + h, 0);
+
+  const rootNode = getNodeById(rootId);
+  if (rootNode) {
+    rootNode.x = START_X;
+    rootNode.y = START_Y;
+  }
+
+  if (topLevelChildren.length) {
+    let currentTop = START_Y - ((totalTopUnits - 1) * LANE_GAP) / 2;
+
+    topLevelChildren.forEach((childId, index) => {
+      const laneUnits = topLaneHeights[index];
+      const laneCenter = currentTop + ((laneUnits - 1) * LANE_GAP) / 2;
+      layoutSubtree(childId, 1, laneCenter);
+      currentTop += laneUnits * LANE_GAP;
+    });
+  }
+
+  rebuildDatasetsPreserveView(rootId);
+
+  setTimeout(() => {
+    if (rootId !== null) {
+      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+    }
+
+    if (selectedNodeId !== null) {
+      loadSelectedNodeIntoEditor();
+      applyFocusMode();
+    }
+
+    hideLoading();
+    setDirtyState(true);
+    setStatus("Roadmap auto-arranged. Save when ready.");
+    showToast("Roadmap auto-arranged.");
+  }, 120);
+}
 
     function renderSearchResults(query) {
       const resultsBox = document.getElementById("searchResults");
