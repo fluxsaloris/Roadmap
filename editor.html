@@ -116,21 +116,21 @@
     }
 
     .status-pending {
-      background: #181818;
-      border-color: #333;
-      color: #999;
+      background: #151515;
+      border-color: #353535;
+      color: #9a9a9a;
     }
 
     .status-progress {
-      background: #3d2b06;
-      border-color: #9a6a00;
-      color: #ffd37a;
+      background: rgba(190, 26, 72, 0.16);
+      border-color: rgba(190, 26, 72, 0.55);
+      color: #ffb3c9;
     }
 
     .status-complete {
-      background: #123a24;
-      border-color: #1e6c41;
-      color: #7dffb0;
+      background: rgba(120, 30, 55, 0.22);
+      border-color: rgba(255, 120, 165, 0.5);
+      color: #ffd3e1;
     }
 
     .heroControls {
@@ -264,6 +264,20 @@
       min-height: 240px;
     }
 
+    .panel.status-panel-pending {
+      border-color: #2a2a2a;
+    }
+
+    .panel.status-panel-progress {
+      border-color: rgba(190, 26, 72, 0.35);
+      box-shadow: 0 0 18px rgba(190, 26, 72, 0.08);
+    }
+
+    .panel.status-panel-complete {
+      border-color: rgba(255, 120, 165, 0.28);
+      box-shadow: 0 0 18px rgba(255, 120, 165, 0.06);
+    }
+
     .panel.hiddenBySearch {
       display: none;
     }
@@ -379,6 +393,19 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #333;
+      background: #141414;
+      color: #b6b6b6;
     }
 
     .emptyState {
@@ -871,7 +898,7 @@
         const descendants = countDescendants(id);
 
         return `
-          <article class="panel${visible ? "" : " hiddenBySearch"}">
+          <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
             <div class="panelHeader">
               <div class="panelHeaderText">
                 <h2>${escapeHtml(node.label)}</h2>
@@ -881,8 +908,8 @@
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-              <span class="statusBadge status-pending">${descendants} sub-items</span>
-              <span class="statusBadge status-pending">${childIds.length} direct children</span>
+              <span class="metaChip">${descendants} sub-items</span>
+              <span class="metaChip">${childIds.length} direct children</span>
             </div>
 
             <div class="editorGrid">
