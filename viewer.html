@@ -574,6 +574,7 @@
     let parentMap = new Map();
     let rootId = null;
     let expandedNodes = new Set();
+    let collapsedPanels = new Set();
     let currentSearch = "";
 
     function showLoading(text = "Loading roadmap...") {
@@ -768,6 +769,12 @@
       renderPanels();
     }
 
+    function togglePanel(id) {
+      if (collapsedPanels.has(Number(id))) collapsedPanels.delete(Number(id));
+      else collapsedPanels.add(Number(id));
+      renderPanels();
+    }
+
     function renderTreeNode(id, search) {
       const node = getNodeById(id);
       if (!node) return "";
@@ -847,6 +854,7 @@
         const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
         const descendants = countDescendants(id);
         const stats = getCompletionStats(id);
+        const isCollapsed = collapsedPanels.has(Number(id)) && !search;
 
         return `
           <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
@@ -866,18 +874,25 @@
 
             ${renderProgressBar(stats)}
 
-            <div class="panelBody">
-              ${childIds.length
-                ? childIds.map(childId => renderTreeNode(childId, search)).join("")
-                : `<div class="emptyState">No child items yet.</div>`
-              }
+            <div class="nodeActions">
+              <button onclick="togglePanel(${id})">${isCollapsed ? "Expand Panel" : "Collapse Panel"}</button>
             </div>
+
+            ${isCollapsed ? "" : `
+              <div class="panelBody">
+                ${childIds.length
+                  ? childIds.map(childId => renderTreeNode(childId, search)).join("")
+                  : `<div class="emptyState">No child items yet.</div>`
+                }
+              </div>
+            `}
           </article>
         `;
       }).join("");
     }
 
     function expandAllSections() {
+      collapsedPanels.clear();
       for (const node of graphData.nodes) {
         if (getChildren(node.id).length) expandedNodes.add(node.id);
       }
@@ -886,6 +901,8 @@
 
     function collapseAllSections() {
       expandedNodes.clear();
+      const topLevel = getChildren(rootId);
+      for (const id of topLevel) collapsedPanels.add(Number(id));
       renderPanels();
     }
 
@@ -931,6 +948,7 @@
     });
 
     window.toggleSection = toggleSection;
+    window.togglePanel = togglePanel;
     window.expandAllSections = expandAllSections;
     window.collapseAllSections = collapseAllSections;
     window.reloadRoadmap = reloadRoadmap;
