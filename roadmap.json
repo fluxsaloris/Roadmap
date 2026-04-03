@@ -511,6 +511,14 @@
       "description": "Coming Soon",
       "x": 1115,
       "y": -740
+    },
+    {
+      "id": 66,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 865,
+      "y": -1640
     }
   ],
   "edges": [
@@ -765,6 +773,10 @@
     {
       "from": 49,
       "to": 65
+    },
+    {
+      "from": 51,
+      "to": 66
     }
   ]
 }
