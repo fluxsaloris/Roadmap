@@ -1583,8 +1583,28 @@
   const ROOT_Y = 0;
 
   const MAIN_GAP = 280;
-  const LEVEL_GAP_Y = 120;
-  const SIDE_GAP_X = 110;
+  const STEM_GAP_Y = 120;
+  const SIDE_GAP_X = 115;
+
+  const TIMELINE_ORDER = [48, 51, 46, 2];
+
+  const PRIMARY_CHAIN = {
+    48: [49, 50],
+    51: [66, 67],
+    46: [47],
+    2: [3, 4, 5, 6, 7],
+
+    49: [50],
+    50: [53],
+    66: [67],
+    67: [69],
+    68: [71],
+    76: [78],
+    77: [79],
+    6: [7],
+    14: [15],
+    40: [41]
+  };
 
   const childrenMap = new Map();
   graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
@@ -1595,191 +1615,128 @@
     childrenMap.get(from).push(to);
   });
 
-  function getNodeByIdLocal(id) {
+  function getNode(id) {
     return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
   }
 
-  function getChildren(nodeId) {
-    const ids = [...(childrenMap.get(Number(nodeId)) || [])];
-    return ids.sort((a, b) => {
-      const na = getNodeByIdLocal(a);
-      const nb = getNodeByIdLocal(b);
-      return (na?.label || "").localeCompare(nb?.label || "");
-    });
+  function getChildren(id) {
+    return [...(childrenMap.get(Number(id)) || [])].sort((a, b) => Number(a) - Number(b));
   }
 
-  function getMainTimelineNodes() {
-    const rootChildren = [...(childrenMap.get(Number(rootId)) || [])];
-    return rootChildren.sort((a, b) => {
-      const na = getNodeByIdLocal(a);
-      const nb = getNodeByIdLocal(b);
-      const ax = typeof na?.x === "number" ? na.x : 0;
-      const bx = typeof nb?.x === "number" ? nb.x : 0;
-      if (ax !== bx) return ax - bx;
-      return Number(a) - Number(b);
-    });
-  }
-
-  function getDepth(nodeId, seen = new Set()) {
-    if (seen.has(nodeId)) return 0;
-    seen.add(nodeId);
-
-    const children = getChildren(nodeId);
-    if (!children.length) return 1;
-
-    let best = 1;
-    for (const childId of children) {
-      best = Math.max(best, 1 + getDepth(childId, new Set(seen)));
-    }
-    return best;
+  function placeNode(id, x, y) {
+    const node = getNode(id);
+    if (!node) return;
+    node.x = x;
+    node.y = y;
   }
 
   function getPrimaryChild(nodeId) {
+    const preferred = PRIMARY_CHAIN[nodeId];
     const children = getChildren(nodeId);
     if (!children.length) return null;
 
-    let bestId = children[0];
-    let bestDepth = getDepth(bestId);
-
-    for (let i = 1; i < children.length; i++) {
-      const depth = getDepth(children[i]);
-      if (depth > bestDepth) {
-        bestDepth = depth;
-        bestId = children[i];
+    if (preferred && preferred.length) {
+      for (const id of preferred) {
+        if (children.includes(id)) return id;
       }
     }
 
-    return bestId;
+    return children[0];
   }
 
-  function layoutBranchStem(startNodeId, startX, startY, direction) {
-    let currentId = startNodeId;
+  function layoutSideTree(nodeId, x, y, direction, seen = new Set()) {
+    if (seen.has(nodeId)) return;
+    seen.add(nodeId);
+
+    placeNode(nodeId, x, y);
+
+    const children = getChildren(nodeId);
+    if (!children.length) return;
+
+    const primary = getPrimaryChild(nodeId);
+    const sideChildren = children.filter(id => id !== primary);
+
+    if (primary !== null) {
+      layoutSideTree(primary, x, y + (direction * STEM_GAP_Y), direction, new Set(seen));
+    }
+
+    sideChildren.forEach((childId, index) => {
+      const offsetPattern = [-1, 1, -2, 2, -3, 3];
+      const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
+      layoutSideTree(
+        childId,
+        x + (offset * 90),
+        y + (direction * STEM_GAP_Y),
+        direction,
+        new Set(seen)
+      );
+    });
+  }
+
+  function layoutMainStem(mainNodeId, x, y, direction) {
+    placeNode(mainNodeId, x, y);
+
+    const chain = PRIMARY_CHAIN[mainNodeId] || [];
+    let currentParent = mainNodeId;
     let level = 1;
-    const visited = new Set();
 
-    while (currentId !== null && !visited.has(currentId)) {
-      visited.add(currentId);
+    for (const chainNodeId of chain) {
+      placeNode(chainNodeId, x, y + (direction * STEM_GAP_Y * level));
 
-      const currentNode = getNodeByIdLocal(currentId);
-      if (!currentNode) break;
-
-      currentNode.x = startX;
-      currentNode.y = startY + (direction * LEVEL_GAP_Y * level);
-
-      const children = getChildren(currentId);
-      if (!children.length) break;
-
-      const primaryChild = getPrimaryChild(currentId);
-      const sideChildren = children.filter(id => id !== primaryChild);
+      const children = getChildren(currentParent);
+      const sideChildren = children.filter(id => id !== chainNodeId);
 
       sideChildren.forEach((childId, index) => {
-        const sideNode = getNodeByIdLocal(childId);
-        if (!sideNode) return;
-
-        const offsetPattern = [-1, 1, -2, 2, -3, 3];
+        const offsetPattern = [-1, 1, -2, 2, -3, 3, -4, 4];
         const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
 
-        sideNode.x = startX + (offset * SIDE_GAP_X);
-        sideNode.y = currentNode.y;
-
-        layoutSideSubtree(
+        layoutSideTree(
           childId,
-          sideNode.x,
-          sideNode.y,
+          x + (offset * SIDE_GAP_X),
+          y + (direction * STEM_GAP_Y * level),
           direction
         );
       });
 
-      currentId = primaryChild;
+      currentParent = chainNodeId;
       level++;
     }
-  }
 
-  function layoutSideSubtree(nodeId, x, y, direction, seen = new Set()) {
-    if (seen.has(nodeId)) return;
-    seen.add(nodeId);
-
-    const node = getNodeByIdLocal(nodeId);
-    if (!node) return;
-
-    node.x = x;
-    node.y = y;
-
-    const children = getChildren(nodeId);
-    if (!children.length) return;
-
-    children.forEach((childId, index) => {
-      const child = getNodeByIdLocal(childId);
-      if (!child) return;
-
-      const offsetPattern = [-1, 1, -2, 2, -3, 3];
-      const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
-
-      const childX = x + (offset * 90);
-      const childY = y + (direction * LEVEL_GAP_Y);
-
-      child.x = childX;
-      child.y = childY;
-
-      layoutSideSubtree(childId, childX, childY, direction, new Set(seen));
+    const tailChildren = getChildren(currentParent).filter(id => {
+      const nextPreferred = getPrimaryChild(currentParent);
+      return id !== nextPreferred;
     });
-  }
 
-  const rootNode = getNodeByIdLocal(rootId);
-  if (!rootNode) {
-    hideLoading();
-    showToast("Root node missing.");
-    return;
-  }
-
-  rootNode.x = ROOT_X;
-  rootNode.y = ROOT_Y;
-
-  const mainNodes = getMainTimelineNodes();
-
-  // main horizontal line
-  mainNodes.forEach((nodeId, index) => {
-    const node = getNodeByIdLocal(nodeId);
-    if (!node) return;
-
-    node.x = ROOT_X + ((index + 1) * MAIN_GAP);
-    node.y = ROOT_Y;
-  });
-
-  // each main node gets one vertical stem
-  mainNodes.forEach((nodeId, index) => {
-    const node = getNodeByIdLocal(nodeId);
-    if (!node) return;
-
-    const direction = index % 2 === 0 ? -1 : 1;
-
-    const children = getChildren(nodeId);
-    if (!children.length) return;
-
-    const primaryChild = getPrimaryChild(nodeId);
-    const sideChildren = children.filter(id => id !== primaryChild);
-
-    // main deep branch
-    if (primaryChild !== null) {
-      layoutBranchStem(primaryChild, node.x, node.y, direction);
+    const nextPreferred = getPrimaryChild(currentParent);
+    if (nextPreferred !== null && !(PRIMARY_CHAIN[currentParent] || []).includes(nextPreferred)) {
+      layoutSideTree(
+        nextPreferred,
+        x,
+        y + (direction * STEM_GAP_Y * level),
+        direction
+      );
     }
 
-    // other direct children sit close to the main node as short side stems
-    sideChildren.forEach((childId, childIndex) => {
-      const child = getNodeByIdLocal(childId);
-      if (!child) return;
-
+    tailChildren.forEach((childId, index) => {
       const offsetPattern = [-1, 1, -2, 2, -3, 3, -4, 4];
-      const offset = offsetPattern[childIndex] ?? (childIndex % 2 === 0 ? -(childIndex + 1) : (childIndex + 1));
+      const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
 
-      const childX = node.x + (offset * SIDE_GAP_X);
-      const childY = node.y + (direction * LEVEL_GAP_Y);
-
-      child.x = childX;
-      child.y = childY;
-
-      layoutSideSubtree(childId, childX, childY, direction);
+      layoutSideTree(
+        childId,
+        x + (offset * SIDE_GAP_X),
+        y + (direction * STEM_GAP_Y * (level - 1)),
+        direction
+      );
     });
+  }
+
+  placeNode(rootId, ROOT_X, ROOT_Y);
+
+  TIMELINE_ORDER.forEach((nodeId, index) => {
+    const x = ROOT_X + ((index + 1) * MAIN_GAP);
+    const y = ROOT_Y;
+    const direction = index % 2 === 0 ? -1 : 1;
+    layoutMainStem(nodeId, x, y, direction);
   });
 
   rebuildDatasetsPreserveView(rootId);
