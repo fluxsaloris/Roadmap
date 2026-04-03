@@ -1569,165 +1569,237 @@
     }
 
     function autoArrange() {
-      pushHistory();
+  pushHistory();
 
-      const rootId = getRootId();
-      if (rootId === null) {
-        showToast("Nothing to arrange.");
-        return;
-      }
+  const rootId = getRootId();
+  if (rootId === null) {
+    showToast("Nothing to arrange.");
+    return;
+  }
 
-      showLoading("Auto arranging roadmap...");
+  showLoading("Auto arranging roadmap...");
 
-      const ROOT_X = 0;
-      const ROOT_Y = 0;
+  const ROOT_X = 0;
+  const ROOT_Y = 0;
 
-      const MAIN_GAP = 280;
-      const STEM_GAP_Y = 110;
-      const CHILD_SPREAD_X = 90;
+  const MAIN_GAP = 280;
+  const LEVEL_GAP_Y = 120;
+  const SIDE_GAP_X = 110;
 
-      const childrenMap = new Map();
-      graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
-      graphData.edges.forEach(edge => {
-        const from = Number(edge.from);
-        const to = Number(edge.to);
-        if (!childrenMap.has(from)) childrenMap.set(from, []);
-        childrenMap.get(from).push(to);
-      });
+  const childrenMap = new Map();
+  graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
+  graphData.edges.forEach(edge => {
+    const from = Number(edge.from);
+    const to = Number(edge.to);
+    if (!childrenMap.has(from)) childrenMap.set(from, []);
+    childrenMap.get(from).push(to);
+  });
 
-      function getNodeByIdLocal(id) {
-        return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
-      }
+  function getNodeByIdLocal(id) {
+    return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
+  }
 
-      function getChildren(nodeId) {
-        const ids = [...(childrenMap.get(Number(nodeId)) || [])];
-        return ids.sort((a, b) => {
-          const na = getNodeByIdLocal(a);
-          const nb = getNodeByIdLocal(b);
-          return (na?.label || "").localeCompare(nb?.label || "");
-        });
-      }
+  function getChildren(nodeId) {
+    const ids = [...(childrenMap.get(Number(nodeId)) || [])];
+    return ids.sort((a, b) => {
+      const na = getNodeByIdLocal(a);
+      const nb = getNodeByIdLocal(b);
+      return (na?.label || "").localeCompare(nb?.label || "");
+    });
+  }
 
-      function getMainTimelineNodes() {
-        const rootChildren = [...(childrenMap.get(Number(rootId)) || [])];
+  function getMainTimelineNodes() {
+    const rootChildren = [...(childrenMap.get(Number(rootId)) || [])];
+    return rootChildren.sort((a, b) => {
+      const na = getNodeByIdLocal(a);
+      const nb = getNodeByIdLocal(b);
+      const ax = typeof na?.x === "number" ? na.x : 0;
+      const bx = typeof nb?.x === "number" ? nb.x : 0;
+      if (ax !== bx) return ax - bx;
+      return Number(a) - Number(b);
+    });
+  }
 
-        return rootChildren.sort((a, b) => {
-          const na = getNodeByIdLocal(a);
-          const nb = getNodeByIdLocal(b);
-          const ax = typeof na?.x === "number" ? na.x : 0;
-          const bx = typeof nb?.x === "number" ? nb.x : 0;
-          if (ax !== bx) return ax - bx;
-          return Number(a) - Number(b);
-        });
-      }
+  function getDepth(nodeId, seen = new Set()) {
+    if (seen.has(nodeId)) return 0;
+    seen.add(nodeId);
 
-      function collectDescendantsByLevel(startId) {
-        const levels = [];
-        const visited = new Set();
-        let current = [startId];
+    const children = getChildren(nodeId);
+    if (!children.length) return 1;
 
-        while (current.length) {
-          const next = [];
-          const thisLevel = [];
-
-          for (const id of current) {
-            if (visited.has(id)) continue;
-            visited.add(id);
-            thisLevel.push(id);
-
-            const children = getChildren(id);
-            for (const childId of children) {
-              if (!visited.has(childId)) next.push(childId);
-            }
-          }
-
-          if (thisLevel.length) levels.push(thisLevel);
-          current = next;
-        }
-
-        return levels;
-      }
-
-      const rootNode = getNodeByIdLocal(rootId);
-      if (!rootNode) {
-        hideLoading();
-        showToast("Root node missing.");
-        return;
-      }
-
-      rootNode.x = ROOT_X;
-      rootNode.y = ROOT_Y;
-
-      const mainNodes = getMainTimelineNodes();
-
-      mainNodes.forEach((nodeId, index) => {
-        const node = getNodeByIdLocal(nodeId);
-        if (!node) return;
-
-        node.x = ROOT_X + ((index + 1) * MAIN_GAP);
-        node.y = ROOT_Y;
-      });
-
-      mainNodes.forEach((nodeId, mainIndex) => {
-        const mainNode = getNodeByIdLocal(nodeId);
-        if (!mainNode) return;
-
-        const direction = mainIndex % 2 === 0 ? -1 : 1;
-        const firstChildren = getChildren(nodeId);
-
-        firstChildren.forEach((childId, childIndex) => {
-          const child = getNodeByIdLocal(childId);
-          if (!child) return;
-
-          const offsetPattern = [0, -1, 1, -2, 2, -3, 3, -4, 4];
-          const pattern = offsetPattern[childIndex] ?? (childIndex - Math.floor(firstChildren.length / 2));
-
-          child.x = mainNode.x + (pattern * CHILD_SPREAD_X);
-          child.y = mainNode.y + (direction * STEM_GAP_Y);
-        });
-
-        firstChildren.forEach((branchRootId) => {
-          const branchRoot = getNodeByIdLocal(branchRootId);
-          if (!branchRoot) return;
-
-          const levels = collectDescendantsByLevel(branchRootId);
-
-          for (let levelIndex = 1; levelIndex < levels.length; levelIndex++) {
-            const level = levels[levelIndex];
-            const y = mainNode.y + (direction * STEM_GAP_Y * (levelIndex + 1));
-
-            level.forEach((descId, i) => {
-              const desc = getNodeByIdLocal(descId);
-              if (!desc) return;
-
-              const offsetPattern = [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5];
-              const pattern = offsetPattern[i] ?? (i - Math.floor(level.length / 2));
-
-              desc.x = branchRoot.x + (pattern * 90);
-              desc.y = y;
-            });
-          }
-        });
-      });
-
-      rebuildDatasetsPreserveView(rootId);
-
-      setTimeout(() => {
-        if (network) {
-          network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-        }
-
-        if (selectedNodeId !== null) {
-          loadSelectedNodeIntoEditor();
-          applyFocusMode();
-        }
-
-        hideLoading();
-        setDirtyState(true);
-        setStatus("Roadmap auto-arranged. Save when ready.");
-        showToast("Roadmap auto-arranged.");
-      }, 120);
+    let best = 1;
+    for (const childId of children) {
+      best = Math.max(best, 1 + getDepth(childId, new Set(seen)));
     }
+    return best;
+  }
+
+  function getPrimaryChild(nodeId) {
+    const children = getChildren(nodeId);
+    if (!children.length) return null;
+
+    let bestId = children[0];
+    let bestDepth = getDepth(bestId);
+
+    for (let i = 1; i < children.length; i++) {
+      const depth = getDepth(children[i]);
+      if (depth > bestDepth) {
+        bestDepth = depth;
+        bestId = children[i];
+      }
+    }
+
+    return bestId;
+  }
+
+  function layoutBranchStem(startNodeId, startX, startY, direction) {
+    let currentId = startNodeId;
+    let level = 1;
+    const visited = new Set();
+
+    while (currentId !== null && !visited.has(currentId)) {
+      visited.add(currentId);
+
+      const currentNode = getNodeByIdLocal(currentId);
+      if (!currentNode) break;
+
+      currentNode.x = startX;
+      currentNode.y = startY + (direction * LEVEL_GAP_Y * level);
+
+      const children = getChildren(currentId);
+      if (!children.length) break;
+
+      const primaryChild = getPrimaryChild(currentId);
+      const sideChildren = children.filter(id => id !== primaryChild);
+
+      sideChildren.forEach((childId, index) => {
+        const sideNode = getNodeByIdLocal(childId);
+        if (!sideNode) return;
+
+        const offsetPattern = [-1, 1, -2, 2, -3, 3];
+        const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
+
+        sideNode.x = startX + (offset * SIDE_GAP_X);
+        sideNode.y = currentNode.y;
+
+        layoutSideSubtree(
+          childId,
+          sideNode.x,
+          sideNode.y,
+          direction
+        );
+      });
+
+      currentId = primaryChild;
+      level++;
+    }
+  }
+
+  function layoutSideSubtree(nodeId, x, y, direction, seen = new Set()) {
+    if (seen.has(nodeId)) return;
+    seen.add(nodeId);
+
+    const node = getNodeByIdLocal(nodeId);
+    if (!node) return;
+
+    node.x = x;
+    node.y = y;
+
+    const children = getChildren(nodeId);
+    if (!children.length) return;
+
+    children.forEach((childId, index) => {
+      const child = getNodeByIdLocal(childId);
+      if (!child) return;
+
+      const offsetPattern = [-1, 1, -2, 2, -3, 3];
+      const offset = offsetPattern[index] ?? (index % 2 === 0 ? -(index + 1) : (index + 1));
+
+      const childX = x + (offset * 90);
+      const childY = y + (direction * LEVEL_GAP_Y);
+
+      child.x = childX;
+      child.y = childY;
+
+      layoutSideSubtree(childId, childX, childY, direction, new Set(seen));
+    });
+  }
+
+  const rootNode = getNodeByIdLocal(rootId);
+  if (!rootNode) {
+    hideLoading();
+    showToast("Root node missing.");
+    return;
+  }
+
+  rootNode.x = ROOT_X;
+  rootNode.y = ROOT_Y;
+
+  const mainNodes = getMainTimelineNodes();
+
+  // main horizontal line
+  mainNodes.forEach((nodeId, index) => {
+    const node = getNodeByIdLocal(nodeId);
+    if (!node) return;
+
+    node.x = ROOT_X + ((index + 1) * MAIN_GAP);
+    node.y = ROOT_Y;
+  });
+
+  // each main node gets one vertical stem
+  mainNodes.forEach((nodeId, index) => {
+    const node = getNodeByIdLocal(nodeId);
+    if (!node) return;
+
+    const direction = index % 2 === 0 ? -1 : 1;
+
+    const children = getChildren(nodeId);
+    if (!children.length) return;
+
+    const primaryChild = getPrimaryChild(nodeId);
+    const sideChildren = children.filter(id => id !== primaryChild);
+
+    // main deep branch
+    if (primaryChild !== null) {
+      layoutBranchStem(primaryChild, node.x, node.y, direction);
+    }
+
+    // other direct children sit close to the main node as short side stems
+    sideChildren.forEach((childId, childIndex) => {
+      const child = getNodeByIdLocal(childId);
+      if (!child) return;
+
+      const offsetPattern = [-1, 1, -2, 2, -3, 3, -4, 4];
+      const offset = offsetPattern[childIndex] ?? (childIndex % 2 === 0 ? -(childIndex + 1) : (childIndex + 1));
+
+      const childX = node.x + (offset * SIDE_GAP_X);
+      const childY = node.y + (direction * LEVEL_GAP_Y);
+
+      child.x = childX;
+      child.y = childY;
+
+      layoutSideSubtree(childId, childX, childY, direction);
+    });
+  });
+
+  rebuildDatasetsPreserveView(rootId);
+
+  setTimeout(() => {
+    if (network) {
+      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+    }
+
+    if (selectedNodeId !== null) {
+      loadSelectedNodeIntoEditor();
+      applyFocusMode();
+    }
+
+    hideLoading();
+    setDirtyState(true);
+    setStatus("Roadmap auto-arranged. Save when ready.");
+    showToast("Roadmap auto-arranged.");
+  }, 120);
+}
 
     function renderSearchResults(query) {
       const resultsBox = document.getElementById("searchResults");
