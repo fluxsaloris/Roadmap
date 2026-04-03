@@ -535,6 +535,22 @@
       "description": "Coming Soon",
       "x": 1105,
       "y": -203
+    },
+    {
+      "id": 69,
+      "label": "Player Labyrinths",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1345,
+      "y": -353
+    },
+    {
+      "id": 70,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1345,
+      "y": -243
     }
   ],
   "edges": [
@@ -801,6 +817,14 @@
     {
       "from": 66,
       "to": 68
+    },
+    {
+      "from": 67,
+      "to": 69
+    },
+    {
+      "from": 67,
+      "to": 70
     }
   ]
 }
