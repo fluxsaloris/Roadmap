@@ -465,575 +465,575 @@
   </div>
 
   <script>
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
-    const START_NODE_SCALE = 1.2;
+  const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
+  const START_NODE_SCALE = 1.2;
 
-    let network;
-    let nodesDS;
-    let edgesDS;
-    let graphData = { nodes: [], edges: [] };
-    let toastTimer = null;
-    let selectedNodeId = null;
+  let network;
+  let nodesDS;
+  let edgesDS;
+  let graphData = { nodes: [], edges: [] };
+  let toastTimer = null;
+  let selectedNodeId = null;
 
-    const childMap = new Map();
-    const parentMap = new Map();
-    const collapsedNodes = new Set();
+  const childMap = new Map();
+  const parentMap = new Map();
+  const collapsedNodes = new Set();
 
-    function showLoading(text = "Loading roadmap...") {
-      document.getElementById("loadingText").textContent = text;
-      document.getElementById("loadingOverlay").style.display = "flex";
-    }
+  function showLoading(text = "Loading roadmap...") {
+    document.getElementById("loadingText").textContent = text;
+    document.getElementById("loadingOverlay").style.display = "flex";
+  }
 
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
+  function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#999";
-    }
+  function setStatus(text, isError = false) {
+    const el = document.getElementById("statusLine");
+    el.textContent = text;
+    el.style.color = isError ? "#ff8a8a" : "#999";
+  }
 
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
-    }
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 3000);
+  }
 
-    function showErrorPanel(message) {
-      document.getElementById("errorPanelText").textContent = message;
-      document.getElementById("errorPanel").classList.add("show");
-    }
+  function showErrorPanel(message) {
+    document.getElementById("errorPanelText").textContent = message;
+    document.getElementById("errorPanel").classList.add("show");
+  }
 
-    function hideErrorPanel() {
-      document.getElementById("errorPanel").classList.remove("show");
-    }
+  function hideErrorPanel() {
+    document.getElementById("errorPanel").classList.remove("show");
+  }
 
-    function positionInfoBox(domX, domY) {
-      const box = document.getElementById("infoBox");
-      const padding = 12;
+  function positionInfoBox(domX, domY) {
+    const box = document.getElementById("infoBox");
+    const padding = 12;
 
-      requestAnimationFrame(() => {
-        const rect = box.getBoundingClientRect();
-        let left = domX + 16;
-        let top = domY - 16;
+    requestAnimationFrame(() => {
+      const rect = box.getBoundingClientRect();
+      let left = domX + 16;
+      let top = domY - 16;
 
-        if (left + rect.width > window.innerWidth - padding) {
-          left = domX - rect.width - 16;
-        }
-
-        if (top + rect.height > window.innerHeight - padding) {
-          top = window.innerHeight - rect.height - padding;
-        }
-
-        if (top < padding) top = padding;
-        if (left < padding) left = padding;
-
-        box.style.left = left + "px";
-        box.style.top = top + "px";
-        box.style.right = "auto";
-        box.style.bottom = "auto";
-      });
-    }
-
-    function getColor(status) {
-      if (status === "complete") {
-        return {
-          background: "#00cc66",
-          border: "#00994d",
-          highlight: { background: "#2cff8f", border: "#adffd0" },
-          hover: { background: "#19db79", border: "#00994d" }
-        };
+      if (left + rect.width > window.innerWidth - padding) {
+        left = domX - rect.width - 16;
       }
-      if (status === "progress") {
-        return {
-          background: "#ffaa00",
-          border: "#cc8800",
-          highlight: { background: "#ffd166", border: "#fff0bd" },
-          hover: { background: "#ffbc33", border: "#cc8800" }
-        };
+
+      if (top + rect.height > window.innerHeight - padding) {
+        top = window.innerHeight - rect.height - padding;
       }
+
+      if (top < padding) top = padding;
+      if (left < padding) left = padding;
+
+      box.style.left = left + "px";
+      box.style.top = top + "px";
+      box.style.right = "auto";
+      box.style.bottom = "auto";
+    });
+  }
+
+  function getColor(status) {
+    if (status === "complete") {
       return {
-        background: "#111",
-        border: "#333",
-        highlight: { background: "#2a2a2a", border: "#ff78a5" },
-        hover: { background: "#181818", border: "#444" }
+        background: "#00cc66",
+        border: "#00994d",
+        highlight: { background: "#2cff8f", border: "#adffd0" },
+        hover: { background: "#19db79", border: "#00994d" }
       };
     }
-
-    function getEdgeColor(status) {
-      if (status === "complete") return "rgba(0, 204, 102, 0.65)";
-      if (status === "progress") return "rgba(255, 170, 0, 0.65)";
-      return "rgba(255,255,255,0.16)";
-    }
-
-    function getStatusLabel(status) {
-      if (status === "complete") return "Done";
-      if (status === "progress") return "In Progress";
-      return "Not Started";
-    }
-
-    function getStatusBadgeStyle(status) {
-      if (status === "complete") {
-        return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      }
-      if (status === "progress") {
-        return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      }
-      return "background:#181818;color:#999;border:1px solid #333;";
-    }
-
-    function updateStats() {
-      const total = graphData.nodes.length;
-      const complete = graphData.nodes.filter(n => n.status === "complete").length;
-      const progress = graphData.nodes.filter(n => n.status === "progress").length;
-      const pending = total - complete - progress;
-      const percent = total ? Math.round((complete / total) * 100) : 0;
-
-      document.getElementById("statTotal").textContent = total;
-      document.getElementById("statComplete").textContent = complete;
-      document.getElementById("statProgress").textContent = progress;
-      document.getElementById("statPending").textContent = pending;
-      document.getElementById("progressText").textContent =
-        `Completion: ${complete} / ${total} complete (${percent}%)`;
-      document.getElementById("progressFill").style.width = `${percent}%`;
-    }
-
-    function normalizeGraphData(raw) {
-      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
-      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-
+    if (status === "progress") {
       return {
-        nodes: rawNodes.map(n => ({
-          id: Number(n.id),
-          label: n.label || "Unnamed",
-          status: n.status || "pending",
-          description: n.description || "Coming Soon",
-          x: typeof n.x === "number" ? n.x : null,
-          y: typeof n.y === "number" ? n.y : null
-        })),
-        edges: rawEdges.map((e, index) => ({
-          id: `${e.from}->${e.to}-${index}`,
-          from: Number(e.from),
-          to: Number(e.to)
-        }))
+        background: "#ffaa00",
+        border: "#cc8800",
+        highlight: { background: "#ffd166", border: "#fff0bd" },
+        hover: { background: "#ffbc33", border: "#cc8800" }
       };
     }
-
-    function rebuildMaps() {
-      childMap.clear();
-      parentMap.clear();
-
-      for (const node of graphData.nodes) {
-        childMap.set(Number(node.id), []);
-      }
-
-      for (const edge of graphData.edges) {
-        const from = Number(edge.from);
-        const to = Number(edge.to);
-        if (!childMap.has(from)) childMap.set(from, []);
-        childMap.get(from).push(to);
-        parentMap.set(to, from);
-      }
-    }
-
-    function getRootId() {
-      const childIds = new Set(graphData.edges.map(e => Number(e.to)));
-      const root = graphData.nodes.find(n => !childIds.has(Number(n.id)));
-      return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
-    }
-
-    function hasSavedPositions() {
-      return graphData.nodes.length > 0 &&
-        graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
-    }
-
-    function getDescendants(rootId) {
-      const result = [];
-      const stack = [...(childMap.get(Number(rootId)) || [])];
-
-      while (stack.length) {
-        const id = stack.pop();
-        result.push(Number(id));
-        const children = childMap.get(Number(id)) || [];
-        for (const child of children) stack.push(Number(child));
-      }
-
-      return result;
-    }
-
-    function getNodeById(id) {
-      return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
-    }
-
-    function buildNodes(useSavedPositions) {
-      return graphData.nodes.map(n => {
-        const color = getColor(n.status);
-        const isCollapsed = collapsedNodes.has(Number(n.id));
-
-        const nodeData = {
-          id: n.id,
-          label: isCollapsed ? `${n.label}  [+/-]` : n.label,
-          shape: "box",
-          margin: 14,
-          color,
-          font: {
-            color: n.status === "complete" ? "#003322" : (n.status === "progress" ? "#222" : "#ddd"),
-            size: 14
-          },
-          description: n.description,
-          status: n.status,
-          hidden: false
-        };
-
-        if (useSavedPositions) {
-          nodeData.x = n.x;
-          nodeData.y = n.y;
-          nodeData.fixed = true;
-        }
-
-        return nodeData;
-      });
-    }
-
-    function buildEdges() {
-      return graphData.edges.map(e => {
-        const fromNode = getNodeById(e.from);
-        return {
-          id: e.id,
-          from: e.from,
-          to: e.to,
-          color: { color: getEdgeColor(fromNode?.status || "pending") },
-          smooth: false,
-          width: 1.5,
-          hidden: false
-        };
-      });
-    }
-
-function createNetwork(useSavedPositions) {
-  if (network) network.destroy();
-
-  nodesDS = new vis.DataSet(buildNodes(useSavedPositions));
-  edgesDS = new vis.DataSet(buildEdges());
-
-  network = new vis.Network(
-    document.getElementById("graph"),
-    { nodes: nodesDS, edges: edgesDS },
-    {
-      layout: useSavedPositions ? {} : {
-        hierarchical: {
-          direction: "LR",
-          levelSeparation: 250,
-          nodeSpacing: 200
-        }
-      },
-      physics: false,
-      interaction: {
-        dragNodes: false,
-        dragView: true,
-        zoomView: true
-      },
-      edges: {
-        smooth: false,
-        width: 2,
-        color: {
-          inherit: false
-        }
-      }
-    }
-  );
-
-  network.on("click", function(params) {
-    const info = document.getElementById("infoBox");
-
-    if (!params.nodes.length) {
-      selectedNodeId = null;
-      info.classList.add("hidden");
-      return;
-    }
-
-    selectedNodeId = Number(params.nodes[0]);
-    const node = getNodeById(selectedNodeId);
-    if (!node) return;
-
-    info.innerHTML =
-      '<div id="closeBtn">✕</div>' +
-      `<h3>${node.label}</h3>` +
-      `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-      `<p>${node.description || "No description available."}</p>` +
-      `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
-
-    info.classList.remove("hidden");
-    positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
-
-    document.getElementById("closeBtn").onclick = () => {
-      info.classList.add("hidden");
+    return {
+      background: "#111",
+      border: "#333",
+      highlight: { background: "#2a2a2a", border: "#ff78a5" },
+      hover: { background: "#181818", border: "#444" }
     };
-  });
-}
+  }
 
-    function applyCollapseState() {
-      const hiddenNodeIds = new Set();
+  function getEdgeColor(status) {
+    if (status === "complete") return "rgba(0, 204, 102, 0.28)";
+    if (status === "progress") return "rgba(255, 170, 0, 0.30)";
+    return "rgba(255,255,255,0.10)";
+  }
 
-      for (const collapsedId of collapsedNodes) {
-        for (const descendant of getDescendants(collapsedId)) {
-          hiddenNodeIds.add(Number(descendant));
+  function getStatusLabel(status) {
+    if (status === "complete") return "Done";
+    if (status === "progress") return "In Progress";
+    return "Not Started";
+  }
+
+  function getStatusBadgeStyle(status) {
+    if (status === "complete") {
+      return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
+    }
+    if (status === "progress") {
+      return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
+    }
+    return "background:#181818;color:#999;border:1px solid #333;";
+  }
+
+  function updateStats() {
+    const total = graphData.nodes.length;
+    const complete = graphData.nodes.filter(n => n.status === "complete").length;
+    const progress = graphData.nodes.filter(n => n.status === "progress").length;
+    const pending = total - complete - progress;
+    const percent = total ? Math.round((complete / total) * 100) : 0;
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statComplete").textContent = complete;
+    document.getElementById("statProgress").textContent = progress;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("progressText").textContent =
+      `Completion: ${complete} / ${total} complete (${percent}%)`;
+    document.getElementById("progressFill").style.width = `${percent}%`;
+  }
+
+  function normalizeGraphData(raw) {
+    const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+
+    return {
+      nodes: rawNodes.map(n => ({
+        id: Number(n.id),
+        label: n.label || "Unnamed",
+        status: n.status || "pending",
+        description: n.description || "Coming Soon",
+        x: typeof n.x === "number" ? n.x : null,
+        y: typeof n.y === "number" ? n.y : null
+      })),
+      edges: rawEdges.map((e, index) => ({
+        id: `${e.from}->${e.to}-${index}`,
+        from: Number(e.from),
+        to: Number(e.to)
+      }))
+    };
+  }
+
+  function rebuildMaps() {
+    childMap.clear();
+    parentMap.clear();
+
+    for (const node of graphData.nodes) {
+      childMap.set(Number(node.id), []);
+    }
+
+    for (const edge of graphData.edges) {
+      const from = Number(edge.from);
+      const to = Number(edge.to);
+      if (!childMap.has(from)) childMap.set(from, []);
+      childMap.get(from).push(to);
+      parentMap.set(to, from);
+    }
+  }
+
+  function getRootId() {
+    const childIds = new Set(graphData.edges.map(e => Number(e.to)));
+    const root = graphData.nodes.find(n => !childIds.has(Number(n.id)));
+    return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
+  }
+
+  function hasSavedPositions() {
+    return graphData.nodes.length > 0 &&
+      graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
+  }
+
+  function getDescendants(rootId) {
+    const result = [];
+    const stack = [...(childMap.get(Number(rootId)) || [])];
+
+    while (stack.length) {
+      const id = stack.pop();
+      result.push(Number(id));
+      const children = childMap.get(Number(id)) || [];
+      for (const child of children) stack.push(Number(child));
+    }
+
+    return result;
+  }
+
+  function getNodeById(id) {
+    return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
+  }
+
+  function buildNodes(useSavedPositions) {
+    return graphData.nodes.map(n => {
+      const color = getColor(n.status);
+      const isCollapsed = collapsedNodes.has(Number(n.id));
+
+      const nodeData = {
+        id: n.id,
+        label: isCollapsed ? `${n.label}  [+/-]` : n.label,
+        shape: "box",
+        margin: 12,
+        color,
+        font: {
+          color: n.status === "complete" ? "#003322" : (n.status === "progress" ? "#222" : "#cfcfcf"),
+          size: 13
+        },
+        description: n.description,
+        status: n.status,
+        hidden: false
+      };
+
+      if (useSavedPositions) {
+        nodeData.x = n.x;
+        nodeData.y = n.y;
+        nodeData.fixed = true;
+      }
+
+      return nodeData;
+    });
+  }
+
+  function buildEdges() {
+    return graphData.edges.map(e => {
+      const fromNode = getNodeById(e.from);
+      return {
+        id: e.id,
+        from: e.from,
+        to: e.to,
+        color: { color: getEdgeColor(fromNode?.status || "pending") },
+        smooth: false,
+        width: 1,
+        hidden: false
+      };
+    });
+  }
+
+  function createNetwork(useSavedPositions) {
+    if (network) network.destroy();
+
+    nodesDS = new vis.DataSet(buildNodes(useSavedPositions));
+    edgesDS = new vis.DataSet(buildEdges());
+
+    network = new vis.Network(
+      document.getElementById("graph"),
+      { nodes: nodesDS, edges: edgesDS },
+      {
+        layout: useSavedPositions ? {} : {
+          hierarchical: {
+            direction: "LR",
+            levelSeparation: 220,
+            nodeSpacing: 140
+          }
+        },
+        physics: false,
+        interaction: {
+          dragNodes: false,
+          dragView: true,
+          zoomView: true
+        },
+        edges: {
+          smooth: false,
+          width: 1,
+          color: {
+            inherit: false
+          }
         }
       }
+    );
 
-      nodesDS.update(graphData.nodes.map(n => ({
-        id: Number(n.id),
-        hidden: hiddenNodeIds.has(Number(n.id)),
-        label: collapsedNodes.has(Number(n.id)) ? `${n.label}  [+/-]` : n.label
-      })));
+    network.on("click", function(params) {
+      const info = document.getElementById("infoBox");
 
-      edgesDS.update(graphData.edges.map(e => ({
-        id: e.id,
-        hidden: hiddenNodeIds.has(Number(e.from)) || hiddenNodeIds.has(Number(e.to))
-      })));
-    }
-
-    function renderSearchResults(query) {
-      const resultsBox = document.getElementById("searchResults");
-      resultsBox.innerHTML = "";
-
-      if (!query || !graphData.nodes.length) {
-        resultsBox.style.display = "none";
+      if (!params.nodes.length) {
+        selectedNodeId = null;
+        info.classList.add("hidden");
         return;
       }
 
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const matches = graphData.nodes
-        .filter(n => (n.label || "").toLowerCase().includes(q))
-        .slice(0, 8);
-
-      if (!matches.length) {
-        resultsBox.innerHTML =
-          `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
-        resultsBox.style.display = "block";
-        return;
-      }
-
-      for (const match of matches) {
-        const item = document.createElement("div");
-        item.className = "searchResult";
-        item.innerHTML = `
-          <div class="searchResultTitle">${match.label}</div>
-          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
-        `;
-        item.onclick = () => {
-          jumpToNode(match.id);
-          resultsBox.style.display = "none";
-        };
-        resultsBox.appendChild(item);
-      }
-
-      resultsBox.style.display = "block";
-    }
-
-    function jumpToNode(nodeId) {
-      const node = getNodeById(nodeId);
+      selectedNodeId = Number(params.nodes[0]);
+      const node = getNodeById(selectedNodeId);
       if (!node) return;
 
-      let current = parentMap.get(Number(nodeId));
-      while (current !== undefined) {
-        collapsedNodes.delete(Number(current));
-        current = parentMap.get(Number(current));
-      }
-
-      applyCollapseState();
-
-      selectedNodeId = Number(nodeId);
-
-      network.focus(Number(nodeId), {
-        scale: Math.max(network.getScale(), 1.12),
-        animation: {
-          duration: 280,
-          easingFunction: "easeInOutQuad"
-        }
-      });
-
-      nodesDS.update({
-        id: Number(nodeId),
-        color: getColor(node.status).highlight
-      });
-
-      setTimeout(() => {
-        const fresh = getNodeById(nodeId);
-        if (!fresh) return;
-        nodesDS.update({
-          id: Number(nodeId),
-          color: getColor(fresh.status)
-        });
-      }, 1800);
-
-      const info = document.getElementById("infoBox");
       info.innerHTML =
         '<div id="closeBtn">✕</div>' +
         `<h3>${node.label}</h3>` +
         `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
         `<p>${node.description || "No description available."}</p>` +
-        `<div class="smallNote">Jumped to this roadmap item from search.</div>`;
+        `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
+
       info.classList.remove("hidden");
-      positionInfoBox(window.innerWidth * 0.5, 140);
+      positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
 
       document.getElementById("closeBtn").onclick = () => {
         info.classList.add("hidden");
       };
+    });
+  }
 
-      showToast("Jumped to node.");
-    }
+  function applyCollapseState() {
+    const hiddenNodeIds = new Set();
 
-    async function reloadGraph() {
-      try {
-        showLoading("Loading roadmap...");
-        setStatus("Loading latest roadmap...");
-
-        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
-          cache: "no-store"
-        });
-
-        if (!res.ok) {
-          throw new Error("Could not load roadmap.json");
-        }
-
-        graphData = normalizeGraphData(await res.json());
-        rebuildMaps();
-        updateStats();
-
-        const useSavedPositions = hasSavedPositions();
-        createNetwork(useSavedPositions);
-        applyCollapseState();
-
-        const rootId = getRootId();
-        if (rootId !== null) {
-          setTimeout(() => {
-            network.focus(rootId, {
-              scale: START_NODE_SCALE,
-              animation: false
-            });
-          }, 50);
-        }
-
-        hideErrorPanel();
-        setStatus("Loaded latest roadmap.");
-        hideLoading();
-      } catch (err) {
-        console.error(err);
-        setStatus("Failed to load roadmap.", true);
-        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
-        hideLoading();
+    for (const collapsedId of collapsedNodes) {
+      for (const descendant of getDescendants(collapsedId)) {
+        hiddenNodeIds.add(Number(descendant));
       }
     }
 
-    function toggleSelectedBranch() {
-      if (selectedNodeId === null) {
-        showToast("Select a node first.");
-        return;
+    nodesDS.update(graphData.nodes.map(n => ({
+      id: Number(n.id),
+      hidden: hiddenNodeIds.has(Number(n.id)),
+      label: collapsedNodes.has(Number(n.id)) ? `${n.label}  [+/-]` : n.label
+    })));
+
+    edgesDS.update(graphData.edges.map(e => ({
+      id: e.id,
+      hidden: hiddenNodeIds.has(Number(e.from)) || hiddenNodeIds.has(Number(e.to))
+    })));
+  }
+
+  function renderSearchResults(query) {
+    const resultsBox = document.getElementById("searchResults");
+    resultsBox.innerHTML = "";
+
+    if (!query || !graphData.nodes.length) {
+      resultsBox.style.display = "none";
+      return;
+    }
+
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      resultsBox.style.display = "none";
+      return;
+    }
+
+    const matches = graphData.nodes
+      .filter(n => (n.label || "").toLowerCase().includes(q))
+      .slice(0, 8);
+
+    if (!matches.length) {
+      resultsBox.innerHTML =
+        `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
+      resultsBox.style.display = "block";
+      return;
+    }
+
+    for (const match of matches) {
+      const item = document.createElement("div");
+      item.className = "searchResult";
+      item.innerHTML = `
+        <div class="searchResultTitle">${match.label}</div>
+        <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
+      `;
+      item.onclick = () => {
+        jumpToNode(match.id);
+        resultsBox.style.display = "none";
+      };
+      resultsBox.appendChild(item);
+    }
+
+    resultsBox.style.display = "block";
+  }
+
+  function jumpToNode(nodeId) {
+    const node = getNodeById(nodeId);
+    if (!node) return;
+
+    let current = parentMap.get(Number(nodeId));
+    while (current !== undefined) {
+      collapsedNodes.delete(Number(current));
+      current = parentMap.get(Number(current));
+    }
+
+    applyCollapseState();
+
+    selectedNodeId = Number(nodeId);
+
+    network.focus(Number(nodeId), {
+      scale: Math.max(network.getScale(), 1.08),
+      animation: {
+        duration: 280,
+        easingFunction: "easeInOutQuad"
+      }
+    });
+
+    nodesDS.update({
+      id: Number(nodeId),
+      color: getColor(node.status).highlight
+    });
+
+    setTimeout(() => {
+      const fresh = getNodeById(nodeId);
+      if (!fresh) return;
+      nodesDS.update({
+        id: Number(nodeId),
+        color: getColor(fresh.status)
+      });
+    }, 1800);
+
+    const info = document.getElementById("infoBox");
+    info.innerHTML =
+      '<div id="closeBtn">✕</div>' +
+      `<h3>${node.label}</h3>` +
+      `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
+      `<p>${node.description || "No description available."}</p>` +
+      `<div class="smallNote">Jumped to this roadmap item from search.</div>`;
+    info.classList.remove("hidden");
+    positionInfoBox(window.innerWidth * 0.5, 140);
+
+    document.getElementById("closeBtn").onclick = () => {
+      info.classList.add("hidden");
+    };
+
+    showToast("Jumped to node.");
+  }
+
+  async function reloadGraph() {
+    try {
+      showLoading("Loading roadmap...");
+      setStatus("Loading latest roadmap...");
+
+      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      if (!res.ok) {
+        throw new Error("Could not load roadmap.json");
       }
 
-      const rootId = getRootId();
-      if (Number(selectedNodeId) === Number(rootId)) {
-        showToast("You can't collapse the root.");
-        return;
-      }
+      graphData = normalizeGraphData(await res.json());
+      rebuildMaps();
+      updateStats();
 
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      if (collapsedNodes.has(Number(selectedNodeId))) {
-        collapsedNodes.delete(Number(selectedNodeId));
-        setStatus("Branch expanded.");
-      } else {
-        collapsedNodes.add(Number(selectedNodeId));
-        setStatus("Branch collapsed.");
-      }
-
+      const useSavedPositions = hasSavedPositions();
+      createNetwork(useSavedPositions);
       applyCollapseState();
 
-      requestAnimationFrame(() => {
-        network.moveTo({
-          position: currentPosition,
-          scale: currentScale,
-          animation: false
-        });
-      });
-    }
-
-    function expandAll() {
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      collapsedNodes.clear();
-      applyCollapseState();
-      setStatus("All branches expanded.");
-
-      requestAnimationFrame(() => {
-        network.moveTo({
-          position: currentPosition,
-          scale: currentScale,
-          animation: false
-        });
-      });
-    }
-
-    function zoomIn() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 1.2 });
-    }
-
-    function zoomOut() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 0.8 });
-    }
-
-    function resetView() {
-      if (!network) return;
       const rootId = getRootId();
-      if (rootId === null) return;
-      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-      setStatus("View reset.");
+      if (rootId !== null) {
+        setTimeout(() => {
+          network.focus(rootId, {
+            scale: START_NODE_SCALE,
+            animation: false
+          });
+        }, 50);
+      }
+
+      hideErrorPanel();
+      setStatus("Loaded latest roadmap.");
+      hideLoading();
+    } catch (err) {
+      console.error(err);
+      setStatus("Failed to load roadmap.", true);
+      showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
+      hideLoading();
+    }
+  }
+
+  function toggleSelectedBranch() {
+    if (selectedNodeId === null) {
+      showToast("Select a node first.");
+      return;
     }
 
-    document.addEventListener("click", (e) => {
-      const wrap = document.getElementById("searchWrap");
-      const results = document.getElementById("searchResults");
-      if (wrap && !wrap.contains(e.target)) {
-        results.style.display = "none";
+    const rootId = getRootId();
+    if (Number(selectedNodeId) === Number(rootId)) {
+      showToast("You can't collapse the root.");
+      return;
+    }
+
+    const currentScale = network.getScale();
+    const currentPosition = network.getViewPosition();
+
+    if (collapsedNodes.has(Number(selectedNodeId))) {
+      collapsedNodes.delete(Number(selectedNodeId));
+      setStatus("Branch expanded.");
+    } else {
+      collapsedNodes.add(Number(selectedNodeId));
+      setStatus("Branch collapsed.");
+    }
+
+    applyCollapseState();
+
+    requestAnimationFrame(() => {
+      network.moveTo({
+        position: currentPosition,
+        scale: currentScale,
+        animation: false
+      });
+    });
+  }
+
+  function expandAll() {
+    const currentScale = network.getScale();
+    const currentPosition = network.getViewPosition();
+
+    collapsedNodes.clear();
+    applyCollapseState();
+    setStatus("All branches expanded.");
+
+    requestAnimationFrame(() => {
+      network.moveTo({
+        position: currentPosition,
+        scale: currentScale,
+        animation: false
+      });
+    });
+  }
+
+  function zoomIn() {
+    if (!network) return;
+    network.moveTo({ scale: network.getScale() * 1.15 });
+  }
+
+  function zoomOut() {
+    if (!network) return;
+    network.moveTo({ scale: network.getScale() * 0.85 });
+  }
+
+  function resetView() {
+    if (!network) return;
+    const rootId = getRootId();
+    if (rootId === null) return;
+    network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+    setStatus("View reset.");
+  }
+
+  document.addEventListener("click", (e) => {
+    const wrap = document.getElementById("searchWrap");
+    const results = document.getElementById("searchResults");
+    if (wrap && !wrap.contains(e.target)) {
+      results.style.display = "none";
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("searchInput");
+    input.addEventListener("input", () => {
+      renderSearchResults(input.value);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.getElementById("searchResults").style.display = "none";
+        input.blur();
       }
     });
+  });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const input = document.getElementById("searchInput");
-      input.addEventListener("input", () => {
-        renderSearchResults(input.value);
-      });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      reloadGraph();
+    }
+  });
 
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          document.getElementById("searchResults").style.display = "none";
-          input.blur();
-        }
-      });
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        reloadGraph();
-      }
-    });
-
-    reloadGraph();
-  </script>
+  reloadGraph();
+</script>
 </body>
 </html>
