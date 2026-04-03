@@ -1,938 +1,124 @@
 {
   "nodes": [
-    {
-      "id": 1,
-      "label": "Dungeon Call",
-      "status": "progress",
-      "description": "The project has officially started and begun development. All changes will be listed on this page as well as all progress.",
-      "x": 0,
-      "y": 0
-    },
-    {
-      "id": 2,
-      "label": "Veilmar",
-      "status": "progress",
-      "description": "Veilmar is the main city of Dungeon Call where the adventurers of the world reside. This is in development!",
-      "x": 1120,
-      "y": 0
-    },
-    {
-      "id": 3,
-      "label": "Combat",
-      "status": "pending",
-      "description": "Combat mechanics not started but intend to begin with magic.",
-      "x": 1120,
-      "y": 120
-    },
-    {
-      "id": 4,
-      "label": "Magic Combat",
-      "status": "pending",
-      "description": "The magic system is going to the starting point for the combat system. Magic will have a huge variety but will start simple.",
-      "x": 1120,
-      "y": 240
-    },
-    {
-      "id": 5,
-      "label": "Mana Control",
-      "status": "pending",
-      "description": "This is going to the basics of magic before you move onto actual magic variety and specialty. You will manipulate mana in its raw form and this is where every mage will begin.",
-      "x": 1120,
-      "y": 360
-    },
-    {
-      "id": 6,
-      "label": "Mana Specialisations",
-      "status": "pending",
-      "description": "Stemming from this node is where all of the magic specialisations will be categorised as a teaser for you all to see and how they progress.",
-      "x": 1120,
-      "y": 480
-    },
-    {
-      "id": 7,
-      "label": "Black Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 600
-    },
-    {
-      "id": 8,
-      "label": "Blood Magic (Haemomancy)",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1120,
-      "y": 720
-    },
-    {
-      "id": 9,
-      "label": "Necromancy",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1005,
-      "y": 600
-    },
-    {
-      "id": 10,
-      "label": "Curse Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1235,
-      "y": 600
-    },
-    {
-      "id": 11,
-      "label": "Demon Summoning",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 890,
-      "y": 600
-    },
-    {
-      "id": 12,
-      "label": "Life Manipulation",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1350,
-      "y": 600
-    },
-    {
-      "id": 13,
-      "label": "Mind Manipulation",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 775,
-      "y": 600
-    },
-    {
-      "id": 14,
-      "label": "White Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1005,
-      "y": 600
-    },
-    {
-      "id": 15,
-      "label": "Barrier/Protection Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1005,
-      "y": 720
-    },
-    {
-      "id": 16,
-      "label": "Divination Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 915,
-      "y": 720
-    },
-    {
-      "id": 17,
-      "label": "Status Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1095,
-      "y": 720
-    },
-    {
-      "id": 18,
-      "label": "Runic/Ritual Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 825,
-      "y": 720
-    },
-    {
-      "id": 19,
-      "label": "Purification Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1185,
-      "y": 720
-    },
-    {
-      "id": 20,
-      "label": "Spiritual Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 735,
-      "y": 720
-    },
-    {
-      "id": 21,
-      "label": "Blue Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1235,
-      "y": 600
-    },
-    {
-      "id": 22,
-      "label": "Green Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 890,
-      "y": 600
-    },
-    {
-      "id": 23,
-      "label": "Red Magic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1350,
-      "y": 600
-    },
-    {
-      "id": 24,
-      "label": "Tavern",
-      "status": "pending",
-      "description": "The tavern is going to be a place of rest for all of the players and NPCs alike and maybe you can discover thigns here...",
-      "x": 1005,
-      "y": 120
-    },
-    {
-      "id": 25,
-      "label": "Monoliths",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 1235,
-      "y": 120
-    },
-    {
-      "id": 26,
-      "label": "Temple Of The Gods",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 890,
-      "y": 120
-    },
-    {
-      "id": 27,
-      "label": "Alchemical Store",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1350,
-      "y": 120
-    },
-    {
-      "id": 28,
-      "label": "Merchant Guild",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 775,
-      "y": 120
-    },
-    {
-      "id": 29,
-      "label": "Gatehouse & City Walls",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 1465,
-      "y": 120
-    },
-    {
-      "id": 30,
-      "label": "Apothecary & Medicine House",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 660,
-      "y": 120
-    },
-    {
-      "id": 31,
-      "label": "Bath House",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1580,
-      "y": 120
-    },
-    {
-      "id": 32,
-      "label": "Marketplace",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": 85,
-      "y": 120
-    },
-    {
-      "id": 33,
-      "label": "Adventurer Guild",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 2270,
-      "y": 120
-    },
-    {
-      "id": 34,
-      "label": "Restaurants",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -145,
-      "y": 120
-    },
-    {
-      "id": 35,
-      "label": "Auction House",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 2500,
-      "y": 120
-    },
-    {
-      "id": 36,
-      "label": "Blacksmith",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -375,
-      "y": 120
-    },
-    {
-      "id": 37,
-      "label": "Barracks",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 2730,
-      "y": 120
-    },
-    {
-      "id": 38,
-      "label": "City Districts",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": -605,
-      "y": 120
-    },
-    {
-      "id": 39,
-      "label": "Castle",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 2960,
-      "y": 120
-    },
-    {
-      "id": 40,
-      "label": "Magic Towers",
-      "status": "progress",
-      "description": "Coming Soon",
-      "x": -835,
-      "y": 120
-    },
-    {
-      "id": 41,
-      "label": "Black Magic Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -835,
-      "y": 240
-    },
-    {
-      "id": 42,
-      "label": "White Magic Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -925,
-      "y": 240
-    },
-    {
-      "id": 43,
-      "label": "Blue Magic Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -745,
-      "y": 240
-    },
-    {
-      "id": 44,
-      "label": "Green Magic Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -1015,
-      "y": 240
-    },
-    {
-      "id": 45,
-      "label": "Red Magic Tower",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -655,
-      "y": 240
-    },
-    {
-      "id": 46,
-      "label": "Inventory System & Stat System",
-      "status": "progress",
-      "description": "This system will be where you manage your items but on the opposite side there will also be your player information such as stats.",
-      "x": 840,
-      "y": 0
-    },
-    {
-      "id": 47,
-      "label": "Custom Language",
-      "status": "progress",
-      "description": "The custom language is going to be something similar to the language you see used in Orario of the Danmachi anime/manga except we have created our own for fun and copyright purposes.",
-      "x": 840,
-      "y": -120
-    },
-    {
-      "id": 48,
-      "label": "Character Customisation",
-      "status": "pending",
-      "description": "The character customisation process is going to allow you to pick your race, pick between multiple premade hair styles, body types and your size.",
-      "x": 280,
-      "y": 0
-    },
-    {
-      "id": 49,
-      "label": "Races",
-      "status": "pending",
-      "description": "The races for Dungeon Call will be a multitude of species making your character seem less fully human than kind of like a Demi-Human and they will be separate from the pure species found in the Dungeon.",
-      "x": 280,
-      "y": -120
-    },
-    {
-      "id": 50,
-      "label": "Elf",
-      "status": "pending",
-      "description": "Pending Name",
-      "x": 280,
-      "y": -240
-    },
-    {
-      "id": 51,
-      "label": "Dungeon",
-      "status": "progress",
-      "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown.",
-      "x": 560,
-      "y": 0
-    },
-    {
-      "id": 53,
-      "label": "High Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 190,
-      "y": -330
-    },
-    {
-      "id": 54,
-      "label": "Half Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 165,
-      "y": -240
-    },
-    {
-      "id": 55,
-      "label": "Pure Elf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 395,
-      "y": -240
-    },
-    {
-      "id": 56,
-      "label": "Fairy",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 165,
-      "y": -240
-    },
-    {
-      "id": 57,
-      "label": "Spirit",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 395,
-      "y": -240
-    },
-    {
-      "id": 58,
-      "label": "Lamia",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 50,
-      "y": -240
-    },
-    {
-      "id": 59,
-      "label": "Dragon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 510,
-      "y": -240
-    },
-    {
-      "id": 60,
-      "label": "Lizard",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -65,
-      "y": -240
-    },
-    {
-      "id": 61,
-      "label": "Dwarf",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 625,
-      "y": -240
-    },
-    {
-      "id": 62,
-      "label": "Tiefling",
-      "status": "pending",
-      "description": "Short nimble human",
-      "x": -180,
-      "y": -240
-    },
-    {
-      "id": 63,
-      "label": "Owl",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 740,
-      "y": -240
-    },
-    {
-      "id": 64,
-      "label": "Ogre",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": -755,
-      "y": -240
-    },
-    {
-      "id": 65,
-      "label": "Demon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1430,
-      "y": -240
-    },
-    {
-      "id": 66,
-      "label": "Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 120
-    },
-    {
-      "id": 67,
-      "label": "Labyrinth Ownership",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": 240
-    },
-    {
-      "id": 68,
-      "label": "Labyrinth NPCs",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 445,
-      "y": 240
-    },
-    {
-      "id": 69,
-      "label": "Player Labyrinths",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 920,
-      "y": 330
-    },
-    {
-      "id": 70,
-      "label": "NPC Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 445,
-      "y": 240
-    },
-    {
-      "id": 71,
-      "label": "Labyrinth Worker",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 445,
-      "y": 360
-    },
-    {
-      "id": 72,
-      "label": "Labyrinth Warrior",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 355,
-      "y": 360
-    },
-    {
-      "id": 73,
-      "label": "Labyrinth Hunter",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 535,
-      "y": 360
-    },
-    {
-      "id": 74,
-      "label": "Labyrinth Hunter",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 265,
-      "y": 360
-    },
-    {
-      "id": 75,
-      "label": "Labyrinth Assistant",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 625,
-      "y": 360
-    },
-    {
-      "id": 76,
-      "label": "Labyrinth Event",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 675,
-      "y": 240
-    },
-    {
-      "id": 77,
-      "label": "Labyrinth Mechanic",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 330,
-      "y": 240
-    },
-    {
-      "id": 78,
-      "label": "Wave Defence",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 675,
-      "y": 360
-    },
-    {
-      "id": 79,
-      "label": "Farming",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 330,
-      "y": 360
-    }
+    { "id": 1, "label": "Dungeon Call", "status": "progress", "description": "The project has officially started and begun development. All changes will be listed on this page as well as all progress.", "x": 0, "y": 0 },
+
+    { "id": 48, "label": "Character Customisation", "status": "pending", "description": "The character customisation process is going to allow you to pick your race, pick between multiple premade hair styles, body types and your size.", "x": 340, "y": 0 },
+    { "id": 49, "label": "Races", "status": "pending", "description": "The races for Dungeon Call will be a multitude of species making your character seem less fully human than kind of like a Demi-Human and they will be separate from the pure species found in the Dungeon.", "x": 340, "y": -180 },
+    { "id": 84, "label": "Elven Line", "status": "pending", "description": "Grouped elven ancestry branches.", "x": 180, "y": -360 },
+    { "id": 50, "label": "Elf", "status": "pending", "description": "Pending Name", "x": 340, "y": -360 },
+    { "id": 85, "label": "Beast & Spirit Line", "status": "pending", "description": "Grouped spirit and beast-like branches.", "x": 500, "y": -360 },
+    { "id": 86, "label": "Demonic & Giant Line", "status": "pending", "description": "Grouped heavier and infernal race branches.", "x": 660, "y": -360 },
+
+    { "id": 56, "label": "Fairy", "status": "pending", "description": "Coming Soon", "x": 100, "y": -540 },
+    { "id": 57, "label": "Spirit", "status": "pending", "description": "Coming Soon", "x": 220, "y": -540 },
+
+    { "id": 53, "label": "High Elf", "status": "pending", "description": "Coming Soon", "x": 220, "y": -540 },
+    { "id": 54, "label": "Half Elf", "status": "pending", "description": "Coming Soon", "x": 340, "y": -540 },
+    { "id": 55, "label": "Pure Elf", "status": "pending", "description": "Coming Soon", "x": 460, "y": -540 },
+
+    { "id": 58, "label": "Lamia", "status": "pending", "description": "Coming Soon", "x": 420, "y": -540 },
+    { "id": 59, "label": "Dragon", "status": "pending", "description": "Coming Soon", "x": 540, "y": -540 },
+    { "id": 60, "label": "Lizard", "status": "pending", "description": "Coming Soon", "x": 660, "y": -540 },
+    { "id": 61, "label": "Dwarf", "status": "pending", "description": "Coming Soon", "x": 780, "y": -540 },
+
+    { "id": 62, "label": "Tiefling", "status": "pending", "description": "Short nimble human", "x": 540, "y": -720 },
+    { "id": 63, "label": "Owl", "status": "pending", "description": "Coming Soon", "x": 660, "y": -720 },
+    { "id": 64, "label": "Ogre", "status": "pending", "description": "Coming Soon", "x": 780, "y": -720 },
+    { "id": 65, "label": "Demon", "status": "pending", "description": "Coming Soon", "x": 900, "y": -720 },
+
+    { "id": 51, "label": "Dungeon", "status": "progress", "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havoc and over time Veilmar became home to adventurers exploring the Dungeons unknown.", "x": 760, "y": 0 },
+    { "id": 66, "label": "Labyrinth", "status": "pending", "description": "Coming Soon", "x": 760, "y": 180 },
+    { "id": 76, "label": "Labyrinth Event", "status": "pending", "description": "Coming Soon", "x": 480, "y": 360 },
+    { "id": 67, "label": "Labyrinth Ownership", "status": "pending", "description": "Coming Soon", "x": 620, "y": 360 },
+    { "id": 68, "label": "Labyrinth NPCs", "status": "pending", "description": "Coming Soon", "x": 900, "y": 360 },
+    { "id": 77, "label": "Labyrinth Mechanic", "status": "pending", "description": "Coming Soon", "x": 1040, "y": 360 },
+
+    { "id": 78, "label": "Wave Defence", "status": "pending", "description": "Coming Soon", "x": 480, "y": 540 },
+    { "id": 69, "label": "Player Labyrinths", "status": "pending", "description": "Coming Soon", "x": 560, "y": 540 },
+    { "id": 70, "label": "NPC Labyrinth", "status": "pending", "description": "Coming Soon", "x": 680, "y": 540 },
+    { "id": 71, "label": "Labyrinth Worker", "status": "pending", "description": "Coming Soon", "x": 780, "y": 540 },
+    { "id": 72, "label": "Labyrinth Warrior", "status": "pending", "description": "Coming Soon", "x": 900, "y": 540 },
+    { "id": 73, "label": "Labyrinth Hunter", "status": "pending", "description": "Coming Soon", "x": 1020, "y": 540 },
+    { "id": 74, "label": "Labyrinth Hunter", "status": "pending", "description": "Coming Soon", "x": 1140, "y": 540 },
+    { "id": 75, "label": "Labyrinth Assistant", "status": "pending", "description": "Coming Soon", "x": 1260, "y": 540 },
+    { "id": 79, "label": "Farming", "status": "pending", "description": "Coming Soon", "x": 1180, "y": 540 },
+
+    { "id": 46, "label": "Inventory System & Stat System", "status": "progress", "description": "This system will be where you manage your items but on the opposite side there will also be your player information such as stats.", "x": 1140, "y": 0 },
+    { "id": 47, "label": "Custom Language", "status": "progress", "description": "The custom language is going to be something similar to the language you see used in Orario of the Danmachi anime/manga except we have created our own for fun and copyright purposes.", "x": 1140, "y": -180 },
+
+    { "id": 2, "label": "Veilmar", "status": "progress", "description": "Veilmar is the main city of Dungeon Call where the adventurers of the world reside. This is in development!", "x": 1520, "y": 0 },
+    { "id": 3, "label": "Combat", "status": "pending", "description": "Combat mechanics not started but intend to begin with magic.", "x": 1520, "y": 180 },
+    { "id": 4, "label": "Magic Combat", "status": "pending", "description": "The magic system is going to the starting point for the combat system. Magic will have a huge variety but will start simple.", "x": 1520, "y": 360 },
+    { "id": 5, "label": "Mana Control", "status": "pending", "description": "This is going to the basics of magic before you move onto actual magic variety and specialty. You will manipulate mana in its raw form and this is where every mage will begin.", "x": 1520, "y": 540 },
+    { "id": 6, "label": "Mana Specialisations", "status": "pending", "description": "Stemming from this node is where all of the magic specialisations will be categorised as a teaser for you all to see and how they progress.", "x": 1520, "y": 720 },
+
+    { "id": 14, "label": "White Magic", "status": "pending", "description": "Coming Soon", "x": 1340, "y": 900 },
+    { "id": 21, "label": "Blue Magic", "status": "pending", "description": "Coming Soon", "x": 1460, "y": 900 },
+    { "id": 7, "label": "Black Magic", "status": "pending", "description": "Coming Soon", "x": 1520, "y": 900 },
+    { "id": 22, "label": "Green Magic", "status": "pending", "description": "Coming Soon", "x": 1640, "y": 900 },
+    { "id": 23, "label": "Red Magic", "status": "pending", "description": "Coming Soon", "x": 1760, "y": 900 },
+
+    { "id": 15, "label": "Barrier/Protection Magic", "status": "pending", "description": "Coming Soon", "x": 1220, "y": 1080 },
+    { "id": 16, "label": "Divination Magic", "status": "pending", "description": "Coming Soon", "x": 1340, "y": 1080 },
+    { "id": 17, "label": "Status Magic", "status": "pending", "description": "Coming Soon", "x": 1460, "y": 1080 },
+    { "id": 18, "label": "Runic/Ritual Magic", "status": "pending", "description": "Coming Soon", "x": 1580, "y": 1080 },
+    { "id": 19, "label": "Purification Magic", "status": "pending", "description": "Coming Soon", "x": 1700, "y": 1080 },
+    { "id": 20, "label": "Spiritual Magic", "status": "pending", "description": "Coming Soon", "x": 1820, "y": 1080 },
+
+    { "id": 8, "label": "Blood Magic (Haemomancy)", "status": "pending", "description": "Coming Soon", "x": 1280, "y": 1080 },
+    { "id": 9, "label": "Necromancy", "status": "pending", "description": "Coming Soon", "x": 1400, "y": 1080 },
+    { "id": 10, "label": "Curse Magic", "status": "pending", "description": "Coming Soon", "x": 1520, "y": 1080 },
+    { "id": 11, "label": "Demon Summoning", "status": "pending", "description": "Coming Soon", "x": 1640, "y": 1080 },
+    { "id": 12, "label": "Life Manipulation", "status": "pending", "description": "Coming Soon", "x": 1760, "y": 1080 },
+    { "id": 13, "label": "Mind Manipulation", "status": "pending", "description": "Coming Soon", "x": 1880, "y": 1080 },
+
+    { "id": 80, "label": "City Core", "status": "progress", "description": "Core districts and civic structures of Veilmar.", "x": 1280, "y": -180 },
+    { "id": 81, "label": "Commerce & Services", "status": "progress", "description": "Guilds, shops, trade and daily services.", "x": 1520, "y": -180 },
+    { "id": 82, "label": "Landmarks & Faith", "status": "pending", "description": "Monuments, temples and notable public places.", "x": 1760, "y": -180 },
+    { "id": 83, "label": "Arcane Quarter", "status": "progress", "description": "The major magical institutions and towers.", "x": 2000, "y": -180 },
+
+    { "id": 24, "label": "Tavern", "status": "pending", "description": "The tavern is going to be a place of rest for all of the players and NPCs alike and maybe you can discover things here...", "x": 1160, "y": -360 },
+    { "id": 29, "label": "Gatehouse & City Walls", "status": "progress", "description": "Coming Soon", "x": 1280, "y": -360 },
+    { "id": 37, "label": "Barracks", "status": "pending", "description": "Coming Soon", "x": 1400, "y": -360 },
+    { "id": 38, "label": "City Districts", "status": "progress", "description": "Coming Soon", "x": 1520, "y": -360 },
+    { "id": 39, "label": "Castle", "status": "pending", "description": "Coming Soon", "x": 1640, "y": -360 },
+
+    { "id": 27, "label": "Alchemical Store", "status": "pending", "description": "Coming Soon", "x": 1340, "y": -360 },
+    { "id": 28, "label": "Merchant Guild", "status": "pending", "description": "Coming Soon", "x": 1460, "y": -360 },
+    { "id": 30, "label": "Apothecary & Medicine House", "status": "pending", "description": "Coming Soon", "x": 1580, "y": -360 },
+    { "id": 31, "label": "Bath House", "status": "pending", "description": "Coming Soon", "x": 1700, "y": -360 },
+    { "id": 32, "label": "Marketplace", "status": "progress", "description": "Coming Soon", "x": 1820, "y": -360 },
+    { "id": 33, "label": "Adventurer Guild", "status": "pending", "description": "Coming Soon", "x": 1940, "y": -360 },
+    { "id": 34, "label": "Restaurants", "status": "pending", "description": "Coming Soon", "x": 2060, "y": -360 },
+    { "id": 35, "label": "Auction House", "status": "pending", "description": "Coming Soon", "x": 2180, "y": -360 },
+    { "id": 36, "label": "Blacksmith", "status": "pending", "description": "Coming Soon", "x": 2300, "y": -360 },
+
+    { "id": 25, "label": "Monoliths", "status": "progress", "description": "Coming Soon", "x": 1700, "y": -360 },
+    { "id": 26, "label": "Temple Of The Gods", "status": "pending", "description": "Coming Soon", "x": 1820, "y": -360 },
+
+    { "id": 40, "label": "Magic Towers", "status": "progress", "description": "Coming Soon", "x": 2000, "y": -360 },
+    { "id": 41, "label": "Black Magic Tower", "status": "pending", "description": "Coming Soon", "x": 1760, "y": -540 },
+    { "id": 42, "label": "White Magic Tower", "status": "pending", "description": "Coming Soon", "x": 1880, "y": -540 },
+    { "id": 43, "label": "Blue Magic Tower", "status": "pending", "description": "Coming Soon", "x": 2000, "y": -540 },
+    { "id": 44, "label": "Green Magic Tower", "status": "pending", "description": "Coming Soon", "x": 2120, "y": -540 },
+    { "id": 45, "label": "Red Magic Tower", "status": "pending", "description": "Coming Soon", "x": 2240, "y": -540 }
   ],
   "edges": [
-    {
-      "from": 1,
-      "to": 2
-    },
-    {
-      "from": 2,
-      "to": 3
-    },
-    {
-      "from": 3,
-      "to": 4
-    },
-    {
-      "from": 4,
-      "to": 5
-    },
-    {
-      "from": 5,
-      "to": 6
-    },
-    {
-      "from": 6,
-      "to": 7
-    },
-    {
-      "from": 7,
-      "to": 8
-    },
-    {
-      "from": 7,
-      "to": 9
-    },
-    {
-      "from": 7,
-      "to": 10
-    },
-    {
-      "from": 7,
-      "to": 11
-    },
-    {
-      "from": 7,
-      "to": 12
-    },
-    {
-      "from": 7,
-      "to": 13
-    },
-    {
-      "from": 6,
-      "to": 14
-    },
-    {
-      "from": 14,
-      "to": 15
-    },
-    {
-      "from": 14,
-      "to": 16
-    },
-    {
-      "from": 14,
-      "to": 17
-    },
-    {
-      "from": 14,
-      "to": 18
-    },
-    {
-      "from": 14,
-      "to": 19
-    },
-    {
-      "from": 14,
-      "to": 20
-    },
-    {
-      "from": 6,
-      "to": 21
-    },
-    {
-      "from": 6,
-      "to": 22
-    },
-    {
-      "from": 6,
-      "to": 23
-    },
-    {
-      "from": 2,
-      "to": 24
-    },
-    {
-      "from": 2,
-      "to": 25
-    },
-    {
-      "from": 2,
-      "to": 26
-    },
-    {
-      "from": 2,
-      "to": 27
-    },
-    {
-      "from": 2,
-      "to": 28
-    },
-    {
-      "from": 2,
-      "to": 29
-    },
-    {
-      "from": 2,
-      "to": 30
-    },
-    {
-      "from": 2,
-      "to": 31
-    },
-    {
-      "from": 2,
-      "to": 32
-    },
-    {
-      "from": 2,
-      "to": 33
-    },
-    {
-      "from": 2,
-      "to": 34
-    },
-    {
-      "from": 2,
-      "to": 35
-    },
-    {
-      "from": 2,
-      "to": 36
-    },
-    {
-      "from": 2,
-      "to": 37
-    },
-    {
-      "from": 2,
-      "to": 38
-    },
-    {
-      "from": 2,
-      "to": 39
-    },
-    {
-      "from": 2,
-      "to": 40
-    },
-    {
-      "from": 40,
-      "to": 41
-    },
-    {
-      "from": 40,
-      "to": 42
-    },
-    {
-      "from": 40,
-      "to": 43
-    },
-    {
-      "from": 40,
-      "to": 44
-    },
-    {
-      "from": 40,
-      "to": 45
-    },
-    {
-      "from": 1,
-      "to": 46
-    },
-    {
-      "from": 46,
-      "to": 47
-    },
-    {
-      "from": 1,
-      "to": 48
-    },
-    {
-      "from": 48,
-      "to": 49
-    },
-    {
-      "from": 49,
-      "to": 50
-    },
-    {
-      "from": 1,
-      "to": 51
-    },
-    {
-      "from": 50,
-      "to": 53
-    },
-    {
-      "from": 50,
-      "to": 54
-    },
-    {
-      "from": 50,
-      "to": 55
-    },
-    {
-      "from": 49,
-      "to": 56
-    },
-    {
-      "from": 49,
-      "to": 57
-    },
-    {
-      "from": 49,
-      "to": 58
-    },
-    {
-      "from": 49,
-      "to": 59
-    },
-    {
-      "from": 49,
-      "to": 60
-    },
-    {
-      "from": 49,
-      "to": 61
-    },
-    {
-      "from": 49,
-      "to": 62
-    },
-    {
-      "from": 49,
-      "to": 63
-    },
-    {
-      "from": 49,
-      "to": 64
-    },
-    {
-      "from": 49,
-      "to": 65
-    },
-    {
-      "from": 51,
-      "to": 66
-    },
-    {
-      "from": 66,
-      "to": 67
-    },
-    {
-      "from": 66,
-      "to": 68
-    },
-    {
-      "from": 67,
-      "to": 69
-    },
-    {
-      "from": 67,
-      "to": 70
-    },
-    {
-      "from": 68,
-      "to": 71
-    },
-    {
-      "from": 68,
-      "to": 72
-    },
-    {
-      "from": 68,
-      "to": 73
-    },
-    {
-      "from": 68,
-      "to": 74
-    },
-    {
-      "from": 68,
-      "to": 75
-    },
-    {
-      "from": 66,
-      "to": 76
-    },
-    {
-      "from": 66,
-      "to": 77
-    },
-    {
-      "from": 76,
-      "to": 78
-    },
-    {
-      "from": 77,
-      "to": 79
-    }
-  ]
-}
+    { "from": 1, "to": 48 },
+    { "from": 48, "to": 49 },
+    { "from": 49, "to": 84 },
+    { "from": 49, "to": 85 },
+    { "from": 49, "to": 86 },
+    { "from": 84, "to": 50 },
+    { "from": 84, "to": 56 },
+    { "from": 84, "to": 57 },
+    { "from": 50, "to": 53 },
+    { "from": 50, "to": 54 },
+    { "from": 50, "to": 55 },
+    { "from": 85, "to": 58 },
+    { "from": 85, "to": 59 },
+    { "from": 85, "to": 60 },
+    { "from": 85, "to": 61 },
+    { "from": 86, "to": 62 },
+    { "from": 86, "to": 63 },
+    { "from": 86, "
