@@ -616,16 +616,16 @@
       </div>
     </div>
 
-        <div class="panel">
-  <div class="panelTitleSmall">Timeline</div>
-  <div id="timelineList" style="max-height:160px;overflow-y:auto;font-size:12px;"></div>
-  <button onclick="restoreSnapshot()">Restore Selected</button>
-</div>
+    <div class="panel">
+      <div class="panelTitleSmall">Timeline</div>
+      <div id="timelineList" style="max-height:160px;overflow-y:auto;font-size:12px;"></div>
+      <button onclick="restoreSnapshot()">Restore Selected</button>
+    </div>
 
-<div class="panel">
-  <div class="panelTitleSmall">Diff Viewer</div>
-  <div id="diffViewer" style="font-size:12px;color:#ccc;white-space:pre-wrap;"></div>
-</div>
+    <div class="panel">
+      <div class="panelTitleSmall">Diff Viewer</div>
+      <div id="diffViewer" style="font-size:12px;color:#ccc;white-space:pre-wrap;"></div>
+    </div>
   </div>
 
   <div id="infoBox"></div>
@@ -742,12 +742,8 @@
 
     function triggerAutoSave() {
       clearTimeout(autoSaveTimer);
-
       if (!hasUnsavedChanges) return;
-
-      autoSaveTimer = setTimeout(() => {
-        saveRoadmap(true);
-      }, 4000);
+      autoSaveTimer = setTimeout(() => saveRoadmap(true), 4000);
     }
 
     function setDirtyState(isDirty) {
@@ -963,6 +959,14 @@
             dragNodes: useFixedPositions,
             dragView: true,
             zoomView: true
+          },
+          edges: {
+            smooth: false,
+            color: {
+              color: "#b8860b",
+              highlight: "#ffd166"
+            },
+            width: 2
           }
         }
       );
@@ -1073,9 +1077,9 @@
 
       info.innerHTML =
         '<div id="closeBtn">✕</div>' +
-        `<h3>${node.label}</h3>` +
+        `<h3>${escapeHtml(node.label)}</h3>` +
         `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>` +
+        `<p>${escapeHtml(node.description || "No description available.")}</p>` +
         `<div class="infoInlineEditor">
           <label for="infoInlineLabel">Quick Edit Label</label>
           <input id="infoInlineLabel" type="text" value="${escapeHtml(node.label)}" />
@@ -1296,8 +1300,8 @@
         label: "New Node",
         status: "pending",
         description: "Coming Soon",
-        x: (typeof parent.x === "number" ? parent.x : 0) + 240,
-        y: (typeof parent.y === "number" ? parent.y : 0) + (siblingCount * 110) - 40
+        x: (typeof parent.x === "number" ? parent.x : 0) + 180,
+        y: (typeof parent.y === "number" ? parent.y : 0) + ((siblingCount + 1) * 110)
       };
 
       graphData.nodes.push(newNode);
@@ -1327,7 +1331,7 @@
 
       const parentId = getParentId(selectedNodeId);
       if (parentId === null) {
-        showToast("The root node can't have a sibling.");
+        showToast("The root can't have a sibling.");
         return;
       }
 
@@ -1340,8 +1344,8 @@
         label: "New Sibling",
         status: "pending",
         description: "Coming Soon",
-        x: (typeof parent.x === "number" ? parent.x : 0) + 240,
-        y: (typeof parent.y === "number" ? parent.y : 0) + (siblingCount * 110) - 40
+        x: (typeof parent.x === "number" ? parent.x : 0) + 180,
+        y: (typeof parent.y === "number" ? parent.y : 0) + ((siblingCount + 1) * 110)
       };
 
       graphData.nodes.push(newNode);
@@ -1548,134 +1552,182 @@
     }
 
     function zoomIn() {
+      if (!network) return;
       network.moveTo({ scale: network.getScale() * 1.2 });
     }
 
     function zoomOut() {
+      if (!network) return;
       network.moveTo({ scale: network.getScale() * 0.8 });
     }
 
     function resetView() {
       const rootId = getRootId();
-      if (rootId === null) return;
+      if (rootId === null || !network) return;
       network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
       setStatus("View reset.");
     }
 
-function autoArrange() {
-  pushHistory();
+    function autoArrange() {
+      pushHistory();
 
-  const rootId = getRootId();
-  if (rootId === null) {
-    showToast("Nothing to arrange.");
-    return;
-  }
+      const rootId = getRootId();
+      if (rootId === null) {
+        showToast("Nothing to arrange.");
+        return;
+      }
 
-  showLoading("Auto arranging roadmap...");
+      showLoading("Auto arranging roadmap...");
 
-  const START_X = 0;
-  const START_Y = 0;
+      const ROOT_X = 0;
+      const ROOT_Y = 0;
 
-  const MAIN_GAP = 260;       // spacing across the timeline
-  const STEM_GAP_Y = 110;     // spacing down a stem
-  const STEM_SIDE_OFFSET = 90; // small left/right wiggle so stems don't fully overlap
+      const MAIN_GAP = 280;
+      const STEM_GAP_Y = 110;
+      const CHILD_SPREAD_X = 90;
 
-  const childrenMap = new Map();
-  graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
-  graphData.edges.forEach(edge => {
-    const from = Number(edge.from);
-    const to = Number(edge.to);
-    if (!childrenMap.has(from)) childrenMap.set(from, []);
-    childrenMap.get(from).push(to);
-  });
+      const childrenMap = new Map();
+      graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
+      graphData.edges.forEach(edge => {
+        const from = Number(edge.from);
+        const to = Number(edge.to);
+        if (!childrenMap.has(from)) childrenMap.set(from, []);
+        childrenMap.get(from).push(to);
+      });
 
-  function sortChildren(ids) {
-    return [...ids].sort((a, b) => {
-      const nodeA = getNodeById(a);
-      const nodeB = getNodeById(b);
-      return (nodeA?.label || "").localeCompare(nodeB?.label || "");
-    });
-  }
+      function getNodeByIdLocal(id) {
+        return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
+      }
 
-  const rootNode = getNodeById(rootId);
-  if (!rootNode) {
-    hideLoading();
-    showToast("Root node missing.");
-    return;
-  }
+      function getChildren(nodeId) {
+        const ids = [...(childrenMap.get(Number(nodeId)) || [])];
+        return ids.sort((a, b) => {
+          const na = getNodeByIdLocal(a);
+          const nb = getNodeByIdLocal(b);
+          return (na?.label || "").localeCompare(nb?.label || "");
+        });
+      }
 
-  // Root at the far left of the timeline
-  rootNode.x = START_X;
-  rootNode.y = START_Y;
+      function getMainTimelineNodes() {
+        const rootChildren = [...(childrenMap.get(Number(rootId)) || [])];
 
-  // These become the main straight timeline points
-  const mainNodes = sortChildren(childrenMap.get(rootId) || []);
+        return rootChildren.sort((a, b) => {
+          const na = getNodeByIdLocal(a);
+          const nb = getNodeByIdLocal(b);
+          const ax = typeof na?.x === "number" ? na.x : 0;
+          const bx = typeof nb?.x === "number" ? nb.x : 0;
+          if (ax !== bx) return ax - bx;
+          return Number(a) - Number(b);
+        });
+      }
 
-  mainNodes.forEach((nodeId, index) => {
-    const node = getNodeById(nodeId);
-    if (!node) return;
+      function collectDescendantsByLevel(startId) {
+        const levels = [];
+        const visited = new Set();
+        let current = [startId];
 
-    node.x = START_X + ((index + 1) * MAIN_GAP);
-    node.y = START_Y;
-  });
+        while (current.length) {
+          const next = [];
+          const thisLevel = [];
 
-  // Place descendants as vertical stems from each main node
-  function layoutStem(parentId, direction = 1, depth = 1, laneShift = 0, visited = new Set()) {
-    if (visited.has(parentId)) return;
-    visited.add(parentId);
+          for (const id of current) {
+            if (visited.has(id)) continue;
+            visited.add(id);
+            thisLevel.push(id);
 
-    const parent = getNodeById(parentId);
-    if (!parent) return;
+            const children = getChildren(id);
+            for (const childId of children) {
+              if (!visited.has(childId)) next.push(childId);
+            }
+          }
 
-    const children = sortChildren(childrenMap.get(parentId) || []);
-    if (!children.length) return;
+          if (thisLevel.length) levels.push(thisLevel);
+          current = next;
+        }
 
-    children.forEach((childId, index) => {
-      const child = getNodeById(childId);
-      if (!child) return;
+        return levels;
+      }
 
-      // alternate slight side offset to stop perfect overlap
-      const side =
-        index % 3 === 0 ? 0 :
-        index % 3 === 1 ? -STEM_SIDE_OFFSET :
-                          STEM_SIDE_OFFSET;
+      const rootNode = getNodeByIdLocal(rootId);
+      if (!rootNode) {
+        hideLoading();
+        showToast("Root node missing.");
+        return;
+      }
 
-      child.x = parent.x + side + laneShift;
-      child.y = parent.y + (direction * STEM_GAP_Y * depth);
+      rootNode.x = ROOT_X;
+      rootNode.y = ROOT_Y;
 
-      // keep deeper descendants on same general stem
-      layoutStem(
-        childId,
-        direction,
-        depth + 1,
-        laneShift + (index % 2 === 0 ? -18 : 18),
-        new Set(visited)
-      );
-    });
-  }
+      const mainNodes = getMainTimelineNodes();
 
-  // Alternate stems above and below the line
-  mainNodes.forEach((nodeId, index) => {
-    const direction = index % 2 === 0 ? -1 : 1;
-    layoutStem(nodeId, direction);
-  });
+      mainNodes.forEach((nodeId, index) => {
+        const node = getNodeByIdLocal(nodeId);
+        if (!node) return;
 
-  rebuildDatasetsPreserveView(rootId);
+        node.x = ROOT_X + ((index + 1) * MAIN_GAP);
+        node.y = ROOT_Y;
+      });
 
-  setTimeout(() => {
-    network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+      mainNodes.forEach((nodeId, mainIndex) => {
+        const mainNode = getNodeByIdLocal(nodeId);
+        if (!mainNode) return;
 
-    if (selectedNodeId !== null) {
-      loadSelectedNodeIntoEditor();
-      applyFocusMode();
+        const direction = mainIndex % 2 === 0 ? -1 : 1;
+        const firstChildren = getChildren(nodeId);
+
+        firstChildren.forEach((childId, childIndex) => {
+          const child = getNodeByIdLocal(childId);
+          if (!child) return;
+
+          const offsetPattern = [0, -1, 1, -2, 2, -3, 3, -4, 4];
+          const pattern = offsetPattern[childIndex] ?? (childIndex - Math.floor(firstChildren.length / 2));
+
+          child.x = mainNode.x + (pattern * CHILD_SPREAD_X);
+          child.y = mainNode.y + (direction * STEM_GAP_Y);
+        });
+
+        firstChildren.forEach((branchRootId) => {
+          const branchRoot = getNodeByIdLocal(branchRootId);
+          if (!branchRoot) return;
+
+          const levels = collectDescendantsByLevel(branchRootId);
+
+          for (let levelIndex = 1; levelIndex < levels.length; levelIndex++) {
+            const level = levels[levelIndex];
+            const y = mainNode.y + (direction * STEM_GAP_Y * (levelIndex + 1));
+
+            level.forEach((descId, i) => {
+              const desc = getNodeByIdLocal(descId);
+              if (!desc) return;
+
+              const offsetPattern = [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5];
+              const pattern = offsetPattern[i] ?? (i - Math.floor(level.length / 2));
+
+              desc.x = branchRoot.x + (pattern * 90);
+              desc.y = y;
+            });
+          }
+        });
+      });
+
+      rebuildDatasetsPreserveView(rootId);
+
+      setTimeout(() => {
+        if (network) {
+          network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
+        }
+
+        if (selectedNodeId !== null) {
+          loadSelectedNodeIntoEditor();
+          applyFocusMode();
+        }
+
+        hideLoading();
+        setDirtyState(true);
+        setStatus("Roadmap auto-arranged. Save when ready.");
+        showToast("Roadmap auto-arranged.");
+      }, 120);
     }
-
-    hideLoading();
-    setDirtyState(true);
-    setStatus("Roadmap auto-arranged. Save when ready.");
-    showToast("Roadmap auto-arranged.");
-  }, 120);
-}
 
     function renderSearchResults(query) {
       const resultsBox = document.getElementById("searchResults");
@@ -1706,7 +1758,7 @@ function autoArrange() {
         const item = document.createElement("div");
         item.className = "searchResult";
         item.innerHTML = `
-          <div class="searchResultTitle">${match.label}</div>
+          <div class="searchResultTitle">${escapeHtml(match.label)}</div>
           <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
         `;
         item.onclick = () => {
@@ -1721,7 +1773,7 @@ function autoArrange() {
 
     function jumpToNode(nodeId) {
       const node = getNodeById(nodeId);
-      if (!node) return;
+      if (!node || !network) return;
 
       selectedNodeId = Number(nodeId);
       loadSelectedNodeIntoEditor();
@@ -1754,6 +1806,7 @@ function autoArrange() {
         timeline = JSON.parse(savedTimeline);
         renderTimeline();
       }
+
       const input = document.getElementById("searchInput");
       input.addEventListener("input", () => {
         renderSearchResults(input.value);
@@ -1790,123 +1843,124 @@ function autoArrange() {
       }
     });
 
-    function createSnapshot(label = "Edit") {
-  const snapshot = {
-    time: new Date().toLocaleTimeString(),
-    data: JSON.stringify(graphData)
-  };
+    function createSnapshot() {
+      const snapshot = {
+        time: new Date().toLocaleTimeString(),
+        data: JSON.stringify(graphData)
+      };
 
-  timeline.unshift(snapshot);
-  if (timeline.length > 30) timeline.pop();
+      timeline.unshift(snapshot);
+      if (timeline.length > 30) timeline.pop();
 
-  localStorage.setItem("roadmapTimeline", JSON.stringify(timeline));
-  renderTimeline();
-}
-
-function renderTimeline() {
-  const el = document.getElementById("timelineList");
-  if (!el) return;
-
-  el.innerHTML = "";
-
-  if (!timeline.length) {
-    el.innerHTML = `<div style="color:#777;">No snapshots yet</div>`;
-    return;
-  }
-
-  timeline.forEach((snap, i) => {
-    const div = document.createElement("div");
-    div.textContent = `#${timeline.length - i} • ${snap.time}`;
-    div.style.cursor = "pointer";
-    div.style.padding = "6px 8px";
-    div.style.borderRadius = "8px";
-    div.style.marginBottom = "6px";
-    div.style.border = "1px solid #2a2a2a";
-    div.style.background = selectedSnapshotIndex === i ? "rgba(190, 26, 72, 0.18)" : "#111";
-    div.style.color = selectedSnapshotIndex === i ? "#fff" : "#ccc";
-
-    div.onclick = () => {
-      selectedSnapshotIndex = i;
+      localStorage.setItem("roadmapTimeline", JSON.stringify(timeline));
       renderTimeline();
-      highlightDiff(i);
-      showToast(`Selected snapshot #${timeline.length - i}`);
-    };
-
-    el.appendChild(div);
-  });
-
-  if (selectedSnapshotIndex === null && timeline.length > 0) {
-    selectedSnapshotIndex = 0;
-    renderTimeline();
-    highlightDiff(0);
-  }
-}
-
-function restoreSnapshot() {
-  if (selectedSnapshotIndex === null || !timeline[selectedSnapshotIndex]) {
-    showToast("Select a timeline snapshot first.");
-    return;
-  }
-
-  pushHistory();
-
-  const snap = timeline[selectedSnapshotIndex];
-  graphData = JSON.parse(snap.data);
-
-  rebuildDatasetsPreserveView();
-  setDirtyState(true);
-
-  selectedNodeId = null;
-  clearEditorFields();
-  document.getElementById("infoBox").style.display = "none";
-
-  showToast(`Restored snapshot #${timeline.length - selectedSnapshotIndex}`);
-  setStatus("Snapshot restored. Save when ready.");
-}
-
-function highlightDiff(index) {
-  const viewer = document.getElementById("diffViewer");
-  if (!viewer) return;
-
-  if (!timeline[index]) {
-    viewer.textContent = "No snapshot selected.";
-    return;
-  }
-
-  const current = graphData.nodes;
-  const old = JSON.parse(timeline[index].data).nodes;
-
-  let output = "";
-
-  current.forEach(n => {
-    const prev = old.find(o => o.id === n.id);
-
-    if (!prev) {
-      output += `+ Added: ${n.label}\n`;
-      return;
     }
 
-    if (prev.label !== n.label) {
-      output += `~ Label: ${prev.label} → ${n.label}\n`;
+    function renderTimeline() {
+      const el = document.getElementById("timelineList");
+      if (!el) return;
+
+      el.innerHTML = "";
+
+      if (!timeline.length) {
+        el.innerHTML = `<div style="color:#777;">No snapshots yet</div>`;
+        return;
+      }
+
+      timeline.forEach((snap, i) => {
+        const div = document.createElement("div");
+        div.textContent = `#${timeline.length - i} • ${snap.time}`;
+        div.style.cursor = "pointer";
+        div.style.padding = "6px 8px";
+        div.style.borderRadius = "8px";
+        div.style.marginBottom = "6px";
+        div.style.border = "1px solid #2a2a2a";
+        div.style.background = selectedSnapshotIndex === i ? "rgba(190, 26, 72, 0.18)" : "#111";
+        div.style.color = selectedSnapshotIndex === i ? "#fff" : "#ccc";
+
+        div.onclick = () => {
+          selectedSnapshotIndex = i;
+          renderTimeline();
+          highlightDiff(i);
+          showToast(`Selected snapshot #${timeline.length - i}`);
+        };
+
+        el.appendChild(div);
+      });
+
+      if (selectedSnapshotIndex === null && timeline.length > 0) {
+        selectedSnapshotIndex = 0;
+        renderTimeline();
+        highlightDiff(0);
+      }
     }
 
-    if (prev.status !== n.status) {
-      output += `~ Status: ${prev.status} → ${n.status}\n`;
+    function restoreSnapshot() {
+      if (selectedSnapshotIndex === null || !timeline[selectedSnapshotIndex]) {
+        showToast("Select a timeline snapshot first.");
+        return;
+      }
+
+      pushHistory();
+
+      const snap = timeline[selectedSnapshotIndex];
+      graphData = JSON.parse(snap.data);
+
+      rebuildDatasetsPreserveView();
+      setDirtyState(true);
+
+      selectedNodeId = null;
+      clearEditorFields();
+      document.getElementById("infoBox").style.display = "none";
+
+      showToast(`Restored snapshot #${timeline.length - selectedSnapshotIndex}`);
+      setStatus("Snapshot restored. Save when ready.");
     }
 
-    if ((prev.description || "") !== (n.description || "")) {
-      output += `~ Description changed: ${n.label}\n`;
-    }
-  });
+    function highlightDiff(index) {
+      const viewer = document.getElementById("diffViewer");
+      if (!viewer) return;
 
-  old.forEach(n => {
-    if (!current.find(c => c.id === n.id)) {
-      output += `- Removed: ${n.label}\n`;
-    }
-  });
+      if (!timeline[index]) {
+        viewer.textContent = "No snapshot selected.";
+        return;
+      }
 
-  viewer.textContent = output || "No differences from the selected snapshot.";
-}
+      const current = graphData.nodes;
+      const old = JSON.parse(timeline[index].data).nodes;
+
+      let output = "";
+
+      current.forEach(n => {
+        const prev = old.find(o => o.id === n.id);
+
+        if (!prev) {
+          output += `+ Added: ${n.label}\n`;
+          return;
+        }
+
+        if (prev.label !== n.label) {
+          output += `~ Label: ${prev.label} → ${n.label}\n`;
+        }
+
+        if (prev.status !== n.status) {
+          output += `~ Status: ${prev.status} → ${n.status}\n`;
+        }
+
+        if ((prev.description || "") !== (n.description || "")) {
+          output += `~ Description changed: ${n.label}\n`;
+        }
+      });
+
+      old.forEach(n => {
+        if (!current.find(c => c.id === n.id)) {
+          output += `- Removed: ${n.label}\n`;
+        }
+      });
+
+      viewer.textContent = output || "No differences from the selected snapshot.";
+    }
+
     reloadFromGitHub();
   </script>
 </body>
