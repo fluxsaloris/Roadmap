@@ -610,11 +610,19 @@
     },
     {
       "id": 78,
-      "label": "New Node",
+      "label": "Wave Defence",
       "status": "pending",
       "description": "Coming Soon",
       "x": 1365,
       "y": 279
+    },
+    {
+      "id": 79,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1365,
+      "y": 479
     }
   ],
   "edges": [
@@ -921,6 +929,10 @@
     {
       "from": 76,
       "to": 78
+    },
+    {
+      "from": 77,
+      "to": 79
     }
   ]
 }
