@@ -11,24 +11,43 @@
     }
   </script>
 
-  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-
   <style>
+    :root {
+      --bg: #000;
+      --panel: rgba(18, 18, 18, 0.92);
+      --panel-2: rgba(24, 24, 24, 0.95);
+      --border: #2a2a2a;
+      --text: #f2f2f2;
+      --muted: #a5a5a5;
+      --accent: #BE1A48;
+      --pending-bg: #111;
+      --pending-border: #333;
+      --pending-text: #888;
+      --progress-bg: #ffaa00;
+      --progress-border: #cc8800;
+      --progress-text: #222;
+      --complete-bg: #00cc66;
+      --complete-border: #00994d;
+      --complete-text: #032b19;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
       min-height: 100%;
-      background: #000 !important;
-      color: white;
-      overflow: hidden;
+      background: #000;
+      color: var(--text);
       font-family: Arial, sans-serif;
     }
 
     body {
       position: relative;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%) !important;
+      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      overflow-x: hidden;
     }
 
     body::before {
@@ -41,7 +60,7 @@
         radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
         radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
         radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.35;
+      opacity: 0.28;
       pointer-events: none;
     }
 
@@ -49,159 +68,173 @@
       content: "";
       position: fixed;
       inset: 0;
-      border: 2px solid #BE1A48;
+      border: 2px solid var(--accent);
       border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.3);
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.25);
       margin: 6px;
-      z-index: 2;
-    }
-
-    #graph {
-      position: fixed;
-      inset: 0;
       z-index: 1;
-      background: transparent !important;
     }
 
-    #hero {
-      position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 20;
-      width: min(500px, calc(100vw - 40px));
+    #app {
+      position: relative;
+      z-index: 2;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 22px 18px 40px;
+    }
+
+    .hero {
       background: rgba(15, 15, 15, 0.9);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      margin-bottom: 18px;
     }
 
-    #hero h1 {
-      margin: 0 0 6px;
-      font-size: 22px;
-      line-height: 1.2;
-      color: #fff;
+    .heroTop {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
-    #hero p {
-      margin: 0 0 10px;
-      color: #bbb;
-      font-size: 14px;
-      line-height: 1.45;
+    .heroTitle {
+      min-width: 320px;
+      flex: 1;
     }
 
-    #searchWrap {
-      position: relative;
-      margin-top: 12px;
+    .heroTitle h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .heroTitle p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 780px;
+    }
+
+    .statusBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .status-pending {
+      background: #181818;
+      border-color: #333;
+      color: #999;
+    }
+
+    .status-progress {
+      background: #3d2b06;
+      border-color: #9a6a00;
+      color: #ffd37a;
+    }
+
+    .status-complete {
+      background: #123a24;
+      border-color: #1e6c41;
+      color: #7dffb0;
+    }
+
+    .heroControls {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1.4fr auto;
+      gap: 12px;
     }
 
     #searchInput {
       width: 100%;
-      box-sizing: border-box;
       background: #111;
       color: #e5e5e5;
       border: 1px solid #303030;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 12px;
+      padding: 12px 14px;
       font-size: 14px;
       outline: none;
     }
 
     #searchInput:focus {
-      border-color: #BE1A48;
+      border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
-    #searchResults {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: rgba(18, 18, 18, 0.96);
-      border: 1px solid #2f2f2f;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      overflow: hidden;
-      max-height: 280px;
-      overflow-y: auto;
-      display: none;
-      z-index: 25;
-      backdrop-filter: blur(10px);
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .searchResult {
-      padding: 10px 12px;
-      border-bottom: 1px solid #262626;
+    button {
+      background: #111;
+      color: #ddd;
+      border: 1px solid #2b2b2b;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
       cursor: pointer;
     }
 
-    .searchResult:last-child {
-      border-bottom: none;
+    button:hover {
+      background: #171717;
     }
 
-    .searchResult:hover {
-      background: rgba(190, 26, 72, 0.12);
-    }
-
-    .searchResultTitle {
-      font-size: 14px;
-      color: #f0f0f0;
-      margin-bottom: 4px;
-    }
-
-    .searchResultMeta {
-      font-size: 12px;
-      color: #9f9f9f;
-    }
-
-    #statusLine {
-      font-size: 12px;
-      color: #999;
-      margin-top: 10px;
-    }
-
-    #statsBar {
+    .stats {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 12px;
+      margin-top: 16px;
     }
 
     .statCard {
       background: rgba(20,20,20,0.9);
       border: 1px solid #2c2c2c;
-      border-radius: 10px;
-      padding: 10px 12px;
-      min-width: 92px;
+      border-radius: 12px;
+      padding: 12px 14px;
+      min-width: 110px;
     }
 
     .statValue {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: #fff;
     }
 
     .statLabel {
-      margin-top: 3px;
+      margin-top: 4px;
       font-size: 11px;
       color: #9d9d9d;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
-    #progressWrap {
-      margin-top: 12px;
+    .progressWrap {
+      margin-top: 14px;
     }
 
-    #progressText {
+    .progressText {
       font-size: 12px;
       color: #bbb;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
     }
 
-    #progressTrack {
+    .progressTrack {
       width: 100%;
       height: 10px;
       background: #111;
@@ -210,7 +243,7 @@
       overflow: hidden;
     }
 
-    #progressFill {
+    .progressFill {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #BE1A48, #ff4f86);
@@ -218,144 +251,159 @@
       transition: width 0.25s ease;
     }
 
-    #infoBox {
-      position: fixed;
-      width: clamp(240px, 28vw, 340px);
-      max-height: min(65vh, 460px);
-      overflow-y: auto;
-      background: rgba(20, 20, 20, 0.96);
-      border: 1px solid #2a2a2a;
-      backdrop-filter: blur(12px);
-      padding: 14px;
-      border-radius: 14px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      z-index: 20;
-      color: white;
-    }
-
-    #infoBox.hidden {
-      display: none;
-    }
-
-    #infoBox h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      line-height: 1.3;
-      color: #fff;
-      padding-right: 22px;
-    }
-
-    #infoBox p {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #d7d7d7;
-      white-space: pre-wrap;
-      margin: 10px 0 0;
-    }
-
-    #closeBtn {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      cursor: pointer;
-      color: #aaa;
-      font-size: 14px;
-    }
-
-    #statusBadge {
-      display: inline-block;
-      margin: 2px 0 8px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .smallNote {
-      margin-top: 10px;
+    #statusLine {
+      margin-top: 12px;
       font-size: 12px;
       color: #999;
-      line-height: 1.4;
     }
 
-    #controls {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 20;
+    .rootCard {
+      background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
+      border: 1px solid #313131;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.35);
+    }
+
+    .rootHeader {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
     }
 
-    button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 8px;
-      padding: 10px 12px;
+    .rootTitle {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .rootDescription {
+      margin: 0;
+      color: #cfcfcf;
+      line-height: 1.6;
       font-size: 14px;
-      cursor: pointer;
-      min-width: 150px;
     }
 
-    button:hover {
-      background: #171717;
+    #panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(320px, 1fr));
+      gap: 18px;
     }
 
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 26px;
-      transform: translateX(-50%) translateY(20px);
-      z-index: 50;
-      background: rgba(18, 18, 18, 0.95);
-      color: #f0f0f0;
-      border: 1px solid #363636;
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 13px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #errorPanel {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 40;
-      width: min(360px, calc(100vw - 40px));
-      background: rgba(35, 12, 18, 0.96);
-      border: 1px solid rgba(190, 26, 72, 0.5);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
       backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      min-height: 240px;
+    }
+
+    .panel.hiddenBySearch {
       display: none;
     }
 
-    #errorPanel.show {
-      display: block;
+    .panelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
     }
 
-    #errorPanelTitle {
+    .panelHeaderText h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .panelDescription {
+      margin: 0;
+      color: #bdbdbd;
+      line-height: 1.5;
       font-size: 14px;
-      font-weight: 700;
-      color: #ffb3c9;
+    }
+
+    .panelBody {
+      margin-top: 14px;
+    }
+
+    .treeSection {
+      margin-top: 12px;
+    }
+
+    .treeNode {
+      background: rgba(22,22,22,0.96);
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .treeNode.matched {
+      border-color: rgba(255, 209, 102, 0.7);
+      box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.28);
+    }
+
+    .treeNodeHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
       margin-bottom: 6px;
     }
 
-    #errorPanelText {
+    .treeNodeTitle {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .treeNodeDescription {
+      margin: 0;
+      color: #adadad;
       font-size: 13px;
-      line-height: 1.45;
-      color: #f2d7df;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .childrenWrap {
+      margin-top: 10px;
+      padding-left: 14px;
+      border-left: 1px solid #2a2a2a;
+    }
+
+    .chipsWrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      border: 1px solid #333;
+      background: #161616;
+      color: #ddd;
+    }
+
+    .chip.matched {
+      border-color: rgba(255, 209, 102, 0.7);
+      color: #fff3c7;
+    }
+
+    .emptyState {
+      color: #888;
+      font-size: 13px;
+      padding-top: 10px;
     }
 
     #loadingOverlay {
@@ -394,60 +442,58 @@
       margin: 0 auto 14px;
     }
 
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 40;
+      width: min(360px, calc(100vw - 40px));
+      background: rgba(35, 12, 18, 0.96);
+      border: 1px solid rgba(190, 26, 72, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffb3c9;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #f2d7df;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1100px) {
+      #panels {
+        grid-template-columns: 1fr;
+      }
+
+      .heroControls {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="graph"></div>
-
-  <div id="hero">
-    <h1>Dungeon Call Roadmap</h1>
-    <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
-
-    <div id="searchWrap">
-      <input id="searchInput" type="text" placeholder="Search roadmap nodes..." autocomplete="off" />
-      <div id="searchResults"></div>
-    </div>
-
-    <div id="statsBar">
-      <div class="statCard">
-        <div class="statValue" id="statTotal">0</div>
-        <div class="statLabel">Total</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statComplete">0</div>
-        <div class="statLabel">Done</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statProgress">0</div>
-        <div class="statLabel">Progress</div>
-      </div>
-      <div class="statCard">
-        <div class="statValue" id="statPending">0</div>
-        <div class="statLabel">Pending</div>
-      </div>
-    </div>
-
-    <div id="progressWrap">
-      <div id="progressText">Completion: 0%</div>
-      <div id="progressTrack">
-        <div id="progressFill"></div>
-      </div>
-    </div>
-
-    <div id="statusLine">Loading roadmap...</div>
-  </div>
-
-  <div id="infoBox" class="hidden"></div>
-  <div id="toast"></div>
-
-  <div id="errorPanel">
-    <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
-    <div id="errorPanelText">Trying again when the page becomes active.</div>
-  </div>
-
   <div id="loadingOverlay">
     <div id="loadingCard">
       <div class="spinner"></div>
@@ -455,29 +501,73 @@
     </div>
   </div>
 
-  <div id="controls">
-    <button onclick="toggleSelectedBranch()">Toggle Branch</button>
-    <button onclick="expandAll()">Expand All</button>
-    <button onclick="zoomIn()">Zoom +</button>
-    <button onclick="zoomOut()">Zoom -</button>
-    <button onclick="resetView()">Reset</button>
-    <button onclick="reloadGraph()">Refresh</button>
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
+    <div id="errorPanelText">Trying again when the page becomes active.</div>
+  </div>
+
+  <div id="app">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="heroTitle">
+          <h1>Dungeon Call Roadmap</h1>
+          <p>Desktop roadmap view rebuilt as panels instead of a graph. Each major system sits in its own section, with its child systems nested inside.</p>
+        </div>
+        <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
+      </div>
+
+      <div class="heroControls">
+        <input id="searchInput" type="text" placeholder="Search roadmap panels and items..." autocomplete="off" />
+        <div class="toolbar">
+          <button onclick="expandAllSections()">Expand All</button>
+          <button onclick="collapseAllSections()">Collapse All</button>
+          <button onclick="reloadRoadmap()">Refresh</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="statCard">
+          <div class="statValue" id="statTotal">0</div>
+          <div class="statLabel">Total</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statComplete">0</div>
+          <div class="statLabel">Done</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statProgress">0</div>
+          <div class="statLabel">Progress</div>
+        </div>
+        <div class="statCard">
+          <div class="statValue" id="statPending">0</div>
+          <div class="statLabel">Pending</div>
+        </div>
+      </div>
+
+      <div class="progressWrap">
+        <div class="progressText" id="progressText">Completion: 0%</div>
+        <div class="progressTrack">
+          <div class="progressFill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div id="statusLine">Loading roadmap...</div>
+    </section>
+
+    <section id="rootPanel" class="rootCard"></section>
+    <section id="panels"></section>
   </div>
 
   <script>
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
-    const START_NODE_SCALE = 1.05;
 
-    let network;
-    let nodesDS;
-    let edgesDS;
     let graphData = { nodes: [], edges: [] };
-    let toastTimer = null;
-    let selectedNodeId = null;
-
-    const childMap = new Map();
-    const parentMap = new Map();
-    const collapsedNodes = new Set();
+    let childMap = new Map();
+    let nodeMap = new Map();
+    let parentMap = new Map();
+    let rootId = null;
+    let expandedNodes = new Set();
+    let currentSearch = "";
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
@@ -494,14 +584,6 @@
       el.style.color = isError ? "#ff8a8a" : "#999";
     }
 
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
-    }
-
     function showErrorPanel(message) {
       document.getElementById("errorPanelText").textContent = message;
       document.getElementById("errorPanel").classList.add("show");
@@ -509,85 +591,6 @@
 
     function hideErrorPanel() {
       document.getElementById("errorPanel").classList.remove("show");
-    }
-
-    function positionInfoBox(domX, domY) {
-      const box = document.getElementById("infoBox");
-      const padding = 12;
-
-      requestAnimationFrame(() => {
-        const rect = box.getBoundingClientRect();
-        let left = domX + 16;
-        let top = domY - 16;
-
-        if (left + rect.width > window.innerWidth - padding) left = domX - rect.width - 16;
-        if (top + rect.height > window.innerHeight - padding) top = window.innerHeight - rect.height - padding;
-        if (top < padding) top = padding;
-        if (left < padding) left = padding;
-
-        box.style.left = left + "px";
-        box.style.top = top + "px";
-        box.style.right = "auto";
-        box.style.bottom = "auto";
-      });
-    }
-
-    function getColor(status) {
-      if (status === "complete") {
-        return {
-          background: "#00cc66",
-          border: "#00994d",
-          highlight: { background: "#2cff8f", border: "#adffd0" },
-          hover: { background: "#19db79", border: "#00994d" }
-        };
-      }
-      if (status === "progress") {
-        return {
-          background: "#ffaa00",
-          border: "#cc8800",
-          highlight: { background: "#ffd166", border: "#fff0bd" },
-          hover: { background: "#ffbc33", border: "#cc8800" }
-        };
-      }
-      return {
-        background: "#111",
-        border: "#333",
-        highlight: { background: "#2a2a2a", border: "#ff78a5" },
-        hover: { background: "#181818", border: "#444" }
-      };
-    }
-
-    function getEdgeColor(status) {
-      if (status === "complete") return "rgba(0, 204, 102, 0.55)";
-      if (status === "progress") return "rgba(255, 170, 0, 0.55)";
-      return "rgba(255,255,255,0.14)";
-    }
-
-    function getStatusLabel(status) {
-      if (status === "complete") return "Done";
-      if (status === "progress") return "In Progress";
-      return "Not Started";
-    }
-
-    function getStatusBadgeStyle(status) {
-      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      return "background:#181818;color:#999;border:1px solid #333;";
-    }
-
-    function updateStats() {
-      const total = graphData.nodes.length;
-      const complete = graphData.nodes.filter(n => n.status === "complete").length;
-      const progress = graphData.nodes.filter(n => n.status === "progress").length;
-      const pending = total - complete - progress;
-      const percent = total ? Math.round((complete / total) * 100) : 0;
-
-      document.getElementById("statTotal").textContent = total;
-      document.getElementById("statComplete").textContent = complete;
-      document.getElementById("statProgress").textContent = progress;
-      document.getElementById("statPending").textContent = pending;
-      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
-      document.getElementById("progressFill").style.width = `${percent}%`;
     }
 
     function normalizeGraphData(raw) {
@@ -612,16 +615,35 @@
     }
 
     function rebuildMaps() {
-      childMap.clear();
-      parentMap.clear();
+      childMap = new Map();
+      nodeMap = new Map();
+      parentMap = new Map();
 
-      for (const node of graphData.nodes) childMap.set(Number(node.id), []);
+      for (const node of graphData.nodes) {
+        nodeMap.set(Number(node.id), node);
+        childMap.set(Number(node.id), []);
+      }
+
       for (const edge of graphData.edges) {
         const from = Number(edge.from);
         const to = Number(edge.to);
         if (!childMap.has(from)) childMap.set(from, []);
         childMap.get(from).push(to);
         parentMap.set(to, from);
+      }
+
+      for (const [id, kids] of childMap.entries()) {
+        kids.sort((a, b) => {
+          const na = nodeMap.get(a);
+          const nb = nodeMap.get(b);
+          const ax = typeof na?.x === "number" ? na.x : 0;
+          const bx = typeof nb?.x === "number" ? nb.x : 0;
+          if (ax !== bx) return ax - bx;
+          const ay = typeof na?.y === "number" ? na.y : 0;
+          const by = typeof nb?.y === "number" ? nb.y : 0;
+          if (ay !== by) return ay - by;
+          return (na?.label || "").localeCompare(nb?.label || "");
+        });
       }
     }
 
@@ -631,266 +653,213 @@
       return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
     }
 
-    function hasSavedPositions() {
-      return graphData.nodes.length > 0 && graphData.nodes.every(n => typeof n.x === "number" && typeof n.y === "number");
-    }
-
-    function getDescendants(rootId) {
-      const result = [];
-      const stack = [...(childMap.get(Number(rootId)) || [])];
-
-      while (stack.length) {
-        const id = stack.pop();
-        result.push(Number(id));
-        const children = childMap.get(Number(id)) || [];
-        for (const child of children) stack.push(Number(child));
-      }
-
-      return result;
-    }
-
     function getNodeById(id) {
-      return graphData.nodes.find(n => Number(n.id) === Number(id)) || null;
+      return nodeMap.get(Number(id)) || null;
     }
 
-    function buildNodes(useSavedPositions) {
-      return graphData.nodes.map(n => {
-        const color = getColor(n.status);
-        const isCollapsed = collapsedNodes.has(Number(n.id));
-
-        const nodeData = {
-          id: n.id,
-          label: isCollapsed ? `${n.label} [+]` : n.label,
-          shape: "box",
-          margin: 14,
-          color,
-          font: {
-            color: n.status === "complete" ? "#003322" : (n.status === "progress" ? "#222" : "#ddd"),
-            size: 14
-          },
-          description: n.description,
-          status: n.status,
-          hidden: false,
-          widthConstraint: { minimum: 70, maximum: 180 }
-        };
-
-        if (useSavedPositions) {
-          nodeData.x = n.x;
-          nodeData.y = n.y;
-          nodeData.fixed = true;
-        }
-
-        return nodeData;
-      });
+    function getChildren(id) {
+      return childMap.get(Number(id)) || [];
     }
 
-    function buildEdges() {
-      return graphData.edges.map(e => {
-        const fromNode = getNodeById(e.from);
-        return {
-          id: e.id,
-          from: e.from,
-          to: e.to,
-          color: { color: getEdgeColor(fromNode?.status || "pending") },
-          smooth: {
-            enabled: true,
-            type: "cubicBezier",
-            forceDirection: "vertical",
-            roundness: 0.2
-          },
-          width: 1.4,
-          hidden: false
-        };
-      });
+    function getStatusLabel(status) {
+      if (status === "complete") return "Done";
+      if (status === "progress") return "In Progress";
+      return "Pending";
     }
 
-    function createNetwork(useSavedPositions) {
-      if (network) network.destroy();
-
-      nodesDS = new vis.DataSet(buildNodes(useSavedPositions));
-      edgesDS = new vis.DataSet(buildEdges());
-
-      network = new vis.Network(
-        document.getElementById("graph"),
-        { nodes: nodesDS, edges: edgesDS },
-        {
-          layout: useSavedPositions ? {} : {
-            hierarchical: {
-              direction: "LR",
-              levelSeparation: 250,
-              nodeSpacing: 220
-            }
-          },
-          physics: false,
-          interaction: {
-            dragNodes: false,
-            dragView: true,
-            zoomView: true
-          }
-        }
-      );
-
-      network.on("click", function(params) {
-        const info = document.getElementById("infoBox");
-
-        if (!params.nodes.length) {
-          selectedNodeId = null;
-          info.classList.add("hidden");
-          return;
-        }
-
-        selectedNodeId = Number(params.nodes[0]);
-        const node = getNodeById(selectedNodeId);
-        if (!node) return;
-
-        info.innerHTML =
-          '<div id="closeBtn">✕</div>' +
-          `<h3>${node.label}</h3>` +
-          `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-          `<p>${node.description || "No description available."}</p>` +
-          `<div class="smallNote">Use “Toggle Branch” to collapse or expand this node’s descendants.</div>`;
-
-        info.classList.remove("hidden");
-        positionInfoBox(params.pointer.DOM.x, params.pointer.DOM.y);
-
-        document.getElementById("closeBtn").onclick = () => {
-          info.classList.add("hidden");
-        };
-      });
-    }
-
-    function applyCollapseState() {
-      const hiddenNodeIds = new Set();
-
-      for (const collapsedId of collapsedNodes) {
-        for (const descendant of getDescendants(collapsedId)) hiddenNodeIds.add(Number(descendant));
+    function countDescendants(id) {
+      let count = 0;
+      const stack = [...getChildren(id)];
+      while (stack.length) {
+        const current = stack.pop();
+        count++;
+        stack.push(...getChildren(current));
       }
-
-      nodesDS.update(graphData.nodes.map(n => ({
-        id: Number(n.id),
-        hidden: hiddenNodeIds.has(Number(n.id)),
-        label: collapsedNodes.has(Number(n.id)) ? `${n.label} [+]` : n.label
-      })));
-
-      edgesDS.update(graphData.edges.map(e => ({
-        id: e.id,
-        hidden: hiddenNodeIds.has(Number(e.from)) || hiddenNodeIds.has(Number(e.to))
-      })));
+      return count;
     }
 
-    function renderSearchResults(query) {
-      const resultsBox = document.getElementById("searchResults");
-      resultsBox.innerHTML = "";
+    function updateStats() {
+      const total = graphData.nodes.length;
+      const complete = graphData.nodes.filter(n => n.status === "complete").length;
+      const progress = graphData.nodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
+      const percent = total ? Math.round((complete / total) * 100) : 0;
 
-      if (!query || !graphData.nodes.length) {
-        resultsBox.style.display = "none";
-        return;
-      }
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statComplete").textContent = complete;
+      document.getElementById("statProgress").textContent = progress;
+      document.getElementById("statPending").textContent = pending;
+      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
+      document.getElementById("progressFill").style.width = `${percent}%`;
 
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        resultsBox.style.display = "none";
-        return;
-      }
+      const rootNode = getNodeById(rootId);
+      const badge = document.getElementById("rootStatusBadge");
+      badge.className = `statusBadge status-${rootNode?.status || "pending"}`;
+      badge.textContent = getStatusLabel(rootNode?.status || "pending");
+    }
 
-      const matches = graphData.nodes.filter(n => (n.label || "").toLowerCase().includes(q)).slice(0, 8);
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-      if (!matches.length) {
-        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
-        resultsBox.style.display = "block";
-        return;
-      }
+    function matchesSearch(node, search) {
+      if (!search) return true;
+      const hay = `${node.label} ${node.description}`.toLowerCase();
+      return hay.includes(search);
+    }
 
-      for (const match of matches) {
-        const item = document.createElement("div");
-        item.className = "searchResult";
-        item.innerHTML = `
-          <div class="searchResultTitle">${match.label}</div>
-          <div class="searchResultMeta">${getStatusLabel(match.status)} • Click to jump</div>
+    function subtreeMatches(id, search) {
+      const node = getNodeById(id);
+      if (!node) return false;
+      if (matchesSearch(node, search)) return true;
+      return getChildren(id).some(childId => subtreeMatches(childId, search));
+    }
+
+    function createStatusBadge(status) {
+      return `<span class="statusBadge status-${status}">${getStatusLabel(status)}</span>`;
+    }
+
+    function renderChipList(childIds, search) {
+      if (!childIds.length) return `<div class="emptyState">No items yet.</div>`;
+      return `
+        <div class="chipsWrap">
+          ${childIds.map(id => {
+            const node = getNodeById(id);
+            if (!node) return "";
+            const matched = matchesSearch(node, search) ? " matched" : "";
+            return `<span class="chip${matched}">${escapeHtml(node.label)}</span>`;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderTreeNode(id, search, level = 0) {
+      const node = getNodeById(id);
+      if (!node) return "";
+
+      const children = getChildren(id).filter(childId => subtreeMatches(childId, search));
+      const selfMatch = matchesSearch(node, search);
+      const subtreeMatch = selfMatch || children.length > 0;
+
+      if (!subtreeMatch) return "";
+
+      const isExpanded = expandedNodes.has(id) || !!search;
+      const hasChildren = children.length > 0;
+      const matchedClass = selfMatch ? " matched" : "";
+
+      return `
+        <div class="treeNode${matchedClass}">
+          <div class="treeNodeHeader">
+            <div>
+              <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
+            </div>
+            ${createStatusBadge(node.status)}
+          </div>
+          ${node.description ? `<p class="treeNodeDescription">${escapeHtml(node.description)}</p>` : ""}
+          ${hasChildren ? `
+            <div style="margin-top:10px;">
+              <button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>
+            </div>
+            ${isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search, level + 1)).join("")}</div>` : ""}
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function renderRootPanel() {
+      const rootNode = getNodeById(rootId);
+      if (!rootNode) return;
+
+      document.getElementById("rootPanel").innerHTML = `
+        <div class="rootHeader">
+          <div>
+            <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+          </div>
+          ${createStatusBadge(rootNode.status)}
+        </div>
+        <p class="rootDescription">${escapeHtml(rootNode.description || "")}</p>
+      `;
+    }
+
+    function renderPanels() {
+      const panelsEl = document.getElementById("panels");
+      const mainChildren = getChildren(rootId);
+      const search = currentSearch.trim().toLowerCase();
+
+      panelsEl.innerHTML = mainChildren.map(id => {
+        const node = getNodeById(id);
+        if (!node) return "";
+
+        const visible = subtreeMatches(id, search);
+        const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
+        const descendants = countDescendants(id);
+
+        return `
+          <article class="panel${visible ? "" : " hiddenBySearch"}">
+            <div class="panelHeader">
+              <div class="panelHeaderText">
+                <h2>${escapeHtml(node.label)}</h2>
+                <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+              </div>
+              ${createStatusBadge(node.status)}
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+              <span class="chip">${descendants} sub-items</span>
+              <span class="chip">${childIds.length} direct children</span>
+            </div>
+
+            <div class="panelBody">
+              ${childIds.length
+                ? childIds.map(childId => renderTreeNode(childId, search)).join("")
+                : `<div class="emptyState">No child items yet.</div>`
+              }
+            </div>
+          </article>
         `;
-        item.onclick = () => {
-          jumpToNode(match.id);
-          resultsBox.style.display = "none";
-        };
-        resultsBox.appendChild(item);
-      }
-
-      resultsBox.style.display = "block";
+      }).join("");
     }
 
-    function jumpToNode(nodeId) {
-      const node = getNodeById(nodeId);
-      if (!node) return;
-
-      let current = parentMap.get(Number(nodeId));
-      while (current !== undefined) {
-        collapsedNodes.delete(Number(current));
-        current = parentMap.get(Number(current));
-      }
-
-      applyCollapseState();
-      selectedNodeId = Number(nodeId);
-
-      network.focus(Number(nodeId), {
-        scale: Math.max(network.getScale(), 1.05),
-        animation: {
-          duration: 280,
-          easingFunction: "easeInOutQuad"
-        }
-      });
-
-      nodesDS.update({
-        id: Number(nodeId),
-        color: getColor(node.status).highlight
-      });
-
-      setTimeout(() => {
-        const fresh = getNodeById(nodeId);
-        if (!fresh) return;
-        nodesDS.update({
-          id: Number(nodeId),
-          color: getColor(fresh.status)
-        });
-      }, 1800);
-
-      const info = document.getElementById("infoBox");
-      info.innerHTML =
-        '<div id="closeBtn">✕</div>' +
-        `<h3>${node.label}</h3>` +
-        `<div id="statusBadge" style="${getStatusBadgeStyle(node.status)}">${getStatusLabel(node.status)}</div>` +
-        `<p>${node.description || "No description available."}</p>` +
-        `<div class="smallNote">Jumped to this roadmap item from search.</div>`;
-      info.classList.remove("hidden");
-      positionInfoBox(window.innerWidth * 0.5, 140);
-
-      document.getElementById("closeBtn").onclick = () => {
-        info.classList.add("hidden");
-      };
-
-      showToast("Jumped to node.");
+    function toggleSection(id) {
+      if (expandedNodes.has(id)) expandedNodes.delete(id);
+      else expandedNodes.add(id);
+      renderPanels();
     }
 
-    async function reloadGraph() {
+    function expandAllSections() {
+      for (const node of graphData.nodes) {
+        if (getChildren(node.id).length) expandedNodes.add(node.id);
+      }
+      renderPanels();
+    }
+
+    function collapseAllSections() {
+      expandedNodes.clear();
+      renderPanels();
+    }
+
+    async function reloadRoadmap() {
       try {
         showLoading("Loading roadmap...");
         setStatus("Loading latest roadmap...");
 
-        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
+        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+          cache: "no-store"
+        });
+
         if (!res.ok) throw new Error("Could not load roadmap.json");
 
         graphData = normalizeGraphData(await res.json());
         rebuildMaps();
+        rootId = getRootId();
         updateStats();
-
-        createNetwork(hasSavedPositions());
-        applyCollapseState();
-
-        const rootId = getRootId();
-        if (rootId !== null) {
-          setTimeout(() => {
-            network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-          }, 50);
-        }
+        renderRootPanel();
+        renderPanels();
 
         hideErrorPanel();
         setStatus("Loaded latest roadmap.");
@@ -898,94 +867,24 @@
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
-        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
+        showErrorPanel("Roadmap refresh failed. Try again in a moment.");
         hideLoading();
       }
     }
 
-    function toggleSelectedBranch() {
-      if (selectedNodeId === null) {
-        showToast("Select a node first.");
-        return;
-      }
-
-      const rootId = getRootId();
-      if (Number(selectedNodeId) === Number(rootId)) {
-        showToast("You can't collapse the root.");
-        return;
-      }
-
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      if (collapsedNodes.has(Number(selectedNodeId))) {
-        collapsedNodes.delete(Number(selectedNodeId));
-        setStatus("Branch expanded.");
-      } else {
-        collapsedNodes.add(Number(selectedNodeId));
-        setStatus("Branch collapsed.");
-      }
-
-      applyCollapseState();
-
-      requestAnimationFrame(() => {
-        network.moveTo({ position: currentPosition, scale: currentScale, animation: false });
-      });
-    }
-
-    function expandAll() {
-      const currentScale = network.getScale();
-      const currentPosition = network.getViewPosition();
-
-      collapsedNodes.clear();
-      applyCollapseState();
-      setStatus("All branches expanded.");
-
-      requestAnimationFrame(() => {
-        network.moveTo({ position: currentPosition, scale: currentScale, animation: false });
-      });
-    }
-
-    function zoomIn() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 1.2 });
-    }
-
-    function zoomOut() {
-      if (!network) return;
-      network.moveTo({ scale: network.getScale() * 0.8 });
-    }
-
-    function resetView() {
-      if (!network) return;
-      const rootId = getRootId();
-      if (rootId === null) return;
-      network.focus(rootId, { scale: START_NODE_SCALE, animation: false });
-      setStatus("View reset.");
-    }
-
-    document.addEventListener("click", (e) => {
-      const wrap = document.getElementById("searchWrap");
-      const results = document.getElementById("searchResults");
-      if (wrap && !wrap.contains(e.target)) results.style.display = "none";
-    });
-
     document.addEventListener("DOMContentLoaded", () => {
       const input = document.getElementById("searchInput");
-      input.addEventListener("input", () => renderSearchResults(input.value));
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          document.getElementById("searchResults").style.display = "none";
-          input.blur();
-        }
+      input.addEventListener("input", () => {
+        currentSearch = input.value || "";
+        renderPanels();
       });
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) reloadGraph();
+      if (!document.hidden) reloadRoadmap();
     });
 
-    reloadGraph();
+    reloadRoadmap();
   </script>
 </body>
 </html>
