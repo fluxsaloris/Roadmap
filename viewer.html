@@ -15,25 +15,13 @@
     :root {
       --bg: #000;
       --panel: rgba(18, 18, 18, 0.92);
-      --panel-2: rgba(24, 24, 24, 0.95);
       --border: #2a2a2a;
       --text: #f2f2f2;
       --muted: #a5a5a5;
       --accent: #BE1A48;
-      --pending-bg: #111;
-      --pending-border: #333;
-      --pending-text: #888;
-      --progress-bg: #ffaa00;
-      --progress-border: #cc8800;
-      --progress-text: #222;
-      --complete-bg: #00cc66;
-      --complete-border: #00994d;
-      --complete-text: #032b19;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -79,7 +67,7 @@
     #app {
       position: relative;
       z-index: 2;
-      max-width: 1600px;
+      max-width: 1650px;
       margin: 0 auto;
       padding: 22px 18px 40px;
     }
@@ -118,7 +106,7 @@
       color: var(--muted);
       font-size: 15px;
       line-height: 1.5;
-      max-width: 780px;
+      max-width: 840px;
     }
 
     .statusBadge {
@@ -134,27 +122,27 @@
     }
 
     .status-pending {
-      background: #181818;
-      border-color: #333;
-      color: #999;
+      background: #151515;
+      border-color: #353535;
+      color: #9a9a9a;
     }
 
     .status-progress {
-      background: #3d2b06;
-      border-color: #9a6a00;
-      color: #ffd37a;
+      background: rgba(190, 26, 72, 0.16);
+      border-color: rgba(190, 26, 72, 0.55);
+      color: #ffb3c9;
     }
 
     .status-complete {
-      background: #123a24;
-      border-color: #1e6c41;
-      color: #7dffb0;
+      background: rgba(57, 255, 20, 0.16);
+      border-color: rgba(57, 255, 20, 0.72);
+      color: #b8ffab;
     }
 
     .heroControls {
       margin-top: 16px;
       display: grid;
-      grid-template-columns: 1.4fr auto;
+      grid-template-columns: 1.2fr auto;
       gap: 12px;
     }
 
@@ -224,33 +212,6 @@
       letter-spacing: 0.04em;
     }
 
-    .progressWrap {
-      margin-top: 14px;
-    }
-
-    .progressText {
-      font-size: 12px;
-      color: #bbb;
-      margin-bottom: 7px;
-    }
-
-    .progressTrack {
-      width: 100%;
-      height: 10px;
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .progressFill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #BE1A48, #ff4f86);
-      border-radius: 999px;
-      transition: width 0.25s ease;
-    }
-
     #statusLine {
       margin-top: 12px;
       font-size: 12px;
@@ -304,6 +265,20 @@
       min-height: 240px;
     }
 
+    .panel.status-panel-pending {
+      border-color: #2a2a2a;
+    }
+
+    .panel.status-panel-progress {
+      border-color: rgba(190, 26, 72, 0.35);
+      box-shadow: 0 0 18px rgba(190, 26, 72, 0.08);
+    }
+
+    .panel.status-panel-complete {
+      border-color: rgba(57, 255, 20, 0.42);
+      box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+    }
+
     .panel.hiddenBySearch {
       display: none;
     }
@@ -333,8 +308,43 @@
       margin-top: 14px;
     }
 
-    .treeSection {
-      margin-top: 12px;
+    .panelTopMeta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .progressWrap {
+      margin: 12px 0 14px;
+    }
+
+    .progressText {
+      font-size: 12px;
+      color: #bdbdbd;
+      margin-bottom: 6px;
+    }
+
+    .progressTrack {
+      width: 100%;
+      height: 10px;
+      background: #101010;
+      border: 1px solid #2a2a2a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progressFill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #BE1A48, #ff4f86);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .panel.status-panel-complete .progressFill,
+    .treeNode.completeNode .progressFill {
+      background: linear-gradient(90deg, #39ff14, #8dff77);
     }
 
     .treeNode {
@@ -345,9 +355,14 @@
       margin-top: 10px;
     }
 
+    .treeNode.completeNode {
+      border-color: rgba(57, 255, 20, 0.34);
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+    }
+
     .treeNode.matched {
-      border-color: rgba(255, 209, 102, 0.7);
-      box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.28);
+      border-color: rgba(190, 26, 72, 0.62);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.24);
     }
 
     .treeNodeHeader {
@@ -356,7 +371,7 @@
       gap: 10px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .treeNodeTitle {
@@ -379,25 +394,24 @@
       border-left: 1px solid #2a2a2a;
     }
 
-    .chipsWrap {
+    .nodeActions {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
+      flex-wrap: wrap;
       margin-top: 10px;
     }
 
-    .chip {
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       border-radius: 999px;
-      padding: 7px 10px;
+      padding: 7px 12px;
       font-size: 12px;
+      font-weight: 700;
       border: 1px solid #333;
-      background: #161616;
-      color: #ddd;
-    }
-
-    .chip.matched {
-      border-color: rgba(255, 209, 102, 0.7);
-      color: #fff3c7;
+      background: #141414;
+      color: #b6b6b6;
     }
 
     .emptyState {
@@ -511,7 +525,7 @@
       <div class="heroTop">
         <div class="heroTitle">
           <h1>Dungeon Call Roadmap</h1>
-          <p>Desktop roadmap view rebuilt as panels instead of a graph. Each major system sits in its own section, with its child systems nested inside.</p>
+          <p>Follow development progress in a panel-based roadmap. Each major system has its own section, with nested roadmap items and completion progress built in.</p>
         </div>
         <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
       </div>
@@ -541,13 +555,6 @@
         <div class="statCard">
           <div class="statValue" id="statPending">0</div>
           <div class="statLabel">Pending</div>
-        </div>
-      </div>
-
-      <div class="progressWrap">
-        <div class="progressText" id="progressText">Completion: 0%</div>
-        <div class="progressTrack">
-          <div class="progressFill" id="progressFill"></div>
         </div>
       </div>
 
@@ -667,15 +674,27 @@
       return "Pending";
     }
 
-    function countDescendants(id) {
-      let count = 0;
-      const stack = [...getChildren(id)];
+    function getCompletionStats(id) {
+      const ids = [Number(id)];
+      const stack = [Number(id)];
+
       while (stack.length) {
         const current = stack.pop();
-        count++;
-        stack.push(...getChildren(current));
+        const children = getChildren(current);
+        for (const childId of children) {
+          ids.push(Number(childId));
+          stack.push(Number(childId));
+        }
       }
-      return count;
+
+      const nodes = ids.map(getNodeById).filter(Boolean);
+      const total = nodes.length;
+      const complete = nodes.filter(n => n.status === "complete").length;
+      const progress = nodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
+      const percent = total ? Math.round((complete / total) * 100) : 0;
+
+      return { total, complete, progress, pending, percent };
     }
 
     function updateStats() {
@@ -683,14 +702,11 @@
       const complete = graphData.nodes.filter(n => n.status === "complete").length;
       const progress = graphData.nodes.filter(n => n.status === "progress").length;
       const pending = total - complete - progress;
-      const percent = total ? Math.round((complete / total) * 100) : 0;
 
       document.getElementById("statTotal").textContent = total;
       document.getElementById("statComplete").textContent = complete;
       document.getElementById("statProgress").textContent = progress;
       document.getElementById("statPending").textContent = pending;
-      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
-      document.getElementById("progressFill").style.width = `${percent}%`;
 
       const rootNode = getNodeById(rootId);
       const badge = document.getElementById("rootStatusBadge");
@@ -724,48 +740,71 @@
       return `<span class="statusBadge status-${status}">${getStatusLabel(status)}</span>`;
     }
 
-    function renderChipList(childIds, search) {
-      if (!childIds.length) return `<div class="emptyState">No items yet.</div>`;
+    function countDescendants(id) {
+      let count = 0;
+      const stack = [...getChildren(id)];
+      while (stack.length) {
+        const current = stack.pop();
+        count++;
+        stack.push(...getChildren(current));
+      }
+      return count;
+    }
+
+    function renderProgressBar(stats) {
       return `
-        <div class="chipsWrap">
-          ${childIds.map(id => {
-            const node = getNodeById(id);
-            if (!node) return "";
-            const matched = matchesSearch(node, search) ? " matched" : "";
-            return `<span class="chip${matched}">${escapeHtml(node.label)}</span>`;
-          }).join("")}
+        <div class="progressWrap">
+          <div class="progressText">${stats.complete} / ${stats.total} complete (${stats.percent}%)</div>
+          <div class="progressTrack">
+            <div class="progressFill" style="width:${stats.percent}%"></div>
+          </div>
         </div>
       `;
     }
 
-    function renderTreeNode(id, search, level = 0) {
+    function toggleSection(id) {
+      if (expandedNodes.has(id)) expandedNodes.delete(id);
+      else expandedNodes.add(id);
+      renderPanels();
+    }
+
+    function renderTreeNode(id, search) {
       const node = getNodeById(id);
       if (!node) return "";
 
       const children = getChildren(id).filter(childId => subtreeMatches(childId, search));
       const selfMatch = matchesSearch(node, search);
       const subtreeMatch = selfMatch || children.length > 0;
-
       if (!subtreeMatch) return "";
 
       const isExpanded = expandedNodes.has(id) || !!search;
       const hasChildren = children.length > 0;
       const matchedClass = selfMatch ? " matched" : "";
+      const stats = getCompletionStats(id);
 
       return `
-        <div class="treeNode${matchedClass}">
+        <div class="treeNode${matchedClass}${node.status === "complete" ? " completeNode" : ""}">
           <div class="treeNodeHeader">
             <div>
               <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
             </div>
             ${createStatusBadge(node.status)}
           </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="metaChip">${stats.total - 1} nested</span>
+            <span class="metaChip">${stats.percent}% done</span>
+          </div>
+
+          ${renderProgressBar(stats)}
+
           ${node.description ? `<p class="treeNodeDescription">${escapeHtml(node.description)}</p>` : ""}
+
           ${hasChildren ? `
-            <div style="margin-top:10px;">
+            <div class="nodeActions">
               <button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>
             </div>
-            ${isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search, level + 1)).join("")}</div>` : ""}
+            ${isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search)).join("")}</div>` : ""}
           ` : ""}
         </div>
       `;
@@ -774,6 +813,7 @@
     function renderRootPanel() {
       const rootNode = getNodeById(rootId);
       if (!rootNode) return;
+      const stats = getCompletionStats(rootId);
 
       document.getElementById("rootPanel").innerHTML = `
         <div class="rootHeader">
@@ -782,6 +822,14 @@
           </div>
           ${createStatusBadge(rootNode.status)}
         </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <span class="metaChip">${stats.total - 1} total sub-items</span>
+          <span class="metaChip">${stats.percent}% complete</span>
+        </div>
+
+        ${renderProgressBar(stats)}
+
         <p class="rootDescription">${escapeHtml(rootNode.description || "")}</p>
       `;
     }
@@ -798,9 +846,10 @@
         const visible = subtreeMatches(id, search);
         const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
         const descendants = countDescendants(id);
+        const stats = getCompletionStats(id);
 
         return `
-          <article class="panel${visible ? "" : " hiddenBySearch"}">
+          <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
             <div class="panelHeader">
               <div class="panelHeaderText">
                 <h2>${escapeHtml(node.label)}</h2>
@@ -809,10 +858,13 @@
               ${createStatusBadge(node.status)}
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-              <span class="chip">${descendants} sub-items</span>
-              <span class="chip">${childIds.length} direct children</span>
+            <div class="panelTopMeta">
+              <span class="metaChip">${descendants} sub-items</span>
+              <span class="metaChip">${childIds.length} direct children</span>
+              <span class="metaChip">${stats.percent}% complete</span>
             </div>
+
+            ${renderProgressBar(stats)}
 
             <div class="panelBody">
               ${childIds.length
@@ -823,12 +875,6 @@
           </article>
         `;
       }).join("");
-    }
-
-    function toggleSection(id) {
-      if (expandedNodes.has(id)) expandedNodes.delete(id);
-      else expandedNodes.add(id);
-      renderPanels();
     }
 
     function expandAllSections() {
@@ -883,6 +929,11 @@
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) reloadRoadmap();
     });
+
+    window.toggleSection = toggleSection;
+    window.expandAllSections = expandAllSections;
+    window.collapseAllSections = collapseAllSections;
+    window.reloadRoadmap = reloadRoadmap;
 
     reloadRoadmap();
   </script>
