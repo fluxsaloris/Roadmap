@@ -514,11 +514,19 @@
     },
     {
       "id": 66,
-      "label": "New Node",
+      "label": "Labyrinth",
       "status": "pending",
       "description": "Coming Soon",
       "x": 865,
       "y": -273
+    },
+    {
+      "id": 67,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1105,
+      "y": -313
     }
   ],
   "edges": [
@@ -777,6 +785,10 @@
     {
       "from": 51,
       "to": 66
+    },
+    {
+      "from": 66,
+      "to": 67
     }
   ]
 }
