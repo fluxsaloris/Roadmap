@@ -514,35 +514,11 @@
     },
     {
       "id": 66,
-      "label": "Labyrinth Ownership",
+      "label": "New Node",
       "status": "pending",
       "description": "Coming Soon",
-      "x": 875,
-      "y": -333
-    },
-    {
-      "id": 67,
-      "label": "Labyrinth NPCs",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 875,
-      "y": -133
-    },
-    {
-      "id": 68,
-      "label": "Player Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1125,
-      "y": -400
-    },
-    {
-      "id": 69,
-      "label": "NPC Labyrinth",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 1125,
-      "y": -200
+      "x": 865,
+      "y": -273
     }
   ],
   "edges": [
@@ -801,18 +777,6 @@
     {
       "from": 51,
       "to": 66
-    },
-    {
-      "from": 51,
-      "to": 67
-    },
-    {
-      "from": 66,
-      "to": 68
-    },
-    {
-      "from": 66,
-      "to": 69
     }
   ]
 }
