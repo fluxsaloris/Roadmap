@@ -188,7 +188,7 @@
       "id": 24,
       "label": "Tavern",
       "status": "pending",
-      "description": "The tavern is going to be a place of rest for all of the players and NPCs alike and maybe you can discover thigns here...",
+      "description": "The tavern is going to be a place of rest for all of the players and NPCs alike and maybe you can discover things here...",
       "x": 950,
       "y": 110
     },
@@ -404,7 +404,7 @@
       "id": 51,
       "label": "Dungeon",
       "status": "progress",
-      "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havok and over time Veilmar became home to adventurers exploring the Dungeons unknown.",
+      "description": "The Dungeon is an entity which exists in the middle of Veilmar. The city was built around the Dungeon in an effort to protect the world from its dungeons as sometimes monsters can escape and wreak havoc and over time Veilmar became home to adventurers exploring the Dungeons unknown.",
       "x": 520,
       "y": 0
     },
@@ -626,313 +626,82 @@
     }
   ],
   "edges": [
-    {
-      "from": 1,
-      "to": 2
-    },
-    {
-      "from": 2,
-      "to": 3
-    },
-    {
-      "from": 3,
-      "to": 4
-    },
-    {
-      "from": 4,
-      "to": 5
-    },
-    {
-      "from": 5,
-      "to": 6
-    },
-    {
-      "from": 6,
-      "to": 7
-    },
-    {
-      "from": 7,
-      "to": 8
-    },
-    {
-      "from": 7,
-      "to": 9
-    },
-    {
-      "from": 7,
-      "to": 10
-    },
-    {
-      "from": 7,
-      "to": 11
-    },
-    {
-      "from": 7,
-      "to": 12
-    },
-    {
-      "from": 7,
-      "to": 13
-    },
-    {
-      "from": 6,
-      "to": 14
-    },
-    {
-      "from": 14,
-      "to": 15
-    },
-    {
-      "from": 14,
-      "to": 16
-    },
-    {
-      "from": 14,
-      "to": 17
-    },
-    {
-      "from": 14,
-      "to": 18
-    },
-    {
-      "from": 14,
-      "to": 19
-    },
-    {
-      "from": 14,
-      "to": 20
-    },
-    {
-      "from": 6,
-      "to": 21
-    },
-    {
-      "from": 6,
-      "to": 22
-    },
-    {
-      "from": 6,
-      "to": 23
-    },
-    {
-      "from": 2,
-      "to": 24
-    },
-    {
-      "from": 2,
-      "to": 25
-    },
-    {
-      "from": 2,
-      "to": 26
-    },
-    {
-      "from": 2,
-      "to": 27
-    },
-    {
-      "from": 2,
-      "to": 28
-    },
-    {
-      "from": 2,
-      "to": 29
-    },
-    {
-      "from": 2,
-      "to": 30
-    },
-    {
-      "from": 2,
-      "to": 31
-    },
-    {
-      "from": 2,
-      "to": 32
-    },
-    {
-      "from": 2,
-      "to": 33
-    },
-    {
-      "from": 2,
-      "to": 34
-    },
-    {
-      "from": 2,
-      "to": 35
-    },
-    {
-      "from": 2,
-      "to": 36
-    },
-    {
-      "from": 2,
-      "to": 37
-    },
-    {
-      "from": 2,
-      "to": 38
-    },
-    {
-      "from": 2,
-      "to": 39
-    },
-    {
-      "from": 2,
-      "to": 40
-    },
-    {
-      "from": 40,
-      "to": 41
-    },
-    {
-      "from": 40,
-      "to": 42
-    },
-    {
-      "from": 40,
-      "to": 43
-    },
-    {
-      "from": 40,
-      "to": 44
-    },
-    {
-      "from": 40,
-      "to": 45
-    },
-    {
-      "from": 1,
-      "to": 46
-    },
-    {
-      "from": 46,
-      "to": 47
-    },
-    {
-      "from": 1,
-      "to": 48
-    },
-    {
-      "from": 48,
-      "to": 49
-    },
-    {
-      "from": 49,
-      "to": 50
-    },
-    {
-      "from": 1,
-      "to": 51
-    },
-    {
-      "from": 50,
-      "to": 53
-    },
-    {
-      "from": 50,
-      "to": 54
-    },
-    {
-      "from": 50,
-      "to": 55
-    },
-    {
-      "from": 49,
-      "to": 56
-    },
-    {
-      "from": 49,
-      "to": 57
-    },
-    {
-      "from": 49,
-      "to": 58
-    },
-    {
-      "from": 49,
-      "to": 59
-    },
-    {
-      "from": 49,
-      "to": 60
-    },
-    {
-      "from": 49,
-      "to": 61
-    },
-    {
-      "from": 49,
-      "to": 62
-    },
-    {
-      "from": 49,
-      "to": 63
-    },
-    {
-      "from": 49,
-      "to": 64
-    },
-    {
-      "from": 49,
-      "to": 65
-    },
-    {
-      "from": 51,
-      "to": 66
-    },
-    {
-      "from": 66,
-      "to": 67
-    },
-    {
-      "from": 66,
-      "to": 68
-    },
-    {
-      "from": 67,
-      "to": 69
-    },
-    {
-      "from": 67,
-      "to": 70
-    },
-    {
-      "from": 68,
-      "to": 71
-    },
-    {
-      "from": 68,
-      "to": 72
-    },
-    {
-      "from": 68,
-      "to": 73
-    },
-    {
-      "from": 68,
-      "to": 74
-    },
-    {
-      "from": 68,
-      "to": 75
-    },
-    {
-      "from": 66,
-      "to": 76
-    },
-    {
-      "from": 66,
-      "to": 77
-    },
-    {
-      "from": 76,
-      "to": 78
-    },
-    {
-      "from": 77,
-      "to": 79
-    }
+    { "from": 1, "to": 2 },
+    { "from": 2, "to": 3 },
+    { "from": 3, "to": 4 },
+    { "from": 4, "to": 5 },
+    { "from": 5, "to": 6 },
+    { "from": 6, "to": 7 },
+    { "from": 7, "to": 8 },
+    { "from": 7, "to": 9 },
+    { "from": 7, "to": 10 },
+    { "from": 7, "to": 11 },
+    { "from": 7, "to": 12 },
+    { "from": 7, "to": 13 },
+    { "from": 6, "to": 14 },
+    { "from": 14, "to": 15 },
+    { "from": 14, "to": 16 },
+    { "from": 14, "to": 17 },
+    { "from": 14, "to": 18 },
+    { "from": 14, "to": 19 },
+    { "from": 14, "to": 20 },
+    { "from": 6, "to": 21 },
+    { "from": 6, "to": 22 },
+    { "from": 6, "to": 23 },
+    { "from": 2, "to": 24 },
+    { "from": 2, "to": 25 },
+    { "from": 2, "to": 26 },
+    { "from": 2, "to": 27 },
+    { "from": 2, "to": 28 },
+    { "from": 2, "to": 29 },
+    { "from": 2, "to": 30 },
+    { "from": 2, "to": 31 },
+    { "from": 2, "to": 32 },
+    { "from": 2, "to": 33 },
+    { "from": 2, "to": 34 },
+    { "from": 2, "to": 35 },
+    { "from": 2, "to": 36 },
+    { "from": 2, "to": 37 },
+    { "from": 2, "to": 38 },
+    { "from": 2, "to": 39 },
+    { "from": 2, "to": 40 },
+    { "from": 40, "to": 41 },
+    { "from": 40, "to": 42 },
+    { "from": 40, "to": 43 },
+    { "from": 40, "to": 44 },
+    { "from": 40, "to": 45 },
+    { "from": 1, "to": 46 },
+    { "from": 46, "to": 47 },
+    { "from": 1, "to": 48 },
+    { "from": 48, "to": 49 },
+    { "from": 49, "to": 50 },
+    { "from": 1, "to": 51 },
+    { "from": 50, "to": 53 },
+    { "from": 50, "to": 54 },
+    { "from": 50, "to": 55 },
+    { "from": 49, "to": 56 },
+    { "from": 49, "to": 57 },
+    { "from": 49, "to": 58 },
+    { "from": 49, "to": 59 },
+    { "from": 49, "to": 60 },
+    { "from": 49, "to": 61 },
+    { "from": 49, "to": 62 },
+    { "from": 49, "to": 63 },
+    { "from": 49, "to": 64 },
+    { "from": 49, "to": 65 },
+    { "from": 51, "to": 66 },
+    { "from": 66, "to": 67 },
+    { "from": 66, "to": 68 },
+    { "from": 67, "to": 69 },
+    { "from": 67, "to": 70 },
+    { "from": 68, "to": 71 },
+    { "from": 68, "to": 72 },
+    { "from": 68, "to": 73 },
+    { "from": 68, "to": 74 },
+    { "from": 68, "to": 75 },
+    { "from": 66, "to": 76 },
+    { "from": 66, "to": 77 },
+    { "from": 76, "to": 78 },
+    { "from": 77, "to": 79 }
   ]
 }
