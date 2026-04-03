@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dungeon Call Roadmap Mobile</title>
   <style>
     :root {
@@ -16,12 +16,16 @@
 
     * {
       box-sizing: border-box;
+      min-width: 0;
     }
 
     html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      max-width: 100%;
       min-height: 100%;
+      overflow-x: hidden;
       background: #000;
       color: var(--text);
       font-family: Arial, sans-serif;
@@ -30,7 +34,6 @@
     body {
       position: relative;
       background: radial-gradient(circle at 30% 20%, #111, #000 70%);
-      overflow-x: hidden;
     }
 
     body::before {
@@ -43,44 +46,50 @@
         radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
         radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
         radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.24;
+      opacity: 0.20;
       pointer-events: none;
     }
 
     body::after {
       content: "";
       position: fixed;
-      inset: 0;
+      top: 6px;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
       border: 2px solid var(--accent);
       border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.2);
-      margin: 6px;
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.18);
       z-index: 1;
     }
 
     #app {
       position: relative;
       z-index: 2;
-      padding: 16px 14px 28px;
-      max-width: 760px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 100%;
+      padding: calc(14px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom));
+      overflow-x: hidden;
     }
 
     .hero {
+      width: 100%;
+      max-width: 100%;
       background: rgba(15, 15, 15, 0.92);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 14px;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .hero h1 {
       margin: 0 0 8px;
-      font-size: 26px;
+      font-size: 24px;
       line-height: 1.15;
+      word-break: break-word;
     }
 
     .hero p {
@@ -96,6 +105,7 @@
 
     #searchInput {
       width: 100%;
+      max-width: 100%;
       margin-top: 14px;
       background: #111;
       color: #e5e5e5;
@@ -126,6 +136,7 @@
       padding: 10px 12px;
       font-size: 13px;
       cursor: pointer;
+      max-width: 100%;
     }
 
     button:hover {
@@ -142,6 +153,7 @@
       font-weight: 700;
       border: 1px solid transparent;
       white-space: nowrap;
+      max-width: 100%;
     }
 
     .status-pending {
@@ -174,6 +186,7 @@
       border: 1px solid #2c2c2c;
       border-radius: 12px;
       padding: 12px;
+      min-width: 0;
     }
 
     .statValue {
@@ -192,12 +205,14 @@
 
     .progressWrap {
       margin: 12px 0 0;
+      width: 100%;
     }
 
     .progressText {
       font-size: 12px;
       color: #bdbdbd;
       margin-bottom: 6px;
+      word-break: break-word;
     }
 
     .progressTrack {
@@ -218,18 +233,21 @@
     }
 
     .rootCard {
+      width: 100%;
+      max-width: 100%;
       background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
       border: 1px solid #313131;
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 14px;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.35);
     }
 
     .rootTitle {
       margin: 0 0 8px;
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 700;
+      word-break: break-word;
     }
 
     .rootDescription {
@@ -237,6 +255,7 @@
       color: #cfcfcf;
       line-height: 1.6;
       font-size: 14px;
+      word-break: break-word;
     }
 
     .metaRow {
@@ -244,6 +263,7 @@
       gap: 8px;
       flex-wrap: wrap;
       margin: 10px 0 0;
+      width: 100%;
     }
 
     .metaChip {
@@ -257,21 +277,27 @@
       border: 1px solid #333;
       background: #141414;
       color: #b6b6b6;
+      max-width: 100%;
     }
 
     #panels {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
+      width: 100%;
+      max-width: 100%;
     }
 
     .panel {
+      width: 100%;
+      max-width: 100%;
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 14px;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      overflow: hidden;
     }
 
     .panel.status-panel-pending {
@@ -304,6 +330,12 @@
       margin: 0 0 6px;
       font-size: 20px;
       line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .panelHeader > div {
+      min-width: 0;
+      flex: 1;
     }
 
     .panelDescription {
@@ -311,6 +343,7 @@
       color: #bdbdbd;
       line-height: 1.5;
       font-size: 14px;
+      word-break: break-word;
     }
 
     .panel.status-panel-complete .progressFill,
@@ -323,14 +356,18 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 10px;
+      width: 100%;
     }
 
     .treeNode {
+      width: 100%;
+      max-width: 100%;
       background: rgba(22,22,22,0.96);
       border: 1px solid #2a2a2a;
       border-radius: 14px;
       padding: 12px;
       margin-top: 10px;
+      overflow: hidden;
     }
 
     .treeNode.completeNode {
@@ -351,10 +388,16 @@
       margin-bottom: 8px;
     }
 
+    .treeNodeHeader > div {
+      min-width: 0;
+      flex: 1;
+    }
+
     .treeNodeTitle {
       margin: 0;
       font-size: 15px;
       line-height: 1.35;
+      word-break: break-word;
     }
 
     .treeNodeDescription {
@@ -363,12 +406,14 @@
       font-size: 13px;
       line-height: 1.5;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .childrenWrap {
       margin-top: 10px;
-      padding-left: 12px;
+      padding-left: 10px;
       border-left: 1px solid #2a2a2a;
+      width: 100%;
     }
 
     .emptyState {
@@ -396,6 +441,7 @@
       backdrop-filter: blur(12px);
       box-shadow: 0 0 20px rgba(0,0,0,0.45);
       min-width: 220px;
+      max-width: calc(100vw - 32px);
     }
 
     #loadingText {
@@ -652,7 +698,6 @@
       document.getElementById("statComplete").textContent = complete;
       document.getElementById("statProgress").textContent = progress;
       document.getElementById("statPending").textContent = pending;
-
       document.getElementById("globalProgressText").textContent = `${complete} / ${total} complete (${percent}%)`;
       document.getElementById("globalProgressFill").style.width = `${percent}%`;
 
