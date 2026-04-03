@@ -5,133 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dungeon Call Roadmap Mobile</title>
   <style>
-    body {
+    :root {
+      --bg: #000;
+      --panel: rgba(18, 18, 18, 0.94);
+      --border: #2a2a2a;
+      --text: #f2f2f2;
+      --muted: #a5a5a5;
+      --accent: #BE1A48;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #000;
+      color: var(--text);
       font-family: Arial, sans-serif;
-      color: white;
+    }
+
+    body {
+      position: relative;
       background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      overflow-x: hidden;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      z-index: -1;
+      z-index: 0;
       background-image:
-        radial-gradient(1px 1px at 10% 20%, white, transparent),
-        radial-gradient(1px 1px at 30% 70%, white, transparent),
-        radial-gradient(1.5px 1.5px at 50% 40%, white, transparent),
-        radial-gradient(1px 1px at 80% 60%, white, transparent);
-      opacity: 0.4;
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
+      opacity: 0.24;
+      pointer-events: none;
     }
 
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      border: 2px solid #BE1A48;
+      border: 2px solid var(--accent);
       border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.3);
+      box-shadow: 0 0 25px rgba(190, 26, 72, 0.2);
       margin: 6px;
+      z-index: 1;
     }
 
-    .container {
-      padding: 18px 14px 90px;
+    #app {
+      position: relative;
+      z-index: 2;
+      padding: 16px 14px 28px;
       max-width: 760px;
       margin: 0 auto;
     }
 
     .hero {
-      background: rgba(15, 15, 15, 0.9);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
+      background: rgba(15, 15, 15, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
       padding: 16px;
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .hero h1 {
-      margin: 0 0 6px;
-      font-size: 22px;
-      line-height: 1.2;
+      margin: 0 0 8px;
+      font-size: 26px;
+      line-height: 1.15;
     }
 
     .hero p {
       margin: 0;
-      color: #bbb;
+      color: var(--muted);
       font-size: 14px;
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
-    .searchWrap {
-      position: relative;
-      margin-top: 14px;
+    #rootStatusBadge {
+      margin-top: 12px;
     }
 
-    .searchInput {
+    #searchInput {
       width: 100%;
-      box-sizing: border-box;
+      margin-top: 14px;
       background: #111;
       color: #e5e5e5;
       border: 1px solid #303030;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 12px;
+      padding: 12px 14px;
       font-size: 14px;
       outline: none;
     }
 
-    .searchInput:focus {
-      border-color: #BE1A48;
+    #searchInput:focus {
+      border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
     }
 
-    .searchResults {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: rgba(18, 18, 18, 0.96);
-      border: 1px solid #2f2f2f;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      overflow: hidden;
-      max-height: 280px;
-      overflow-y: auto;
-      display: none;
-      z-index: 25;
-      backdrop-filter: blur(10px);
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
     }
 
-    .searchResult {
+    button {
+      background: #111;
+      color: #ddd;
+      border: 1px solid #2b2b2b;
+      border-radius: 10px;
       padding: 10px 12px;
-      border-bottom: 1px solid #262626;
+      font-size: 13px;
       cursor: pointer;
     }
 
-    .searchResult:last-child {
-      border-bottom: none;
+    button:hover {
+      background: #171717;
     }
 
-    .searchResult:active {
-      background: rgba(190, 26, 72, 0.16);
-    }
-
-    .searchResultTitle {
-      font-size: 14px;
-      color: #f0f0f0;
-      margin-bottom: 4px;
-    }
-
-    .searchResultMeta {
+    .statusBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 12px;
       font-size: 12px;
-      color: #9f9f9f;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
     }
 
-    .statsBar {
+    .status-pending {
+      background: #151515;
+      border-color: #353535;
+      color: #9a9a9a;
+    }
+
+    .status-progress {
+      background: rgba(190, 26, 72, 0.16);
+      border-color: rgba(190, 26, 72, 0.55);
+      color: #ffb3c9;
+    }
+
+    .status-complete {
+      background: rgba(57, 255, 20, 0.16);
+      border-color: rgba(57, 255, 20, 0.72);
+      color: #b8ffab;
+    }
+
+    .stats {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-top: 14px;
     }
@@ -139,8 +172,8 @@
     .statCard {
       background: rgba(20,20,20,0.9);
       border: 1px solid #2c2c2c;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 12px;
+      padding: 12px;
     }
 
     .statValue {
@@ -150,7 +183,7 @@
     }
 
     .statLabel {
-      margin-top: 3px;
+      margin-top: 4px;
       font-size: 11px;
       color: #9d9d9d;
       text-transform: uppercase;
@@ -158,19 +191,19 @@
     }
 
     .progressWrap {
-      margin-top: 14px;
+      margin: 12px 0 0;
     }
 
     .progressText {
       font-size: 12px;
-      color: #bbb;
+      color: #bdbdbd;
       margin-bottom: 6px;
     }
 
     .progressTrack {
       width: 100%;
       height: 10px;
-      background: #111;
+      background: #101010;
       border: 1px solid #2a2a2a;
       border-radius: 999px;
       overflow: hidden;
@@ -184,142 +217,214 @@
       transition: width 0.25s ease;
     }
 
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .toolbar button {
-      flex: 1;
-    }
-
-    button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #171717;
-    }
-
-    .statusLine {
+    .rootCard {
+      background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
+      border: 1px solid #313131;
+      border-radius: 18px;
+      padding: 16px;
       margin-bottom: 14px;
-      font-size: 13px;
-      color: #aaa;
+      box-shadow: 0 0 20px rgba(0,0,0,0.35);
     }
 
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .card {
-      background: rgba(20, 20, 20, 0.94);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      backdrop-filter: blur(8px);
-      scroll-margin-top: 20px;
-    }
-
-    .card.highlighted {
-      border-color: #ff78a5;
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.25), 0 0 18px rgba(190, 26, 72, 0.18);
-    }
-
-    .card h3 {
+    .rootTitle {
       margin: 0 0 8px;
-      font-size: 16px;
-      line-height: 1.3;
-    }
-
-    .card p {
-      margin: 10px 0 0;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #d7d7d7;
-      white-space: pre-wrap;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
+      font-size: 22px;
       font-weight: 700;
     }
 
-    .cardTop {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .cardTopText {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .branchBtn {
-      white-space: nowrap;
-      padding: 7px 10px;
-      font-size: 12px;
-      min-width: auto;
-    }
-
-    .depth-0 { margin-left: 0; border-left: 4px solid rgba(190, 26, 72, 0.9); }
-    .depth-1 { margin-left: 8px; border-left: 4px solid rgba(190, 26, 72, 0.7); }
-    .depth-2 { margin-left: 16px; border-left: 4px solid rgba(190, 26, 72, 0.5); }
-    .depth-3 { margin-left: 24px; border-left: 4px solid rgba(190, 26, 72, 0.35); }
-    .depth-4 { margin-left: 32px; border-left: 4px solid rgba(190, 26, 72, 0.2); }
-
-    .empty {
-      color: #999;
+    .rootDescription {
+      margin: 0;
+      color: #cfcfcf;
+      line-height: 1.6;
       font-size: 14px;
-      text-align: center;
-      padding: 20px 0;
     }
 
-    #toast {
-      position: fixed;
-      left: 50%;
-      bottom: 26px;
-      transform: translateX(-50%) translateY(20px);
-      z-index: 50;
-      background: rgba(18, 18, 18, 0.95);
-      color: #f0f0f0;
-      border: 1px solid #363636;
+    .metaRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 0;
+    }
+
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 13px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #333;
+      background: #141414;
+      color: #b6b6b6;
     }
 
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    #panels {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .panel.status-panel-pending {
+      border-color: #2a2a2a;
+    }
+
+    .panel.status-panel-progress {
+      border-color: rgba(190, 26, 72, 0.35);
+      box-shadow: 0 0 18px rgba(190, 26, 72, 0.08);
+    }
+
+    .panel.status-panel-complete {
+      border-color: rgba(57, 255, 20, 0.42);
+      box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+    }
+
+    .panel.hiddenBySearch {
+      display: none;
+    }
+
+    .panelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panelHeader h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .panelDescription {
+      margin: 0;
+      color: #bdbdbd;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .panel.status-panel-complete .progressFill,
+    .treeNode.completeNode .progressFill {
+      background: linear-gradient(90deg, #39ff14, #8dff77);
+    }
+
+    .nodeActions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .treeNode {
+      background: rgba(22,22,22,0.96);
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .treeNode.completeNode {
+      border-color: rgba(57, 255, 20, 0.34);
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+    }
+
+    .treeNode.matched {
+      border-color: rgba(190, 26, 72, 0.62);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.24);
+    }
+
+    .treeNodeHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .treeNodeTitle {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .treeNodeDescription {
+      margin: 0;
+      color: #adadad;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .childrenWrap {
+      margin-top: 10px;
+      padding-left: 12px;
+      border-left: 1px solid #2a2a2a;
+    }
+
+    .emptyState {
+      color: #888;
+      font-size: 13px;
+      padding-top: 10px;
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.84);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loadingCard {
+      background: rgba(20,20,20,0.96);
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 24px 28px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.45);
+      min-width: 220px;
+    }
+
+    #loadingText {
+      font-size: 14px;
+      color: #ddd;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid #333;
+      border-top: 3px solid #BE1A48;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 14px;
     }
 
     #errorPanel {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 40;
       background: rgba(35, 12, 18, 0.96);
       border: 1px solid rgba(190, 26, 72, 0.5);
       border-radius: 14px;
       padding: 14px;
       box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
       backdrop-filter: blur(10px);
-      margin-bottom: 14px;
       display: none;
     }
 
@@ -339,20 +444,41 @@
       line-height: 1.45;
       color: #f2d7df;
     }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="hero">
-      <h1>Dungeon Call Roadmap</h1>
-      <p>Follow live development progress, see what is complete, what is in progress, and what is still planned.</p>
+  <div id="loadingOverlay">
+    <div id="loadingCard">
+      <div class="spinner"></div>
+      <div id="loadingText">Loading roadmap...</div>
+    </div>
+  </div>
 
-      <div class="searchWrap">
-        <input id="searchInput" class="searchInput" type="text" placeholder="Search roadmap nodes..." autocomplete="off" />
-        <div id="searchResults" class="searchResults"></div>
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
+    <div id="errorPanelText">Trying again when the page becomes active.</div>
+  </div>
+
+  <div id="app">
+    <section class="hero">
+      <h1>Dungeon Call Roadmap</h1>
+      <p>Track progress, browse major systems, and expand sections to explore nested roadmap items.</p>
+
+      <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
+
+      <input id="searchInput" type="text" placeholder="Search roadmap..." autocomplete="off" />
+
+      <div class="toolbar">
+        <button onclick="expandAllSections()">Expand All</button>
+        <button onclick="collapseAllSections()">Collapse All</button>
+        <button onclick="reloadRoadmap()">Refresh</button>
       </div>
 
-      <div class="statsBar">
+      <div class="stats">
         <div class="statCard">
           <div class="statValue" id="statTotal">0</div>
           <div class="statLabel">Total</div>
@@ -372,55 +498,43 @@
       </div>
 
       <div class="progressWrap">
-        <div class="progressText" id="progressText">Completion: 0%</div>
+        <div class="progressText" id="globalProgressText">0 / 0 complete (0%)</div>
         <div class="progressTrack">
-          <div class="progressFill" id="progressFill"></div>
+          <div class="progressFill" id="globalProgressFill" style="width:0%"></div>
         </div>
       </div>
-    </div>
 
-    <div id="errorPanel">
-      <div id="errorPanelTitle">Couldn’t refresh roadmap</div>
-      <div id="errorPanelText">Trying again when the page becomes active.</div>
-    </div>
+      <div id="statusLine">Loading roadmap...</div>
+    </section>
 
-    <div class="toolbar">
-      <button onclick="reloadRoadmap()">Refresh</button>
-      <button onclick="expandAll()">Expand All</button>
-    </div>
-
-    <div class="statusLine" id="statusLine">Loading roadmap...</div>
-
-    <div class="list" id="roadmapList"></div>
+    <section id="rootPanel" class="rootCard"></section>
+    <section id="panels"></section>
   </div>
-
-  <div id="toast"></div>
 
   <script>
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
-    const ROOT_ID = 1;
 
-    let graphData = null;
-    let cardIndex = new Map();
-    let parentMap = new Map();
-    const collapsedNodes = new Set();
-    let toastTimer = null;
+    let graphData = { nodes: [], edges: [] };
+    let childMap = new Map();
+    let nodeMap = new Map();
+    let rootId = null;
+    let expandedNodes = new Set();
+    let collapsedPanels = new Set();
+    let currentSearch = "";
+
+    function showLoading(text = "Loading roadmap...") {
+      document.getElementById("loadingText").textContent = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
 
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
       el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#aaa";
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.classList.add("show");
-
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
+      el.style.color = isError ? "#ff8a8a" : "#999";
     }
 
     function showErrorPanel(message) {
@@ -432,23 +546,105 @@
       document.getElementById("errorPanel").classList.remove("show");
     }
 
+    function normalizeGraphData(raw) {
+      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+
+      return {
+        nodes: rawNodes.map(n => ({
+          id: Number(n.id),
+          label: n.label || "Unnamed",
+          status: n.status || "pending",
+          description: n.description || "Coming Soon",
+          x: typeof n.x === "number" ? n.x : null,
+          y: typeof n.y === "number" ? n.y : null
+        })),
+        edges: rawEdges.map((e, index) => ({
+          id: `${e.from}->${e.to}-${index}`,
+          from: Number(e.from),
+          to: Number(e.to)
+        }))
+      };
+    }
+
+    function rebuildMaps() {
+      childMap = new Map();
+      nodeMap = new Map();
+
+      for (const node of graphData.nodes) {
+        nodeMap.set(Number(node.id), node);
+        childMap.set(Number(node.id), []);
+      }
+
+      for (const edge of graphData.edges) {
+        const from = Number(edge.from);
+        const to = Number(edge.to);
+        if (!childMap.has(from)) childMap.set(from, []);
+        childMap.get(from).push(to);
+      }
+
+      for (const [id, kids] of childMap.entries()) {
+        kids.sort((a, b) => {
+          const na = nodeMap.get(a);
+          const nb = nodeMap.get(b);
+          const ax = typeof na?.x === "number" ? na.x : 0;
+          const bx = typeof nb?.x === "number" ? nb.x : 0;
+          if (ax !== bx) return ax - bx;
+          const ay = typeof na?.y === "number" ? na.y : 0;
+          const by = typeof nb?.y === "number" ? nb.y : 0;
+          if (ay !== by) return ay - by;
+          return (na?.label || "").localeCompare(nb?.label || "");
+        });
+      }
+    }
+
+    function getRootId() {
+      const childIds = new Set(graphData.edges.map(e => Number(e.to)));
+      const root = graphData.nodes.find(n => !childIds.has(Number(n.id)));
+      return root ? Number(root.id) : (graphData.nodes[0] ? Number(graphData.nodes[0].id) : null);
+    }
+
+    function getNodeById(id) {
+      return nodeMap.get(Number(id)) || null;
+    }
+
+    function getChildren(id) {
+      return childMap.get(Number(id)) || [];
+    }
+
     function getStatusLabel(status) {
       if (status === "complete") return "Done";
       if (status === "progress") return "In Progress";
-      return "Not Started";
+      return "Pending";
     }
 
-    function getBadgeStyle(status) {
-      if (status === "complete") return "background:#123a24;color:#7dffb0;border:1px solid #1e6c41;";
-      if (status === "progress") return "background:#3d2b06;color:#ffd37a;border:1px solid #9a6a00;";
-      return "background:#181818;color:#999;border:1px solid #333;";
+    function getCompletionStats(id) {
+      const ids = [Number(id)];
+      const stack = [Number(id)];
+
+      while (stack.length) {
+        const current = stack.pop();
+        const children = getChildren(current);
+        for (const childId of children) {
+          ids.push(Number(childId));
+          stack.push(Number(childId));
+        }
+      }
+
+      const nodes = ids.map(getNodeById).filter(Boolean);
+      const total = nodes.length;
+      const complete = nodes.filter(n => n.status === "complete").length;
+      const progress = nodes.filter(n => n.status === "progress").length;
+      const pending = total - complete - progress;
+      const percent = total ? Math.round((complete / total) * 100) : 0;
+
+      return { total, complete, progress, pending, percent };
     }
 
-    function updateStats(graphData) {
-      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
-      const total = graphNodes.length;
-      const complete = graphNodes.filter(n => n.status === "complete").length;
-      const progress = graphNodes.filter(n => n.status === "progress").length;
+    function updateStats() {
+      const total = graphData.nodes.length;
+      const complete = graphData.nodes.filter(n => n.status === "complete").length;
+      const progress = graphData.nodes.filter(n => n.status === "progress").length;
       const pending = total - complete - progress;
       const percent = total ? Math.round((complete / total) * 100) : 0;
 
@@ -456,276 +652,248 @@
       document.getElementById("statComplete").textContent = complete;
       document.getElementById("statProgress").textContent = progress;
       document.getElementById("statPending").textContent = pending;
-      document.getElementById("progressText").textContent = `Completion: ${complete} / ${total} complete (${percent}%)`;
-      document.getElementById("progressFill").style.width = `${percent}%`;
+
+      document.getElementById("globalProgressText").textContent = `${complete} / ${total} complete (${percent}%)`;
+      document.getElementById("globalProgressFill").style.width = `${percent}%`;
+
+      const rootNode = getNodeById(rootId);
+      const badge = document.getElementById("rootStatusBadge");
+      badge.className = `statusBadge status-${rootNode?.status || "pending"}`;
+      badge.textContent = getStatusLabel(rootNode?.status || "pending");
     }
 
-    function buildTreeFromGraph(graphData) {
-      const graphNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
-      const graphEdges = Array.isArray(graphData?.edges) ? graphData.edges : [];
-
-      if (!graphNodes.length) return null;
-
-      const byId = {};
-      const childIds = new Set();
-      const childrenLookup = {};
-      parentMap = new Map();
-
-      for (const node of graphNodes) {
-        byId[node.id] = {
-          id: node.id,
-          label: node.label || "Unnamed",
-          status: node.status || "pending",
-          description: node.description || "Coming Soon",
-          children: []
-        };
-        childrenLookup[node.id] = [];
-      }
-
-      for (const edge of graphEdges) {
-        if (byId[edge.from] && byId[edge.to]) {
-          childrenLookup[edge.from].push(edge.to);
-          childIds.add(edge.to);
-          parentMap.set(edge.to, edge.from);
-        }
-      }
-
-      function attach(id) {
-        const node = byId[id];
-        node.children = childrenLookup[id].map(childId => attach(childId));
-        return node;
-      }
-
-      let rootId = graphNodes[0].id;
-      const explicitRoot = graphNodes.find(n => !childIds.has(n.id));
-      if (explicitRoot) rootId = explicitRoot.id;
-
-      return attach(rootId);
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    function renderCards(root) {
-      const list = document.getElementById("roadmapList");
-      list.innerHTML = "";
-      cardIndex = new Map();
+    function matchesSearch(node, search) {
+      if (!search) return true;
+      const hay = `${node.label} ${node.description}`.toLowerCase();
+      return hay.includes(search);
+    }
 
-      if (!root) {
-        list.innerHTML = '<div class="empty">No roadmap data available.</div>';
-        return;
+    function subtreeMatches(id, search) {
+      const node = getNodeById(id);
+      if (!node) return false;
+      if (matchesSearch(node, search)) return true;
+      return getChildren(id).some(childId => subtreeMatches(childId, search));
+    }
+
+    function createStatusBadge(status) {
+      return `<span class="statusBadge status-${status}">${getStatusLabel(status)}</span>`;
+    }
+
+    function countDescendants(id) {
+      let count = 0;
+      const stack = [...getChildren(id)];
+      while (stack.length) {
+        const current = stack.pop();
+        count++;
+        stack.push(...getChildren(current));
       }
+      return count;
+    }
 
-      function walk(node, depth = 0) {
-        const hasChildren = (node.children || []).length > 0;
-        const isCollapsed = collapsedNodes.has(node.id);
-
-        const card = document.createElement("div");
-        card.className = `card depth-${Math.min(depth, 4)}`;
-        card.id = `node-card-${node.id}`;
-
-        const buttonHTML = hasChildren
-          ? `<button class="branchBtn" data-node-id="${node.id}">
-               ${isCollapsed ? "Expand" : "Collapse"}
-             </button>`
-          : "";
-
-        card.innerHTML = `
-          <div class="cardTop">
-            <div class="cardTopText">
-              <h3>${node.label}</h3>
-              <span class="badge" style="${getBadgeStyle(node.status)}">${getStatusLabel(node.status)}</span>
-            </div>
-            ${buttonHTML}
+    function renderProgressBar(stats) {
+      return `
+        <div class="progressWrap">
+          <div class="progressText">${stats.complete} / ${stats.total} complete (${stats.percent}%)</div>
+          <div class="progressTrack">
+            <div class="progressFill" style="width:${stats.percent}%"></div>
           </div>
-          <p>${node.description || "No description available."}</p>
+        </div>
+      `;
+    }
+
+    function toggleSection(id) {
+      if (expandedNodes.has(id)) expandedNodes.delete(id);
+      else expandedNodes.add(id);
+      renderPanels();
+    }
+
+    function togglePanel(id) {
+      if (collapsedPanels.has(Number(id))) collapsedPanels.delete(Number(id));
+      else collapsedPanels.add(Number(id));
+      renderPanels();
+    }
+
+    function renderTreeNode(id, search) {
+      const node = getNodeById(id);
+      if (!node) return "";
+
+      const children = getChildren(id).filter(childId => subtreeMatches(childId, search));
+      const selfMatch = matchesSearch(node, search);
+      const subtreeMatch = selfMatch || children.length > 0;
+      if (!subtreeMatch) return "";
+
+      const isExpanded = expandedNodes.has(id) || !!search;
+      const hasChildren = children.length > 0;
+      const matchedClass = selfMatch ? " matched" : "";
+      const stats = getCompletionStats(id);
+
+      return `
+        <div class="treeNode${matchedClass}${node.status === "complete" ? " completeNode" : ""}">
+          <div class="treeNodeHeader">
+            <div>
+              <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
+            </div>
+            ${createStatusBadge(node.status)}
+          </div>
+
+          <div class="metaRow">
+            <span class="metaChip">${stats.total - 1} nested</span>
+            <span class="metaChip">${stats.percent}% done</span>
+          </div>
+
+          ${renderProgressBar(stats)}
+
+          ${node.description ? `<p class="treeNodeDescription">${escapeHtml(node.description)}</p>` : ""}
+
+          ${hasChildren ? `
+            <div class="nodeActions">
+              <button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>
+            </div>
+            ${isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search)).join("")}</div>` : ""}
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function renderRootPanel() {
+      const rootNode = getNodeById(rootId);
+      if (!rootNode) return;
+      const stats = getCompletionStats(rootId);
+
+      document.getElementById("rootPanel").innerHTML = `
+        <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+        ${createStatusBadge(rootNode.status)}
+        <div class="metaRow">
+          <span class="metaChip">${stats.total - 1} total sub-items</span>
+          <span class="metaChip">${stats.percent}% complete</span>
+        </div>
+        ${renderProgressBar(stats)}
+        <p class="rootDescription">${escapeHtml(rootNode.description || "")}</p>
+      `;
+    }
+
+    function renderPanels() {
+      const panelsEl = document.getElementById("panels");
+      const mainChildren = getChildren(rootId);
+      const search = currentSearch.trim().toLowerCase();
+
+      panelsEl.innerHTML = mainChildren.map(id => {
+        const node = getNodeById(id);
+        if (!node) return "";
+
+        const visible = subtreeMatches(id, search);
+        const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
+        const descendants = countDescendants(id);
+        const stats = getCompletionStats(id);
+        const isCollapsed = collapsedPanels.has(Number(id)) && !search;
+
+        return `
+          <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
+            <div class="panelHeader">
+              <div>
+                <h2>${escapeHtml(node.label)}</h2>
+                <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+              </div>
+              ${createStatusBadge(node.status)}
+            </div>
+
+            <div class="metaRow">
+              <span class="metaChip">${descendants} sub-items</span>
+              <span class="metaChip">${childIds.length} direct children</span>
+              <span class="metaChip">${stats.percent}% complete</span>
+            </div>
+
+            ${renderProgressBar(stats)}
+
+            <div class="nodeActions">
+              <button onclick="togglePanel(${id})">${isCollapsed ? "Expand Panel" : "Collapse Panel"}</button>
+            </div>
+
+            ${isCollapsed ? "" : `
+              <div class="panelBody">
+                ${childIds.length
+                  ? childIds.map(childId => renderTreeNode(childId, search)).join("")
+                  : `<div class="emptyState">No child items yet.</div>`
+                }
+              </div>
+            `}
+          </article>
         `;
-
-        list.appendChild(card);
-        cardIndex.set(node.id, card);
-
-        if (!isCollapsed) {
-          for (const child of node.children || []) {
-            walk(child, depth + 1);
-          }
-        }
-      }
-
-      walk(root, 0);
-
-      list.querySelectorAll(".branchBtn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const nodeId = Number(btn.dataset.nodeId);
-          toggleBranch(nodeId);
-        });
-      });
+      }).join("");
     }
 
-    function toggleBranch(nodeId) {
-      if (nodeId === ROOT_ID) {
-        showToast("You can't collapse the root.");
-        return;
+    function expandAllSections() {
+      collapsedPanels.clear();
+      for (const node of graphData.nodes) {
+        if (getChildren(node.id).length) expandedNodes.add(node.id);
       }
-
-      if (collapsedNodes.has(nodeId)) {
-        collapsedNodes.delete(nodeId);
-        setStatus("Branch expanded.");
-      } else {
-        collapsedNodes.add(nodeId);
-        setStatus("Branch collapsed.");
-      }
-
-      const tree = buildTreeFromGraph(graphData);
-      renderCards(tree);
+      renderPanels();
     }
 
-    function expandAll() {
-      collapsedNodes.clear();
-      const tree = buildTreeFromGraph(graphData);
-      renderCards(tree);
-      setStatus("All branches expanded.");
-    }
-
-    function getAncestorChain(nodeId) {
-      const ancestors = [];
-      let current = parentMap.get(nodeId);
-
-      while (current !== undefined) {
-        ancestors.push(current);
-        current = parentMap.get(current);
-      }
-
-      return ancestors;
-    }
-
-    function highlightCard(nodeId) {
-      const card = cardIndex.get(nodeId);
-      if (!card) return;
-
-      card.classList.add("highlighted");
-      setTimeout(() => {
-        card.classList.remove("highlighted");
-      }, 2000);
-    }
-
-    function jumpToNode(nodeId) {
-      const ancestors = getAncestorChain(nodeId);
-      for (const ancestor of ancestors) {
-        if (collapsedNodes.has(ancestor)) {
-          collapsedNodes.delete(ancestor);
-        }
-      }
-
-      const tree = buildTreeFromGraph(graphData);
-      renderCards(tree);
-
-      const card = cardIndex.get(nodeId);
-      if (!card) return;
-
-      card.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
-      highlightCard(nodeId);
-    }
-
-    function renderSearchResults(query) {
-      const resultsBox = document.getElementById("searchResults");
-      resultsBox.innerHTML = "";
-
-      if (!query || !graphData?.nodes?.length) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const q = query.trim().toLowerCase();
-      if (!q) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const matches = graphData.nodes
-        .filter(node => (node.label || "").toLowerCase().includes(q))
-        .slice(0, 8);
-
-      if (!matches.length) {
-        resultsBox.innerHTML = `<div class="searchResult"><div class="searchResultTitle">No results</div><div class="searchResultMeta">Try another term</div></div>`;
-        resultsBox.style.display = "block";
-        return;
-      }
-
-      for (const match of matches) {
-        const item = document.createElement("div");
-        item.className = "searchResult";
-        item.innerHTML = `
-          <div class="searchResultTitle">${match.label}</div>
-          <div class="searchResultMeta">${getStatusLabel(match.status)} • Tap to jump</div>
-        `;
-        item.onclick = () => {
-          jumpToNode(match.id);
-          resultsBox.style.display = "none";
-          document.getElementById("searchInput").blur();
-        };
-        resultsBox.appendChild(item);
-      }
-
-      resultsBox.style.display = "block";
+    function collapseAllSections() {
+      expandedNodes.clear();
+      const topLevel = getChildren(rootId);
+      for (const id of topLevel) collapsedPanels.add(Number(id));
+      renderPanels();
     }
 
     async function reloadRoadmap() {
       try {
+        showLoading("Loading roadmap...");
         setStatus("Loading latest roadmap...");
 
         const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
           cache: "no-store"
         });
 
-        if (!res.ok) {
-          throw new Error("Could not load roadmap.json");
-        }
+        if (!res.ok) throw new Error("Could not load roadmap.json");
 
-        graphData = await res.json();
-        updateStats(graphData);
+        graphData = normalizeGraphData(await res.json());
+        rebuildMaps();
+        rootId = getRootId();
+        updateStats();
+        renderRootPanel();
+        renderPanels();
 
-        const tree = buildTreeFromGraph(graphData);
-        renderCards(tree);
         hideErrorPanel();
         setStatus("Loaded latest roadmap.");
+        hideLoading();
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
-        showErrorPanel("Roadmap refresh failed. The page will keep trying again, and this message will disappear once loading works.");
+        showErrorPanel("Roadmap refresh failed. Try again in a moment.");
+        hideLoading();
       }
     }
-
-    document.addEventListener("click", (e) => {
-      const wrap = document.querySelector(".searchWrap");
-      const results = document.getElementById("searchResults");
-      if (wrap && !wrap.contains(e.target)) {
-        results.style.display = "none";
-      }
-    });
 
     document.addEventListener("DOMContentLoaded", () => {
       const input = document.getElementById("searchInput");
       input.addEventListener("input", () => {
-        renderSearchResults(input.value);
-      });
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          document.getElementById("searchResults").style.display = "none";
-          input.blur();
-        }
+        currentSearch = input.value || "";
+        renderPanels();
       });
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        reloadRoadmap();
-      }
+      if (!document.hidden) reloadRoadmap();
     });
 
+    window.toggleSection = toggleSection;
+    window.togglePanel = togglePanel;
+    window.expandAllSections = expandAllSections;
+    window.collapseAllSections = collapseAllSections;
+    window.reloadRoadmap = reloadRoadmap;
+
     reloadRoadmap();
-    setInterval(reloadRoadmap, 30000);
   </script>
 </body>
 </html>
