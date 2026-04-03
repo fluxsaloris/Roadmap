@@ -1573,11 +1573,12 @@ function autoArrange() {
 
   showLoading("Auto arranging roadmap...");
 
-  const MAIN_X_GAP = 260;
-  const BRANCH_X_GAP = 170;
-  const BRANCH_Y_GAP = 120;
   const START_X = 0;
   const START_Y = 0;
+
+  const MAIN_GAP = 260;       // spacing across the timeline
+  const STEM_GAP_Y = 110;     // spacing down a stem
+  const STEM_SIDE_OFFSET = 90; // small left/right wiggle so stems don't fully overlap
 
   const childrenMap = new Map();
   graphData.nodes.forEach(node => childrenMap.set(Number(node.id), []));
@@ -1596,111 +1597,67 @@ function autoArrange() {
     });
   }
 
-  function getSubtreeSize(nodeId, seen = new Set()) {
-    if (seen.has(nodeId)) return 0;
-    seen.add(nodeId);
-
-    const children = childrenMap.get(Number(nodeId)) || [];
-    let size = 1;
-
-    for (const childId of children) {
-      size += getSubtreeSize(childId, new Set(seen));
-    }
-
-    return size;
+  const rootNode = getNodeById(rootId);
+  if (!rootNode) {
+    hideLoading();
+    showToast("Root node missing.");
+    return;
   }
 
-  function getMainChild(nodeId) {
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    if (!children.length) return null;
+  // Root at the far left of the timeline
+  rootNode.x = START_X;
+  rootNode.y = START_Y;
 
-    let best = children[0];
-    let bestSize = getSubtreeSize(best);
+  // These become the main straight timeline points
+  const mainNodes = sortChildren(childrenMap.get(rootId) || []);
 
-    for (let i = 1; i < children.length; i++) {
-      const size = getSubtreeSize(children[i]);
-      if (size > bestSize) {
-        best = children[i];
-        bestSize = size;
-      }
-    }
-
-    return best;
-  }
-
-  const trunk = [];
-  let current = rootId;
-  const trunkSeen = new Set();
-
-  while (current !== null && !trunkSeen.has(current)) {
-    trunkSeen.add(current);
-    trunk.push(current);
-    current = getMainChild(current);
-  }
-
-  trunk.forEach((nodeId, index) => {
+  mainNodes.forEach((nodeId, index) => {
     const node = getNodeById(nodeId);
     if (!node) return;
-    node.x = START_X + index * MAIN_X_GAP;
+
+    node.x = START_X + ((index + 1) * MAIN_GAP);
     node.y = START_Y;
   });
 
-  function layoutBranch(nodeId, baseX, baseY, direction, seen = new Set()) {
-    if (seen.has(nodeId)) return;
-    seen.add(nodeId);
+  // Place descendants as vertical stems from each main node
+  function layoutStem(parentId, direction = 1, depth = 1, laneShift = 0, visited = new Set()) {
+    if (visited.has(parentId)) return;
+    visited.add(parentId);
 
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
+    const parent = getNodeById(parentId);
+    if (!parent) return;
+
+    const children = sortChildren(childrenMap.get(parentId) || []);
     if (!children.length) return;
 
     children.forEach((childId, index) => {
       const child = getNodeById(childId);
       if (!child) return;
 
-      const branchY = baseY + direction * ((index + 1) * BRANCH_Y_GAP);
-      const branchX = baseX + BRANCH_X_GAP;
+      // alternate slight side offset to stop perfect overlap
+      const side =
+        index % 3 === 0 ? 0 :
+        index % 3 === 1 ? -STEM_SIDE_OFFSET :
+                          STEM_SIDE_OFFSET;
 
-      child.x = branchX;
-      child.y = branchY;
+      child.x = parent.x + side + laneShift;
+      child.y = parent.y + (direction * STEM_GAP_Y * depth);
 
-      layoutBranch(childId, branchX, branchY, direction, new Set(seen));
+      // keep deeper descendants on same general stem
+      layoutStem(
+        childId,
+        direction,
+        depth + 1,
+        laneShift + (index % 2 === 0 ? -18 : 18),
+        new Set(visited)
+      );
     });
   }
 
-  trunk.forEach((nodeId) => {
-    const node = getNodeById(nodeId);
-    if (!node) return;
-
-    const children = sortChildren(childrenMap.get(Number(nodeId)) || []);
-    const mainChild = getMainChild(nodeId);
-    const sideChildren = children.filter(id => id !== mainChild);
-
-    const upper = [];
-    const lower = [];
-
-    sideChildren.forEach((id, i) => {
-      if (i % 2 === 0) upper.push(id);
-      else lower.push(id);
-    });
-
-    upper.forEach((childId, i) => {
-      const child = getNodeById(childId);
-      if (!child) return;
-
-      child.x = node.x + BRANCH_X_GAP;
-      child.y = node.y - ((i + 1) * BRANCH_Y_GAP);
-
-      layoutBranch(childId, child.x, child.y, -1);
-    });
-
-    lower.forEach((childId, i) => {
-      const child = getNodeById(childId);
-      if (!child) return;
-
-      child.x = node.x + BRANCH_X_GAP;
-      child.y = node.y + ((i + 1) * BRANCH_Y_GAP);
-
-      layoutBranch(childId, child.x, child.y, 1);
-    });
+  // Alternate stems above and below the line
+  mainNodes.forEach((nodeId, index) => {
+    const direction = index % 2 === 0 ? -1 : 1;
+    layoutStem(nodeId, direction);
   });
 
   rebuildDatasetsPreserveView(rootId);
