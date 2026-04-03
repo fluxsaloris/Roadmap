@@ -522,11 +522,19 @@
     },
     {
       "id": 67,
-      "label": "New Node",
+      "label": "Labyrinth Ownership",
       "status": "pending",
       "description": "Coming Soon",
       "x": 1105,
       "y": -313
+    },
+    {
+      "id": 68,
+      "label": "New Node",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": 1105,
+      "y": -203
     }
   ],
   "edges": [
@@ -789,6 +797,10 @@
     {
       "from": 66,
       "to": 67
+    },
+    {
+      "from": 66,
+      "to": 68
     }
   ]
 }
