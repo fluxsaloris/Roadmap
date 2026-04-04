@@ -60,7 +60,7 @@
       "id": 56,
       "label": "Fairy",
       "status": "pending",
-      "description": "Coming Soon",
+      "description": "As a member of the Fairy race you are apart of the fae clan. You possess a set of wings which are also a physical manifestation of your soul allowing you to fly and revealing your true beauty. Nature takes a big liking to you and you typically feel more comfortable in it.",
       "x": 80,
       "y": -140
     },
@@ -68,7 +68,7 @@
       "id": 57,
       "label": "Spirit",
       "status": "pending",
-      "description": "Coming Soon",
+      "description": "You will be part spirit & belong to the clan of spirits. You are very in touch with the ways of the spirits and are able to communicate with creatures that people usually could not... maybe even see what those can not.",
       "x": 80,
       "y": -280
     },
