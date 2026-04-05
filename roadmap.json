@@ -57,43 +57,11 @@
       "y": -420
     },
     {
-      "id": 56,
-      "label": "Fairy",
-      "status": "pending",
-      "description": "As a member of the Fairy race you are apart of the fae clan. You possess a set of wings which are also a physical manifestation of your soul allowing you to fly and revealing your true beauty. Nature takes a big liking to you and you typically feel more comfortable in it.",
-      "x": 80,
-      "y": -140
-    },
-    {
       "id": 57,
       "label": "Spirit",
       "status": "pending",
       "description": "You will be part spirit & belong to the clan of spirits. You are very in touch with the ways of the spirits and are able to communicate with creatures that people usually could not... maybe even see what those can not.",
       "x": 80,
-      "y": -280
-    },
-    {
-      "id": 58,
-      "label": "Lamia",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": -140
-    },
-    {
-      "id": 59,
-      "label": "Dragon",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 180,
-      "y": -140
-    },
-    {
-      "id": 60,
-      "label": "Lizard",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 180,
       "y": -280
     },
     {
@@ -105,16 +73,8 @@
       "y": -280
     },
     {
-      "id": 62,
-      "label": "Tiefling",
-      "status": "pending",
-      "description": "Coming Soon",
-      "x": 560,
-      "y": -280
-    },
-    {
       "id": 63,
-      "label": "Owl",
+      "label": "Avian",
       "status": "pending",
       "description": "Coming Soon",
       "x": 460,
@@ -399,6 +359,14 @@
       "description": "Coming Soon",
       "x": null,
       "y": null
+    },
+    {
+      "id": 81,
+      "label": "Lamia",
+      "status": "pending",
+      "description": "Coming Soon",
+      "x": null,
+      "y": null
     }
   ],
   "edges": [
@@ -428,31 +396,11 @@
     },
     {
       "from": 49,
-      "to": 56
-    },
-    {
-      "from": 49,
       "to": 57
     },
     {
       "from": 49,
-      "to": 58
-    },
-    {
-      "from": 49,
-      "to": 59
-    },
-    {
-      "from": 49,
-      "to": 60
-    },
-    {
-      "from": 49,
       "to": 61
-    },
-    {
-      "from": 49,
-      "to": 62
     },
     {
       "from": 49,
@@ -597,6 +545,10 @@
     {
       "from": 49,
       "to": 80
+    },
+    {
+      "from": 49,
+      "to": 81
     }
   ]
 }
