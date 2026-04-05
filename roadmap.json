@@ -356,7 +356,7 @@
       "id": 80,
       "label": "Vampire",
       "status": "pending",
-      "description": "Coming Soon",
+      "description": "The vampire race is exactly as you would think. There is two different vampire kinds and that will determine how they thrive but all the same they stand equal just have different preferences.",
       "x": null,
       "y": null
     },
@@ -365,6 +365,22 @@
       "label": "Lamia",
       "status": "pending",
       "description": "Lamia are a type of snake person. They remain a form of human on the top half of their body showing some sign of scales but their entire bottom half is that of a snake while remaining normal in size human wise their tail can become quite long. Thanks to this they are very agile and able to restrain people.",
+      "x": null,
+      "y": null
+    },
+    {
+      "id": 82,
+      "label": "Psychic Vampire",
+      "status": "pending",
+      "description": "This is a vampire which feeds off of the emotions of those around them rather than the blood of individuals. This acts as a double edged sword because the emotions of another can either be a hinderance or benefit to the vampire. Due to this vampire being so in touch with emotions they are able to influence people easily and have a strong connection to the abilities of the mind.",
+      "x": null,
+      "y": null
+    },
+    {
+      "id": 83,
+      "label": "Blood Vampire",
+      "status": "pending",
+      "description": "As everyone may understand, this kind of vampire thrives on blood and it isn't as gory and evil as people make it out to be in stories. This vampire instead of needing to consume blood to survive it can gain benefits from consuming different kinds of blood allowing for the opportunity to in a way have a buff but this blood can also be weaponised.",
       "x": null,
       "y": null
     }
@@ -549,6 +565,14 @@
     {
       "from": 49,
       "to": 81
+    },
+    {
+      "from": 80,
+      "to": 82
+    },
+    {
+      "from": 80,
+      "to": 83
     }
   ]
 }
