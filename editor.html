@@ -12,6 +12,9 @@
       --text: #f2f2f2;
       --muted: #a5a5a5;
       --accent: #BE1A48;
+      --ok: #39ff14;
+      --warn: #ffcc66;
+      --error: #ff8a8a;
     }
 
     * { box-sizing: border-box; }
@@ -102,7 +105,16 @@
       max-width: 840px;
     }
 
-    .statusBadge {
+    .topRightMeta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .statusBadge,
+    .saveBadge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -130,6 +142,30 @@
       background: rgba(57, 255, 20, 0.16);
       border-color: rgba(57, 255, 20, 0.72);
       color: #b8ffab;
+    }
+
+    .save-clean {
+      background: rgba(57, 255, 20, 0.12);
+      border-color: rgba(57, 255, 20, 0.45);
+      color: #c8ffbd;
+    }
+
+    .save-dirty {
+      background: rgba(255, 204, 102, 0.12);
+      border-color: rgba(255, 204, 102, 0.45);
+      color: #ffe3a3;
+    }
+
+    .save-saving {
+      background: rgba(190, 26, 72, 0.16);
+      border-color: rgba(190, 26, 72, 0.55);
+      color: #ffb3c9;
+    }
+
+    .save-error {
+      background: rgba(255, 80, 80, 0.12);
+      border-color: rgba(255, 80, 80, 0.45);
+      color: #ffb6b6;
     }
 
     .heroControls {
@@ -172,8 +208,10 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #171717;
+    button:hover { background: #171717; }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .dangerBtn {
@@ -183,6 +221,22 @@
 
     .subtleBtn {
       color: #cfcfcf;
+    }
+
+    .toggleWrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #111;
+      border: 1px solid #2b2b2b;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #d8d8d8;
+      font-size: 13px;
+    }
+
+    .toggleWrap input {
+      accent-color: var(--accent);
     }
 
     .stats {
@@ -527,6 +581,10 @@
       .toolbar {
         justify-content: flex-start;
       }
+
+      .topRightMeta {
+        justify-content: flex-start;
+      }
     }
   </style>
 </head>
@@ -548,18 +606,27 @@
       <div class="heroTop">
         <div class="heroTitle">
           <h1>Dungeon Call Editor</h1>
-          <p>Panel-based roadmap editor with per-category completion, nested progress bars, and simple top-level reordering.</p>
+          <p>Panel-based roadmap editor with autosave, draft recovery, nested progress bars, and safe reload handling.</p>
         </div>
-        <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
+
+        <div class="topRightMeta">
+          <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
+          <div id="saveStateBadge" class="saveBadge save-clean">All changes saved locally</div>
+        </div>
       </div>
 
       <div class="heroControls">
         <input id="searchInput" type="text" placeholder="Search roadmap panels and items..." autocomplete="off" />
         <div class="toolbar">
+          <label class="toggleWrap">
+            <input id="autoSaveGitHubToggle" type="checkbox" />
+            Auto-save to GitHub
+          </label>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
           <button onclick="saveRoadmap()">Save to GitHub</button>
-          <button onclick="reloadRoadmap()">Reload</button>
+          <button onclick="reloadRoadmap(true)">Reload</button>
+          <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
         </div>
       </div>
 
@@ -593,6 +660,11 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v2";
+    const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
+    const LOCAL_AUTOSAVE_DELAY = 700;
+    const GITHUB_AUTOSAVE_DELAY = 3500;
+
     let graphData = { nodes: [], edges: [] };
     let childMap = new Map();
     let nodeMap = new Map();
@@ -601,14 +673,22 @@
     let expandedNodes = new Set();
     let currentSearch = "";
     let hasUnsavedChanges = false;
+    let isSavingToGitHub = false;
+    let isLoading = false;
+    let lastSavedAt = null;
+
+    let localAutosaveTimer = null;
+    let githubAutosaveTimer = null;
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
       document.getElementById("loadingOverlay").style.display = "flex";
+      isLoading = true;
     }
 
     function hideLoading() {
       document.getElementById("loadingOverlay").style.display = "none";
+      isLoading = false;
     }
 
     function setStatus(text, isError = false) {
@@ -626,14 +706,38 @@
       document.getElementById("errorPanel").classList.remove("show");
     }
 
-    function markDirty() {
-      hasUnsavedChanges = true;
-      setStatus("You have unsaved changes.");
+    function setSaveBadge(mode, text) {
+      const el = document.getElementById("saveStateBadge");
+      el.className = `saveBadge ${mode}`;
+      el.textContent = text;
     }
 
-    function clearDirty() {
+    function autoSaveToGitHubEnabled() {
+      return !!document.getElementById("autoSaveGitHubToggle")?.checked;
+    }
+
+    function persistSettings() {
+      localStorage.setItem(AUTO_SAVE_GITHUB_KEY, autoSaveToGitHubEnabled() ? "1" : "0");
+    }
+
+    function restoreSettings() {
+      const enabled = localStorage.getItem(AUTO_SAVE_GITHUB_KEY) === "1";
+      const toggle = document.getElementById("autoSaveGitHubToggle");
+      if (toggle) toggle.checked = enabled;
+    }
+
+    function markDirty(reason = "Unsaved changes") {
+      hasUnsavedChanges = true;
+      setSaveBadge("save-dirty", "Unsaved changes");
+      setStatus(reason);
+      queueLocalAutosave();
+      queueGitHubAutosave();
+    }
+
+    function markClean(message = "All changes saved locally") {
       hasUnsavedChanges = false;
-      setStatus("Loaded latest roadmap.");
+      setSaveBadge("save-clean", message);
+      setStatus(message);
     }
 
     function normalizeGraphData(raw) {
@@ -682,9 +786,11 @@
           const ax = typeof na?.x === "number" ? na.x : 0;
           const bx = typeof nb?.x === "number" ? nb.x : 0;
           if (ax !== bx) return ax - bx;
+
           const ay = typeof na?.y === "number" ? na.y : 0;
           const by = typeof nb?.y === "number" ? nb.y : 0;
           if (ay !== by) return ay - by;
+
           return (na?.label || "").localeCompare(nb?.label || "");
         });
       }
@@ -787,7 +893,113 @@
       return count;
     }
 
+    function getSerializableGraphData() {
+      return {
+        nodes: graphData.nodes.map(n => ({
+          id: n.id,
+          label: n.label,
+          status: n.status,
+          description: n.description,
+          x: n.x,
+          y: n.y
+        })),
+        edges: graphData.edges.map(e => ({
+          from: e.from,
+          to: e.to
+        }))
+      };
+    }
+
+    function saveDraftToLocal() {
+      try {
+        const payload = {
+          savedAt: Date.now(),
+          data: getSerializableGraphData()
+        };
+        localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
+        lastSavedAt = payload.savedAt;
+        if (!isSavingToGitHub) {
+          setSaveBadge(hasUnsavedChanges ? "save-dirty" : "save-clean", hasUnsavedChanges ? "Unsaved changes" : "All changes saved locally");
+        }
+      } catch (err) {
+        console.error("Failed to save local draft:", err);
+        setSaveBadge("save-error", "Local save failed");
+      }
+    }
+
+    function loadDraftFromLocal() {
+      try {
+        const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed?.data) return null;
+        return {
+          savedAt: parsed.savedAt || null,
+          data: normalizeGraphData(parsed.data)
+        };
+      } catch (err) {
+        console.error("Failed to load local draft:", err);
+        return null;
+      }
+    }
+
+    function clearLocalDraft() {
+      try {
+        localStorage.removeItem(LOCAL_DRAFT_KEY);
+      } catch (err) {
+        console.error("Failed to clear local draft:", err);
+      }
+    }
+
+    function syncNodeFromDom(id) {
+      const node = getNodeById(id);
+      if (!node) return;
+
+      const labelEl = document.getElementById(`label-${id}`);
+      const descEl = document.getElementById(`desc-${id}`);
+      const statusEl = document.getElementById(`status-${id}`);
+
+      if (labelEl) node.label = (labelEl.value || "").trim() || "Unnamed";
+      if (descEl) node.description = descEl.value || "";
+      if (statusEl) node.status = statusEl.value || "pending";
+    }
+
+    function syncAllVisibleInputsToGraph(shouldRerender = false) {
+      for (const node of graphData.nodes) {
+        syncNodeFromDom(node.id);
+      }
+
+      rebuildMaps();
+      updateStats();
+
+      if (shouldRerender) {
+        renderRootPanel();
+        renderPanels();
+      }
+    }
+
+    function queueLocalAutosave() {
+      clearTimeout(localAutosaveTimer);
+      localAutosaveTimer = setTimeout(() => {
+        syncAllVisibleInputsToGraph(false);
+        saveDraftToLocal();
+      }, LOCAL_AUTOSAVE_DELAY);
+    }
+
+    function queueGitHubAutosave() {
+      clearTimeout(githubAutosaveTimer);
+
+      if (!autoSaveToGitHubEnabled()) return;
+
+      githubAutosaveTimer = setTimeout(async () => {
+        if (!hasUnsavedChanges || isSavingToGitHub) return;
+        await saveRoadmap(true);
+      }, GITHUB_AUTOSAVE_DELAY);
+    }
+
     function moveTopLevelPanel(id, direction) {
+      syncAllVisibleInputsToGraph(false);
+
       const topLevel = getChildren(rootId).slice();
       const currentIndex = topLevel.indexOf(Number(id));
       if (currentIndex === -1) return;
@@ -807,29 +1019,21 @@
 
       rebuildMaps();
       renderPanels();
-      markDirty();
+      markDirty("Reordered panel.");
     }
 
     function updateNodeFromInputs(id) {
-      const node = getNodeById(id);
-      if (!node) return;
-
-      const labelEl = document.getElementById(`label-${id}`);
-      const descEl = document.getElementById(`desc-${id}`);
-      const statusEl = document.getElementById(`status-${id}`);
-
-      node.label = (labelEl?.value || "").trim() || "Unnamed";
-      node.description = descEl?.value || "";
-      node.status = statusEl?.value || "pending";
-
+      syncNodeFromDom(id);
       rebuildMaps();
       updateStats();
       renderRootPanel();
       renderPanels();
-      markDirty();
+      markDirty("Changes applied.");
     }
 
     function addChild(id) {
+      syncAllVisibleInputsToGraph(false);
+
       const newId = graphData.nodes.length
         ? Math.max(...graphData.nodes.map(n => Number(n.id))) + 1
         : 1;
@@ -854,7 +1058,7 @@
       updateStats();
       renderRootPanel();
       renderPanels();
-      markDirty();
+      markDirty("Added new node.");
     }
 
     function deleteNode(id) {
@@ -862,6 +1066,8 @@
         alert("You can't delete the root node.");
         return;
       }
+
+      syncAllVisibleInputsToGraph(false);
 
       const idsToDelete = new Set();
       const stack = [Number(id)];
@@ -877,11 +1083,12 @@
         e => !idsToDelete.has(Number(e.from)) && !idsToDelete.has(Number(e.to))
       );
 
+      expandedNodes.delete(Number(id));
       rebuildMaps();
       updateStats();
       renderRootPanel();
       renderPanels();
-      markDirty();
+      markDirty("Deleted node.");
     }
 
     function toggleSection(id) {
@@ -1063,18 +1270,28 @@
       renderPanels();
     }
 
-    async function reloadRoadmap() {
+    async function fetchRemoteRoadmap() {
+      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      if (!res.ok) throw new Error("Could not load roadmap.json");
+      return normalizeGraphData(await res.json());
+    }
+
+    async function reloadRoadmap(force = false) {
       try {
+        if (hasUnsavedChanges && !force) {
+          setStatus("Reload skipped because you have unsaved changes.");
+          return;
+        }
+
         showLoading("Loading roadmap...");
         setStatus("Loading latest roadmap...");
 
-        const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
-          cache: "no-store"
-        });
+        const remoteData = await fetchRemoteRoadmap();
 
-        if (!res.ok) throw new Error("Could not load roadmap.json");
-
-        graphData = normalizeGraphData(await res.json());
+        graphData = remoteData;
         rebuildMaps();
         rootId = getRootId();
         updateStats();
@@ -1082,34 +1299,28 @@
         renderPanels();
 
         hideErrorPanel();
-        clearDirty();
         hideLoading();
+        clearLocalDraft();
+        markClean("Loaded latest roadmap.");
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
         showErrorPanel("Roadmap refresh failed. Try again in a moment.");
         hideLoading();
+        setSaveBadge("save-error", "Load failed");
       }
     }
 
-    async function saveRoadmap() {
+    async function saveRoadmap(isAuto = false) {
       try {
-        setStatus("Saving to GitHub...");
+        if (isSavingToGitHub) return;
 
-        const payload = {
-          nodes: graphData.nodes.map(n => ({
-            id: n.id,
-            label: n.label,
-            status: n.status,
-            description: n.description,
-            x: n.x,
-            y: n.y
-          })),
-          edges: graphData.edges.map(e => ({
-            from: e.from,
-            to: e.to
-          }))
-        };
+        syncAllVisibleInputsToGraph(false);
+        isSavingToGitHub = true;
+        setSaveBadge("save-saving", isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
+        setStatus(isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
+
+        const payload = getSerializableGraphData();
 
         const res = await fetch(SAVE_URL, {
           method: "POST",
@@ -1121,24 +1332,99 @@
         if (!res.ok) throw new Error(text || "Save failed");
 
         hideErrorPanel();
-        clearDirty();
+        clearLocalDraft();
+        hasUnsavedChanges = false;
+        saveDraftToLocal();
+        setSaveBadge("save-clean", "Saved to GitHub");
+        setStatus("Saved to GitHub successfully.");
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
         showErrorPanel("Saving failed. Check your Worker or try again.");
+        setSaveBadge("save-error", "GitHub save failed");
+      } finally {
+        isSavingToGitHub = false;
       }
     }
 
+    function discardLocalDraft() {
+      const confirmed = confirm("Discard your local draft and reload the latest GitHub roadmap?");
+      if (!confirmed) return;
+
+      clearTimeout(localAutosaveTimer);
+      clearTimeout(githubAutosaveTimer);
+      clearLocalDraft();
+      hasUnsavedChanges = false;
+      reloadRoadmap(true);
+    }
+
+    function handleEditorInputEvent(target) {
+      if (
+        !target.matches(".editorGrid input") &&
+        !target.matches(".editorGrid textarea") &&
+        !target.matches(".editorGrid select")
+      ) {
+        return;
+      }
+
+      const rawId = target.id.split("-")[1];
+      if (!rawId) return;
+
+      syncNodeFromDom(rawId);
+      rebuildMaps();
+      updateStats();
+      markDirty("Editing draft...");
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
-      const input = document.getElementById("searchInput");
-      input.addEventListener("input", () => {
-        currentSearch = input.value || "";
+      restoreSettings();
+
+      const searchInput = document.getElementById("searchInput");
+      searchInput.addEventListener("input", () => {
+        currentSearch = searchInput.value || "";
         renderPanels();
+      });
+
+      const autoSaveToggle = document.getElementById("autoSaveGitHubToggle");
+      autoSaveToggle.addEventListener("change", () => {
+        persistSettings();
+        if (autoSaveToGitHubEnabled() && hasUnsavedChanges) {
+          queueGitHubAutosave();
+          setStatus("Auto-save to GitHub enabled.");
+        } else if (!autoSaveToGitHubEnabled()) {
+          clearTimeout(githubAutosaveTimer);
+          setStatus("Auto-save to GitHub disabled.");
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        handleEditorInputEvent(event.target);
+      });
+
+      document.addEventListener("change", (event) => {
+        handleEditorInputEvent(event.target);
       });
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) reloadRoadmap();
+      if (document.hidden) {
+        syncAllVisibleInputsToGraph(false);
+        saveDraftToLocal();
+        return;
+      }
+
+      if (hasUnsavedChanges) {
+        setStatus("Returned to editor. Local draft preserved.");
+        return;
+      }
+    });
+
+    window.addEventListener("beforeunload", (event) => {
+      if (!hasUnsavedChanges) return;
+      syncAllVisibleInputsToGraph(false);
+      saveDraftToLocal();
+      event.preventDefault();
+      event.returnValue = "";
     });
 
     window.updateNodeFromInputs = updateNodeFromInputs;
@@ -1150,8 +1436,45 @@
     window.reloadRoadmap = reloadRoadmap;
     window.saveRoadmap = saveRoadmap;
     window.moveTopLevelPanel = moveTopLevelPanel;
+    window.discardLocalDraft = discardLocalDraft;
 
-    reloadRoadmap();
+    (async function init() {
+      try {
+        showLoading("Loading roadmap...");
+
+        const localDraft = loadDraftFromLocal();
+
+        if (localDraft?.data) {
+          graphData = localDraft.data;
+          rebuildMaps();
+          rootId = getRootId();
+          updateStats();
+          renderRootPanel();
+          renderPanels();
+          hideLoading();
+          hasUnsavedChanges = true;
+          setSaveBadge("save-dirty", "Recovered local draft");
+          setStatus("Recovered unsaved local draft.");
+          return;
+        }
+
+        const remoteData = await fetchRemoteRoadmap();
+        graphData = remoteData;
+        rebuildMaps();
+        rootId = getRootId();
+        updateStats();
+        renderRootPanel();
+        renderPanels();
+        hideLoading();
+        markClean("Loaded latest roadmap.");
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        showErrorPanel("Initial load failed. Please refresh or check your connection.");
+        setStatus("Initial load failed.", true);
+        setSaveBadge("save-error", "Load failed");
+      }
+    })();
   </script>
 </body>
 </html>
