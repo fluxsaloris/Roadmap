@@ -618,10 +618,18 @@
 
     .editorGrid {
       display: grid;
-      grid-template-columns: minmax(140px, 1fr) 1.6fr 140px;
+      grid-template-columns: 170px minmax(220px, 1fr) 140px;
       gap: 7px;
       margin-top: 7px;
       align-items: start;
+    }
+
+    body.fit-fields .editorGrid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    body.fit-fields .editorGrid textarea {
+      min-height: 72px;
     }
 
     .editorGrid input,
@@ -643,6 +651,7 @@
       min-height: 56px;
       resize: vertical;
       line-height: 1.4;
+      overflow: hidden;
     }
 
     .editorGrid input:focus,
@@ -773,6 +782,10 @@
       .editorGrid {
         grid-template-columns: 1fr;
       }
+
+      body.fit-fields .editorGrid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 1100px) {
@@ -890,6 +903,10 @@
             <input id="compactModeToggle" type="checkbox" />
             Compact Mode
           </label>
+          <label class="toggleWrap">
+            <input id="fitFieldsToggle" type="checkbox" />
+            Fit Fields
+          </label>
           <button class="ghostBtn" type="button" disabled>History Coming Soon</button>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
@@ -932,11 +949,12 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v7";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v8";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
     const COMPACT_MODE_KEY = "dungeon-call-roadmap-compact-mode-v1";
+    const FIT_FIELDS_KEY = "dungeon-call-roadmap-fit-fields-v1";
     const COLLAPSE_STATE_KEY = "dungeon-call-roadmap-collapse-state-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
@@ -1051,26 +1069,41 @@
       return !!document.getElementById("compactModeToggle")?.checked;
     }
 
+    function fitFieldsEnabled() {
+      return !!document.getElementById("fitFieldsToggle")?.checked;
+    }
+
     function persistSettings() {
       localStorage.setItem(AUTO_SAVE_GITHUB_KEY, autoSaveToGitHubEnabled() ? "1" : "0");
       localStorage.setItem(COMPACT_MODE_KEY, compactModeEnabled() ? "1" : "0");
+      localStorage.setItem(FIT_FIELDS_KEY, fitFieldsEnabled() ? "1" : "0");
     }
 
     function applyCompactModeUI(enabled) {
       document.body.classList.toggle("compact-mode", !!enabled);
     }
 
+    function applyFitFieldsUI(enabled) {
+      document.body.classList.toggle("fit-fields", !!enabled);
+      requestAnimationFrame(autoGrowAllTextareas);
+    }
+
     function restoreSettings() {
       const autoEnabled = localStorage.getItem(AUTO_SAVE_GITHUB_KEY) === "1";
       const compactEnabled = localStorage.getItem(COMPACT_MODE_KEY) === "1";
+      const fitFieldsStored = localStorage.getItem(FIT_FIELDS_KEY);
+      const fitEnabled = fitFieldsStored === null ? true : fitFieldsStored === "1";
 
       const autoToggle = document.getElementById("autoSaveGitHubToggle");
       const compactToggle = document.getElementById("compactModeToggle");
+      const fitToggle = document.getElementById("fitFieldsToggle");
 
       if (autoToggle) autoToggle.checked = autoEnabled;
       if (compactToggle) compactToggle.checked = compactEnabled;
+      if (fitToggle) fitToggle.checked = fitEnabled;
 
       applyCompactModeUI(compactEnabled);
+      applyFitFieldsUI(fitEnabled);
     }
 
     function restoreRemoteSaveMeta() {
@@ -1333,6 +1366,16 @@
           to: e.to
         }))
       };
+    }
+
+    function autoGrowTextarea(el) {
+      if (!el || el.tagName !== "TEXTAREA") return;
+      el.style.height = "auto";
+      el.style.height = Math.max(el.scrollHeight, fitFieldsEnabled() ? 72 : 56) + "px";
+    }
+
+    function autoGrowAllTextareas() {
+      document.querySelectorAll(".editorGrid textarea").forEach(autoGrowTextarea);
     }
 
     function saveDraftToLocal() {
@@ -1725,6 +1768,7 @@
       persistCollapseState();
       renderRootPanel();
       renderPanels();
+      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     function collapseAllSections() {
@@ -1737,6 +1781,7 @@
       persistCollapseState();
       renderRootPanel();
       renderPanels();
+      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     async function fetchRemoteRoadmap() {
@@ -1771,6 +1816,7 @@
         hideLoading();
         clearLocalDraft();
         markClean("Loaded latest roadmap.");
+        requestAnimationFrame(autoGrowAllTextareas);
       } catch (err) {
         console.error(err);
         setStatus("Failed to load roadmap.", true);
@@ -1860,6 +1906,11 @@
       syncNodeFromDom(rawId);
       rebuildMaps();
       updateStats();
+
+      if (target.tagName === "TEXTAREA") {
+        autoGrowTextarea(target);
+      }
+
       markDirty("Editing draft...");
     }
 
@@ -1874,6 +1925,7 @@
       searchInput.addEventListener("input", () => {
         currentSearch = searchInput.value || "";
         renderPanels();
+        requestAnimationFrame(autoGrowAllTextareas);
       });
 
       const autoSaveToggle = document.getElementById("autoSaveGitHubToggle");
@@ -1891,6 +1943,12 @@
       const compactModeToggle = document.getElementById("compactModeToggle");
       compactModeToggle.addEventListener("change", () => {
         applyCompactModeUI(compactModeEnabled());
+        persistSettings();
+      });
+
+      const fitFieldsToggle = document.getElementById("fitFieldsToggle");
+      fitFieldsToggle.addEventListener("change", () => {
+        applyFitFieldsUI(fitFieldsEnabled());
         persistSettings();
       });
 
@@ -1954,6 +2012,7 @@
           setSaveBadge("save-dirty", "Recovered local draft");
           setStatus("Recovered unsaved local draft.");
           updateSaveMetaUI();
+          requestAnimationFrame(autoGrowAllTextareas);
           return;
         }
 
@@ -1967,6 +2026,7 @@
         hideLoading();
         markClean("Loaded latest roadmap.");
         updateSaveMetaUI();
+        requestAnimationFrame(autoGrowAllTextareas);
       } catch (err) {
         console.error(err);
         hideLoading();
