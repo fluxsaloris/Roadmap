@@ -6,15 +6,31 @@
   <title>Dungeon Call Roadmap Editor</title>
   <style>
     :root {
-      --bg: #000;
-      --panel: rgba(18, 18, 18, 0.92);
-      --border: #2a2a2a;
-      --text: #f2f2f2;
-      --muted: #a5a5a5;
-      --accent: #BE1A48;
-      --ok: #39ff14;
-      --warn: #ffcc66;
+      --bg: #070709;
+      --bg-soft: #0d0d11;
+      --panel: rgba(18, 18, 24, 0.88);
+      --panel-2: rgba(24, 24, 31, 0.94);
+      --panel-3: rgba(31, 31, 40, 0.96);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #f4f4f7;
+      --muted: #a7a7b5;
+      --muted-2: #7f8091;
+      --accent: #be1a48;
+      --accent-soft: rgba(190, 26, 72, 0.18);
+      --accent-strong: rgba(190, 26, 72, 0.45);
+      --ok: #6ef08a;
+      --ok-soft: rgba(110, 240, 138, 0.13);
+      --warn: #ffd27a;
+      --warn-soft: rgba(255, 210, 122, 0.14);
       --error: #ff8a8a;
+      --error-soft: rgba(255, 138, 138, 0.14);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.34);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.22);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 12px;
     }
 
     * { box-sizing: border-box; }
@@ -23,14 +39,17 @@
       margin: 0;
       padding: 0;
       min-height: 100%;
-      background: #000;
+      background: var(--bg);
       color: var(--text);
-      font-family: Arial, sans-serif;
+      font-family: Inter, Arial, sans-serif;
     }
 
     body {
       position: relative;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      background:
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.03), transparent 18%),
+        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
       overflow-x: hidden;
     }
 
@@ -39,43 +58,47 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.28;
       pointer-events: none;
+      opacity: 0.16;
+      background-image:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
 
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      border: 2px solid var(--accent);
-      border-radius: 14px;
+      margin: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(190, 26, 72, 0.28);
+      box-shadow: 0 0 40px rgba(190, 26, 72, 0.08);
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.25);
-      margin: 6px;
       z-index: 1;
     }
 
     #app {
       position: relative;
       z-index: 2;
-      max-width: 1650px;
+      max-width: 1620px;
       margin: 0 auto;
-      padding: 22px 18px 40px;
+      padding: 22px 18px 42px;
     }
 
     .hero {
-      background: rgba(15, 15, 15, 0.9);
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      background: rgba(13, 13, 18, 0.86);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 24px;
       padding: 20px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
-      margin-bottom: 18px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 20px;
     }
 
     .heroTop {
@@ -91,35 +114,47 @@
       flex: 1;
     }
 
+    .eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d98aa0;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
     .heroTitle h1 {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: 34px;
-      line-height: 1.1;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
     }
 
     .heroTitle p {
-      margin: 0;
+      margin: 10px 0 0;
       color: var(--muted);
       font-size: 15px;
-      line-height: 1.5;
-      max-width: 840px;
+      line-height: 1.6;
+      max-width: 860px;
     }
 
     .topRightMeta {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: flex-start;
       justify-content: flex-end;
     }
 
     .statusBadge,
-    .saveBadge {
+    .saveBadge,
+    .infoBadge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       border-radius: 999px;
-      padding: 7px 12px;
+      padding: 8px 12px;
       font-size: 12px;
       font-weight: 700;
       border: 1px solid transparent;
@@ -127,68 +162,78 @@
     }
 
     .status-pending {
-      background: #151515;
-      border-color: #353535;
-      color: #9a9a9a;
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.10);
+      color: #c8c8d4;
     }
 
     .status-progress {
-      background: rgba(190, 26, 72, 0.16);
-      border-color: rgba(190, 26, 72, 0.55);
-      color: #ffb3c9;
+      background: rgba(190, 26, 72, 0.14);
+      border-color: rgba(190, 26, 72, 0.45);
+      color: #ffc0d1;
     }
 
     .status-complete {
-      background: rgba(57, 255, 20, 0.16);
-      border-color: rgba(57, 255, 20, 0.72);
-      color: #b8ffab;
+      background: rgba(110, 240, 138, 0.12);
+      border-color: rgba(110, 240, 138, 0.45);
+      color: #c7ffd4;
     }
 
     .save-clean {
-      background: rgba(57, 255, 20, 0.12);
-      border-color: rgba(57, 255, 20, 0.45);
-      color: #c8ffbd;
+      background: var(--ok-soft);
+      border-color: rgba(110, 240, 138, 0.34);
+      color: #cbffd6;
     }
 
     .save-dirty {
-      background: rgba(255, 204, 102, 0.12);
-      border-color: rgba(255, 204, 102, 0.45);
-      color: #ffe3a3;
+      background: var(--warn-soft);
+      border-color: rgba(255, 210, 122, 0.35);
+      color: #ffe6b2;
     }
 
     .save-saving {
-      background: rgba(190, 26, 72, 0.16);
-      border-color: rgba(190, 26, 72, 0.55);
-      color: #ffb3c9;
+      background: rgba(190, 26, 72, 0.14);
+      border-color: rgba(190, 26, 72, 0.45);
+      color: #ffc0d1;
     }
 
     .save-error {
-      background: rgba(255, 80, 80, 0.12);
-      border-color: rgba(255, 80, 80, 0.45);
-      color: #ffb6b6;
+      background: var(--error-soft);
+      border-color: rgba(255, 138, 138, 0.42);
+      color: #ffd0d0;
+    }
+
+    .infoBadge {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.08);
+      color: #cfd0db;
+      font-weight: 600;
     }
 
     .heroControls {
-      margin-top: 16px;
+      margin-top: 18px;
       display: grid;
-      grid-template-columns: 1.2fr auto;
+      grid-template-columns: minmax(260px, 1.2fr) auto;
       gap: 12px;
+      align-items: start;
     }
 
     #searchInput {
       width: 100%;
-      background: #111;
-      color: #e5e5e5;
-      border: 1px solid #303030;
-      border-radius: 12px;
-      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 13px 14px;
       font-size: 14px;
       outline: none;
+      transition: 0.18s ease;
     }
 
     #searchInput:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+      border-color: rgba(190, 26, 72, 0.5);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.12);
+      background: rgba(255,255,255,0.055);
     }
 
     .toolbar {
@@ -199,40 +244,70 @@
     }
 
     button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 10px;
+      appearance: none;
+      background: rgba(255,255,255,0.04);
+      color: #e5e5ec;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
       padding: 11px 14px;
       font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
+      transition: 0.18s ease;
+      box-shadow: none;
     }
 
-    button:hover { background: #171717; }
+    button:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.16);
+      transform: translateY(-1px);
+    }
+
     button:disabled {
-      opacity: 0.45;
+      opacity: 0.42;
       cursor: not-allowed;
+      transform: none;
+    }
+
+    .primaryBtn {
+      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
+      border-color: rgba(255,255,255,0.06);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(190, 26, 72, 0.24);
+    }
+
+    .primaryBtn:hover {
+      background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
+      border-color: rgba(255,255,255,0.08);
     }
 
     .dangerBtn {
-      border-color: rgba(190, 26, 72, 0.45);
-      color: #ffb3c9;
+      border-color: rgba(255, 138, 138, 0.28);
+      color: #ffcbcb;
+      background: rgba(255, 138, 138, 0.06);
+    }
+
+    .dangerBtn:hover {
+      background: rgba(255, 138, 138, 0.10);
+      border-color: rgba(255, 138, 138, 0.42);
     }
 
     .subtleBtn {
-      color: #cfcfcf;
+      color: #d1d2dd;
     }
 
     .toggleWrap {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: #111;
-      border: 1px solid #2b2b2b;
-      border-radius: 10px;
+      gap: 9px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
       padding: 10px 12px;
-      color: #d8d8d8;
+      color: #ddddE7;
       font-size: 13px;
+      font-weight: 600;
+      min-height: 44px;
     }
 
     .toggleWrap input {
@@ -240,47 +315,62 @@
     }
 
     .stats {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(110px, 1fr));
       gap: 12px;
-      margin-top: 16px;
+      margin-top: 18px;
     }
 
     .statCard {
-      background: rgba(20,20,20,0.9);
-      border: 1px solid #2c2c2c;
-      border-radius: 12px;
-      padding: 12px 14px;
-      min-width: 110px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 14px 14px 13px;
+      box-shadow: var(--shadow-md);
     }
 
     .statValue {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: #fff;
+      letter-spacing: -0.02em;
     }
 
     .statLabel {
-      margin-top: 4px;
+      margin-top: 5px;
       font-size: 11px;
-      color: #9d9d9d;
+      color: var(--muted-2);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .statusMetaRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      align-items: center;
     }
 
     #statusLine {
-      margin-top: 12px;
       font-size: 12px;
-      color: #999;
+      color: var(--muted);
+    }
+
+    #saveMetaLine {
+      font-size: 12px;
+      color: var(--muted-2);
     }
 
     .rootCard {
-      background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
-      border: 1px solid #313131;
-      border-radius: 18px;
-      padding: 20px;
+      background: linear-gradient(180deg, rgba(28,28,35,0.94), rgba(16,16,21,0.95));
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      padding: 22px;
       margin-bottom: 18px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.35);
+      box-shadow: var(--shadow-lg);
     }
 
     .rootHeader {
@@ -289,13 +379,14 @@
       gap: 14px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .rootTitle {
-      font-size: 28px;
-      font-weight: 700;
+      font-size: 30px;
+      font-weight: 800;
       margin: 0;
+      letter-spacing: -0.02em;
     }
 
     #panels {
@@ -306,29 +397,28 @@
     }
 
     .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(20,20,26,0.95), rgba(16,16,21,0.96));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
       padding: 18px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      box-shadow: var(--shadow-md);
       min-height: 240px;
       height: fit-content;
       align-self: start;
     }
 
     .panel.status-panel-pending {
-      border-color: #2a2a2a;
+      border-color: rgba(255,255,255,0.08);
     }
 
     .panel.status-panel-progress {
-      border-color: rgba(190, 26, 72, 0.35);
-      box-shadow: 0 0 18px rgba(190, 26, 72, 0.08);
+      border-color: rgba(190, 26, 72, 0.28);
+      box-shadow: 0 10px 28px rgba(190, 26, 72, 0.08);
     }
 
     .panel.status-panel-complete {
-      border-color: rgba(57, 255, 20, 0.42);
-      box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+      border-color: rgba(110, 240, 138, 0.22);
+      box-shadow: 0 10px 28px rgba(110, 240, 138, 0.06);
     }
 
     .panel.hiddenBySearch {
@@ -346,13 +436,14 @@
     .panelHeaderText h2 {
       margin: 0 0 8px;
       font-size: 22px;
-      line-height: 1.2;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
     }
 
     .panelDescription {
       margin: 0;
-      color: #bdbdbd;
-      line-height: 1.5;
+      color: #bebecb;
+      line-height: 1.58;
       font-size: 14px;
     }
 
@@ -368,20 +459,21 @@
     }
 
     .progressWrap {
-      margin: 12px 0 14px;
+      margin: 14px 0 16px;
     }
 
     .progressText {
       font-size: 12px;
-      color: #bdbdbd;
-      margin-bottom: 6px;
+      color: #c0c1cd;
+      margin-bottom: 7px;
+      font-weight: 600;
     }
 
     .progressTrack {
       width: 100%;
       height: 10px;
-      background: #101010;
-      border: 1px solid #2a2a2a;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -389,32 +481,33 @@
     .progressFill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #BE1A48, #ff4f86);
+      background: linear-gradient(90deg, #be1a48, #ff5c90);
       border-radius: 999px;
       transition: width 0.25s ease;
     }
 
     .panel.status-panel-complete .progressFill,
     .treeNode.completeNode .progressFill {
-      background: linear-gradient(90deg, #39ff14, #8dff77);
+      background: linear-gradient(90deg, #52e878, #8dffab);
     }
 
     .treeNode {
-      background: rgba(22,22,22,0.96);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
+      background: linear-gradient(180deg, rgba(28,28,34,0.98), rgba(20,20,25,0.98));
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px;
+      padding: 14px;
+      margin-top: 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
     }
 
     .treeNode.completeNode {
-      border-color: rgba(57, 255, 20, 0.34);
-      box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+      border-color: rgba(110, 240, 138, 0.24);
+      box-shadow: 0 6px 18px rgba(110, 240, 138, 0.05);
     }
 
     .treeNode.matched {
-      border-color: rgba(190, 26, 72, 0.62);
-      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.24);
+      border-color: rgba(190, 26, 72, 0.46);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.16);
     }
 
     .treeNodeHeader {
@@ -428,27 +521,28 @@
 
     .treeNodeTitle {
       margin: 0;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.35;
+      letter-spacing: -0.01em;
     }
 
     .childrenWrap {
-      margin-top: 10px;
+      margin-top: 12px;
       padding-left: 14px;
-      border-left: 1px solid #2a2a2a;
+      border-left: 1px solid rgba(255,255,255,0.07);
     }
 
     .nodeActions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .editorGrid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 8px;
+      gap: 9px;
       margin-top: 10px;
     }
 
@@ -456,26 +550,29 @@
     .editorGrid textarea,
     .editorGrid select {
       width: 100%;
-      background: #111;
-      color: #e5e5e5;
-      border: 1px solid #303030;
-      border-radius: 10px;
-      padding: 10px 12px;
+      background: rgba(255,255,255,0.045);
+      color: #ededf4;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 11px 12px;
       font-size: 14px;
       outline: none;
       font-family: inherit;
+      transition: 0.18s ease;
     }
 
     .editorGrid textarea {
-      min-height: 90px;
+      min-height: 100px;
       resize: vertical;
+      line-height: 1.5;
     }
 
     .editorGrid input:focus,
     .editorGrid textarea:focus,
     .editorGrid select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+      border-color: rgba(190, 26, 72, 0.48);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.11);
+      background: rgba(255,255,255,0.06);
     }
 
     .metaChip {
@@ -483,16 +580,16 @@
       align-items: center;
       gap: 8px;
       border-radius: 999px;
-      padding: 7px 12px;
+      padding: 7px 11px;
       font-size: 12px;
       font-weight: 700;
-      border: 1px solid #333;
-      background: #141414;
-      color: #b6b6b6;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: #c1c2ce;
     }
 
     .emptyState {
-      color: #888;
+      color: var(--muted-2);
       font-size: 13px;
       padding-top: 10px;
     }
@@ -500,7 +597,8 @@
     #loadingOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.84);
+      background: rgba(4,4,8,0.82);
+      backdrop-filter: blur(8px);
       z-index: 100;
       display: flex;
       align-items: center;
@@ -508,28 +606,27 @@
     }
 
     #loadingCard {
-      background: rgba(20,20,20,0.96);
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      padding: 24px 28px;
+      background: rgba(18,18,24,0.96);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 26px 30px;
       text-align: center;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 20px rgba(0,0,0,0.45);
-      min-width: 240px;
+      box-shadow: var(--shadow-lg);
+      min-width: 260px;
     }
 
     #loadingText {
       font-size: 14px;
-      color: #ddd;
+      color: #e2e2ea;
     }
 
     .spinner {
       width: 34px;
       height: 34px;
-      border: 3px solid #333;
-      border-top: 3px solid #BE1A48;
+      border: 3px solid rgba(255,255,255,0.10);
+      border-top: 3px solid #be1a48;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.95s linear infinite;
       margin: 0 auto 14px;
     }
 
@@ -538,13 +635,13 @@
       top: 18px;
       right: 18px;
       z-index: 40;
-      width: min(360px, calc(100vw - 40px));
-      background: rgba(35, 12, 18, 0.96);
-      border: 1px solid rgba(190, 26, 72, 0.5);
-      border-radius: 14px;
+      width: min(380px, calc(100vw - 40px));
+      background: rgba(36, 13, 18, 0.96);
+      border: 1px solid rgba(255, 138, 138, 0.28);
+      border-radius: 16px;
       padding: 14px;
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
-      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
       display: none;
     }
 
@@ -554,15 +651,15 @@
 
     #errorPanelTitle {
       font-size: 14px;
-      font-weight: 700;
-      color: #ffb3c9;
+      font-weight: 800;
+      color: #ffced6;
       margin-bottom: 6px;
     }
 
     #errorPanelText {
       font-size: 13px;
-      line-height: 1.45;
-      color: #f2d7df;
+      line-height: 1.5;
+      color: #f6d9df;
     }
 
     @keyframes spin {
@@ -570,6 +667,11 @@
     }
 
     @media (max-width: 1100px) {
+      .hero {
+        position: relative;
+        top: 0;
+      }
+
       #panels {
         grid-template-columns: 1fr;
       }
@@ -584,6 +686,38 @@
 
       .topRightMeta {
         justify-content: flex-start;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(110px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      #app {
+        padding: 14px 12px 28px;
+      }
+
+      .hero,
+      .rootCard,
+      .panel {
+        padding: 16px;
+      }
+
+      .heroTitle h1 {
+        font-size: 28px;
+      }
+
+      .rootTitle {
+        font-size: 24px;
+      }
+
+      .panelHeaderText h2 {
+        font-size: 20px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
       }
     }
   </style>
@@ -605,13 +739,15 @@
     <section class="hero">
       <div class="heroTop">
         <div class="heroTitle">
+          <div class="eyebrow">Roadmap workspace</div>
           <h1>Dungeon Call Editor</h1>
-          <p>Panel-based roadmap editor with autosave, draft recovery, nested progress bars, and safe reload handling.</p>
+          <p>Panel-based roadmap editor with local draft recovery, safer reload behavior, auto-save options, and a cleaner workflow for frequent updates.</p>
         </div>
 
         <div class="topRightMeta">
           <div id="rootStatusBadge" class="statusBadge status-progress">In Progress</div>
           <div id="saveStateBadge" class="saveBadge save-clean">All changes saved locally</div>
+          <div id="lastRemoteSaveBadge" class="infoBadge">GitHub: not saved yet</div>
         </div>
       </div>
 
@@ -624,7 +760,7 @@
           </label>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
-          <button onclick="saveRoadmap()">Save to GitHub</button>
+          <button class="primaryBtn" onclick="saveRoadmap()">Save to GitHub</button>
           <button onclick="reloadRoadmap(true)">Reload</button>
           <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
         </div>
@@ -633,15 +769,15 @@
       <div class="stats">
         <div class="statCard">
           <div class="statValue" id="statTotal">0</div>
-          <div class="statLabel">Total</div>
+          <div class="statLabel">Total Nodes</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statComplete">0</div>
-          <div class="statLabel">Done</div>
+          <div class="statLabel">Complete</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statProgress">0</div>
-          <div class="statLabel">Progress</div>
+          <div class="statLabel">In Progress</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statPending">0</div>
@@ -649,7 +785,10 @@
         </div>
       </div>
 
-      <div id="statusLine">Loading roadmap...</div>
+      <div class="statusMetaRow">
+        <div id="statusLine">Loading roadmap...</div>
+        <div id="saveMetaLine">Local draft not saved yet.</div>
+      </div>
     </section>
 
     <section id="rootPanel" class="rootCard"></section>
@@ -660,8 +799,9 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v2";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v3";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
+    const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
 
@@ -675,7 +815,9 @@
     let hasUnsavedChanges = false;
     let isSavingToGitHub = false;
     let isLoading = false;
-    let lastSavedAt = null;
+
+    let lastLocalSaveAt = null;
+    let lastRemoteSaveAt = null;
 
     let localAutosaveTimer = null;
     let githubAutosaveTimer = null;
@@ -694,7 +836,7 @@
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
       el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#999";
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
     }
 
     function showErrorPanel(message) {
@@ -712,6 +854,37 @@
       el.textContent = text;
     }
 
+    function formatTimestamp(ts) {
+      if (!ts) return "never";
+      try {
+        return new Date(ts).toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      } catch {
+        return "unknown";
+      }
+    }
+
+    function updateSaveMetaUI() {
+      const saveMetaLine = document.getElementById("saveMetaLine");
+      const remoteBadge = document.getElementById("lastRemoteSaveBadge");
+
+      const localText = lastLocalSaveAt
+        ? `Local draft: ${formatTimestamp(lastLocalSaveAt)}`
+        : "Local draft not saved yet.";
+
+      const remoteText = lastRemoteSaveAt
+        ? `GitHub: ${formatTimestamp(lastRemoteSaveAt)}`
+        : "GitHub: not saved yet";
+
+      saveMetaLine.textContent = `${localText} • ${remoteText}`;
+      remoteBadge.textContent = remoteText;
+    }
+
     function autoSaveToGitHubEnabled() {
       return !!document.getElementById("autoSaveGitHubToggle")?.checked;
     }
@@ -726,18 +899,35 @@
       if (toggle) toggle.checked = enabled;
     }
 
+    function restoreRemoteSaveMeta() {
+      const saved = localStorage.getItem(LAST_REMOTE_SAVE_KEY);
+      if (!saved) return;
+      const numeric = Number(saved);
+      if (!Number.isNaN(numeric) && numeric > 0) {
+        lastRemoteSaveAt = numeric;
+      }
+      updateSaveMetaUI();
+    }
+
+    function persistRemoteSaveMeta() {
+      if (!lastRemoteSaveAt) return;
+      localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt));
+    }
+
     function markDirty(reason = "Unsaved changes") {
       hasUnsavedChanges = true;
       setSaveBadge("save-dirty", "Unsaved changes");
       setStatus(reason);
       queueLocalAutosave();
       queueGitHubAutosave();
+      updateSaveMetaUI();
     }
 
     function markClean(message = "All changes saved locally") {
       hasUnsavedChanges = false;
       setSaveBadge("save-clean", message);
       setStatus(message);
+      updateSaveMetaUI();
     }
 
     function normalizeGraphData(raw) {
@@ -917,10 +1107,14 @@
           data: getSerializableGraphData()
         };
         localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
-        lastSavedAt = payload.savedAt;
+        lastLocalSaveAt = payload.savedAt;
         if (!isSavingToGitHub) {
-          setSaveBadge(hasUnsavedChanges ? "save-dirty" : "save-clean", hasUnsavedChanges ? "Unsaved changes" : "All changes saved locally");
+          setSaveBadge(
+            hasUnsavedChanges ? "save-dirty" : "save-clean",
+            hasUnsavedChanges ? "Unsaved changes" : "All changes saved locally"
+          );
         }
+        updateSaveMetaUI();
       } catch (err) {
         console.error("Failed to save local draft:", err);
         setSaveBadge("save-error", "Local save failed");
@@ -1334,9 +1528,12 @@
         hideErrorPanel();
         clearLocalDraft();
         hasUnsavedChanges = false;
+        lastRemoteSaveAt = Date.now();
+        persistRemoteSaveMeta();
         saveDraftToLocal();
         setSaveBadge("save-clean", "Saved to GitHub");
         setStatus("Saved to GitHub successfully.");
+        updateSaveMetaUI();
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
@@ -1355,6 +1552,8 @@
       clearTimeout(githubAutosaveTimer);
       clearLocalDraft();
       hasUnsavedChanges = false;
+      lastLocalSaveAt = null;
+      updateSaveMetaUI();
       reloadRoadmap(true);
     }
 
@@ -1378,6 +1577,8 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       restoreSettings();
+      restoreRemoteSaveMeta();
+      updateSaveMetaUI();
 
       const searchInput = document.getElementById("searchInput");
       searchInput.addEventListener("input", () => {
@@ -1446,6 +1647,7 @@
 
         if (localDraft?.data) {
           graphData = localDraft.data;
+          lastLocalSaveAt = localDraft.savedAt || null;
           rebuildMaps();
           rootId = getRootId();
           updateStats();
@@ -1455,6 +1657,7 @@
           hasUnsavedChanges = true;
           setSaveBadge("save-dirty", "Recovered local draft");
           setStatus("Recovered unsaved local draft.");
+          updateSaveMetaUI();
           return;
         }
 
@@ -1467,6 +1670,7 @@
         renderPanels();
         hideLoading();
         markClean("Loaded latest roadmap.");
+        updateSaveMetaUI();
       } catch (err) {
         console.error(err);
         hideLoading();
