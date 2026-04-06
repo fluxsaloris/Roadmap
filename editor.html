@@ -210,6 +210,41 @@
       font-weight: 600;
     }
 
+    .workspaceStrip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .workspaceCard {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+      border-radius: 16px;
+      padding: 12px 14px;
+      min-height: 74px;
+    }
+
+    .workspaceLabel {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-2);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .workspaceValue {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e6e7ee;
+      word-break: break-word;
+    }
+
+    .workspaceMuted {
+      color: var(--muted);
+    }
+
     .heroControls {
       margin-top: 18px;
       display: grid;
@@ -296,6 +331,11 @@
       color: #d1d2dd;
     }
 
+    .ghostBtn {
+      background: rgba(255,255,255,0.02);
+      color: #cfd1db;
+    }
+
     .toggleWrap {
       display: inline-flex;
       align-items: center;
@@ -304,7 +344,7 @@
       border: 1px solid rgba(255,255,255,0.10);
       border-radius: 12px;
       padding: 10px 12px;
-      color: #ddddE7;
+      color: #dddde7;
       font-size: 13px;
       font-weight: 600;
       min-height: 44px;
@@ -539,6 +579,17 @@
       margin-top: 12px;
     }
 
+    .actionGroup {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .actionGroup.secondary {
+      padding-top: 2px;
+    }
+
     .editorGrid {
       display: grid;
       grid-template-columns: 1fr;
@@ -691,6 +742,10 @@
       .stats {
         grid-template-columns: repeat(2, minmax(110px, 1fr));
       }
+
+      .workspaceStrip {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 640px) {
@@ -751,6 +806,23 @@
         </div>
       </div>
 
+      <div class="workspaceStrip">
+        <div class="workspaceCard">
+          <div class="workspaceLabel">Latest snapshot version</div>
+          <div id="versionInfoValue" class="workspaceValue workspaceMuted">No snapshot created in this session yet.</div>
+        </div>
+        <div class="workspaceCard">
+          <div class="workspaceLabel">Latest snapshot file</div>
+          <div id="snapshotPathValue" class="workspaceValue workspaceMuted">No snapshot path available yet.</div>
+        </div>
+        <div class="workspaceCard">
+          <div class="workspaceLabel">History tools</div>
+          <div class="workspaceValue">
+            History and diff viewer planned in Phase 2.
+          </div>
+        </div>
+      </div>
+
       <div class="heroControls">
         <input id="searchInput" type="text" placeholder="Search roadmap panels and items..." autocomplete="off" />
         <div class="toolbar">
@@ -758,6 +830,7 @@
             <input id="autoSaveGitHubToggle" type="checkbox" />
             Auto-save to GitHub
           </label>
+          <button class="ghostBtn" type="button" disabled>History Coming Soon</button>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
           <button class="primaryBtn" onclick="saveRoadmap()">Save to GitHub</button>
@@ -799,9 +872,10 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v3";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v4";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
-    const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v1";
+    const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
+    const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
 
@@ -814,10 +888,11 @@
     let currentSearch = "";
     let hasUnsavedChanges = false;
     let isSavingToGitHub = false;
-    let isLoading = false;
 
     let lastLocalSaveAt = null;
     let lastRemoteSaveAt = null;
+    let lastVersionId = null;
+    let lastSnapshotPath = null;
 
     let localAutosaveTimer = null;
     let githubAutosaveTimer = null;
@@ -825,12 +900,10 @@
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
       document.getElementById("loadingOverlay").style.display = "flex";
-      isLoading = true;
     }
 
     function hideLoading() {
       document.getElementById("loadingOverlay").style.display = "none";
-      isLoading = false;
     }
 
     function setStatus(text, isError = false) {
@@ -869,6 +942,27 @@
       }
     }
 
+    function updateWorkspaceInfoUI() {
+      const versionEl = document.getElementById("versionInfoValue");
+      const snapshotEl = document.getElementById("snapshotPathValue");
+
+      if (lastVersionId) {
+        versionEl.textContent = lastVersionId;
+        versionEl.className = "workspaceValue";
+      } else {
+        versionEl.textContent = "No snapshot created in this session yet.";
+        versionEl.className = "workspaceValue workspaceMuted";
+      }
+
+      if (lastSnapshotPath) {
+        snapshotEl.textContent = lastSnapshotPath;
+        snapshotEl.className = "workspaceValue";
+      } else {
+        snapshotEl.textContent = "No snapshot path available yet.";
+        snapshotEl.className = "workspaceValue workspaceMuted";
+      }
+    }
+
     function updateSaveMetaUI() {
       const saveMetaLine = document.getElementById("saveMetaLine");
       const remoteBadge = document.getElementById("lastRemoteSaveBadge");
@@ -883,6 +977,7 @@
 
       saveMetaLine.textContent = `${localText} • ${remoteText}`;
       remoteBadge.textContent = remoteText;
+      updateWorkspaceInfoUI();
     }
 
     function autoSaveToGitHubEnabled() {
@@ -906,12 +1001,39 @@
       if (!Number.isNaN(numeric) && numeric > 0) {
         lastRemoteSaveAt = numeric;
       }
-      updateSaveMetaUI();
     }
 
     function persistRemoteSaveMeta() {
       if (!lastRemoteSaveAt) return;
       localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt));
+    }
+
+    function restoreSnapshotMeta() {
+      try {
+        const raw = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          lastVersionId = parsed.version || null;
+          lastSnapshotPath = parsed.snapshotPath || null;
+        }
+      } catch (err) {
+        console.error("Failed to restore snapshot meta:", err);
+      }
+    }
+
+    function persistSnapshotMeta() {
+      try {
+        localStorage.setItem(
+          LAST_SNAPSHOT_META_KEY,
+          JSON.stringify({
+            version: lastVersionId,
+            snapshotPath: lastSnapshotPath
+          })
+        );
+      } catch (err) {
+        console.error("Failed to persist snapshot meta:", err);
+      }
     }
 
     function markDirty(reason = "Unsaved changes") {
@@ -1343,10 +1465,16 @@
           </div>
 
           <div class="nodeActions">
-            <button onclick="updateNodeFromInputs(${id})">Apply</button>
-            <button onclick="addChild(${id})">Add Child</button>
-            ${hasChildren ? `<button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>` : ""}
-            ${Number(id) !== Number(rootId) ? `<button class="dangerBtn" onclick="deleteNode(${id})">Delete</button>` : ""}
+            <div class="actionGroup">
+              <button onclick="updateNodeFromInputs(${id})">Apply</button>
+              <button onclick="addChild(${id})">Add Child</button>
+              ${hasChildren ? `<button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>` : ""}
+            </div>
+            ${Number(id) !== Number(rootId) ? `
+              <div class="actionGroup secondary">
+                <button class="dangerBtn" onclick="deleteNode(${id})">Delete</button>
+              </div>
+            ` : ""}
           </div>
 
           ${hasChildren && isExpanded ? `<div class="childrenWrap">${children.map(childId => renderTreeNode(childId, search)).join("")}</div>` : ""}
@@ -1385,8 +1513,10 @@
         </div>
 
         <div class="nodeActions">
-          <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
-          <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
+          <div class="actionGroup">
+            <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
+            <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
+          </div>
         </div>
       `;
     }
@@ -1434,11 +1564,15 @@
             </div>
 
             <div class="nodeActions">
-              <button onclick="updateNodeFromInputs(${id})">Apply</button>
-              <button onclick="addChild(${id})">Add Child</button>
-              <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
-              <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
-              <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
+              <div class="actionGroup">
+                <button onclick="updateNodeFromInputs(${id})">Apply</button>
+                <button onclick="addChild(${id})">Add Child</button>
+                <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
+                <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
+              </div>
+              <div class="actionGroup secondary">
+                <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
+              </div>
             </div>
 
             <div class="panelBody">
@@ -1522,17 +1656,30 @@
           body: JSON.stringify({ data: payload })
         });
 
-        const text = await res.text();
-        if (!res.ok) throw new Error(text || "Save failed");
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          const fallbackText = json && json.error ? json.error : "Save failed";
+          throw new Error(fallbackText);
+        }
 
         hideErrorPanel();
         clearLocalDraft();
         hasUnsavedChanges = false;
-        lastRemoteSaveAt = Date.now();
+
+        lastRemoteSaveAt = json && json.savedAt ? Date.parse(json.savedAt) || Date.now() : Date.now();
+        lastVersionId = json && json.version ? json.version : null;
+        lastSnapshotPath = json && json.snapshotPath ? json.snapshotPath : null;
+
         persistRemoteSaveMeta();
+        persistSnapshotMeta();
         saveDraftToLocal();
+
         setSaveBadge("save-clean", "Saved to GitHub");
-        setStatus("Saved to GitHub successfully.");
+        setStatus(
+          lastVersionId
+            ? `Saved to GitHub successfully. Snapshot ${lastVersionId} created.`
+            : "Saved to GitHub successfully."
+        );
         updateSaveMetaUI();
       } catch (err) {
         console.error(err);
@@ -1578,6 +1725,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       restoreSettings();
       restoreRemoteSaveMeta();
+      restoreSnapshotMeta();
       updateSaveMetaUI();
 
       const searchInput = document.getElementById("searchInput");
@@ -1616,7 +1764,6 @@
 
       if (hasUnsavedChanges) {
         setStatus("Returned to editor. Local draft preserved.");
-        return;
       }
     });
 
