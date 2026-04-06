@@ -8,11 +8,10 @@
     :root {
       --bg: #070709;
       --bg-soft: #0d0d11;
-      --panel: rgba(18, 18, 24, 0.88);
-      --panel-2: rgba(24, 24, 31, 0.94);
-      --panel-3: rgba(31, 31, 40, 0.96);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-strong: rgba(255, 255, 255, 0.14);
+      --surface: rgba(20, 20, 26, 0.92);
+      --surface-soft: rgba(20, 20, 26, 0.72);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.11);
       --text: #f4f4f7;
       --muted: #a7a7b5;
       --muted-2: #7f8091;
@@ -25,8 +24,8 @@
       --warn-soft: rgba(255, 210, 122, 0.14);
       --error: #ff8a8a;
       --error-soft: rgba(255, 138, 138, 0.14);
-      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.34);
-      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.22);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
       --radius-xl: 22px;
       --radius-lg: 18px;
       --radius-md: 14px;
@@ -47,8 +46,8 @@
     body {
       position: relative;
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.03), transparent 18%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
       overflow-x: hidden;
     }
@@ -59,7 +58,7 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      opacity: 0.16;
+      opacity: 0.12;
       background-image:
         radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
         radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
@@ -73,8 +72,8 @@
       inset: 0;
       margin: 8px;
       border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.28);
-      box-shadow: 0 0 40px rgba(190, 26, 72, 0.08);
+      border: 1px solid rgba(190, 26, 72, 0.12);
+      box-shadow: 0 0 24px rgba(190, 26, 72, 0.05);
       pointer-events: none;
       z-index: 1;
     }
@@ -84,64 +83,65 @@
       z-index: 2;
       max-width: 1620px;
       margin: 0 auto;
-      padding: 22px 18px 42px;
+      padding: 18px 16px 34px;
     }
 
     .hero {
       position: sticky;
-      top: 12px;
+      top: 8px;
       z-index: 20;
-      background: rgba(13, 13, 18, 0.86);
+      background: rgba(13, 13, 18, 0.65);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 20px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 20px;
+      border-radius: 18px;
+      padding: 14px 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 14px;
+      transition: padding 0.18s ease, border-radius 0.18s ease, background 0.18s ease;
     }
 
     .heroTop {
       display: flex;
-      gap: 18px;
+      gap: 14px;
       align-items: flex-start;
       justify-content: space-between;
       flex-wrap: wrap;
     }
 
     .heroTitle {
-      min-width: 320px;
+      min-width: 300px;
       flex: 1;
     }
 
     .eyebrow {
       display: inline-block;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: #d98aa0;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-weight: 700;
     }
 
     .heroTitle h1 {
       margin: 0;
-      font-size: 34px;
+      font-size: 26px;
       line-height: 1.05;
       letter-spacing: -0.02em;
     }
 
     .heroTitle p {
-      margin: 10px 0 0;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: 13.5px;
+      line-height: 1.55;
       max-width: 860px;
     }
 
     .topRightMeta {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       align-items: flex-start;
       justify-content: flex-end;
@@ -154,7 +154,7 @@
       align-items: center;
       gap: 8px;
       border-radius: 999px;
-      padding: 8px 12px;
+      padding: 7px 11px;
       font-size: 12px;
       font-weight: 700;
       border: 1px solid transparent;
@@ -163,49 +163,49 @@
 
     .status-pending {
       background: rgba(255, 255, 255, 0.04);
-      border-color: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.08);
       color: #c8c8d4;
     }
 
     .status-progress {
-      background: rgba(190, 26, 72, 0.14);
-      border-color: rgba(190, 26, 72, 0.45);
+      background: rgba(190, 26, 72, 0.12);
+      border-color: rgba(190, 26, 72, 0.30);
       color: #ffc0d1;
     }
 
     .status-complete {
       background: rgba(110, 240, 138, 0.12);
-      border-color: rgba(110, 240, 138, 0.45);
+      border-color: rgba(110, 240, 138, 0.34);
       color: #c7ffd4;
     }
 
     .save-clean {
       background: var(--ok-soft);
-      border-color: rgba(110, 240, 138, 0.34);
+      border-color: rgba(110, 240, 138, 0.28);
       color: #cbffd6;
     }
 
     .save-dirty {
       background: var(--warn-soft);
-      border-color: rgba(255, 210, 122, 0.35);
+      border-color: rgba(255, 210, 122, 0.28);
       color: #ffe6b2;
     }
 
     .save-saving {
-      background: rgba(190, 26, 72, 0.14);
-      border-color: rgba(190, 26, 72, 0.45);
+      background: rgba(190, 26, 72, 0.12);
+      border-color: rgba(190, 26, 72, 0.30);
       color: #ffc0d1;
     }
 
     .save-error {
       background: var(--error-soft);
-      border-color: rgba(255, 138, 138, 0.42);
+      border-color: rgba(255, 138, 138, 0.34);
       color: #ffd0d0;
     }
 
     .infoBadge {
       background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.07);
       color: #cfd0db;
       font-weight: 600;
     }
@@ -214,19 +214,19 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     .workspaceCard {
-      border: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
-      border-radius: 16px;
-      padding: 12px 14px;
-      min-height: 74px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.025);
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-height: 66px;
     }
 
     .workspaceLabel {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted-2);
@@ -236,7 +236,7 @@
 
     .workspaceValue {
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.45;
       color: #e6e7ee;
       word-break: break-word;
     }
@@ -246,10 +246,10 @@
     }
 
     .heroControls {
-      margin-top: 18px;
+      margin-top: 12px;
       display: grid;
-      grid-template-columns: minmax(260px, 1.2fr) auto;
-      gap: 12px;
+      grid-template-columns: minmax(240px, 1.15fr) auto;
+      gap: 10px;
       align-items: start;
     }
 
@@ -257,23 +257,23 @@
       width: 100%;
       background: rgba(255,255,255,0.04);
       color: var(--text);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px 13px;
       font-size: 14px;
       outline: none;
       transition: 0.18s ease;
     }
 
     #searchInput:focus {
-      border-color: rgba(190, 26, 72, 0.5);
-      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.12);
-      background: rgba(255,255,255,0.055);
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
+      background: rgba(255,255,255,0.05);
     }
 
     .toolbar {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
@@ -282,9 +282,9 @@
       appearance: none;
       background: rgba(255,255,255,0.04);
       color: #e5e5ec;
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      padding: 11px 14px;
+      padding: 10px 13px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -293,8 +293,8 @@
     }
 
     button:hover {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14);
       transform: translateY(-1px);
     }
 
@@ -306,9 +306,9 @@
 
     .primaryBtn {
       background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
-      border-color: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.05);
       color: #fff;
-      box-shadow: 0 8px 20px rgba(190, 26, 72, 0.24);
+      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
     }
 
     .primaryBtn:hover {
@@ -317,14 +317,14 @@
     }
 
     .dangerBtn {
-      border-color: rgba(255, 138, 138, 0.28);
+      border-color: rgba(255, 138, 138, 0.26);
       color: #ffcbcb;
-      background: rgba(255, 138, 138, 0.06);
+      background: rgba(255, 138, 138, 0.05);
     }
 
     .dangerBtn:hover {
-      background: rgba(255, 138, 138, 0.10);
-      border-color: rgba(255, 138, 138, 0.42);
+      background: rgba(255, 138, 138, 0.09);
+      border-color: rgba(255, 138, 138, 0.36);
     }
 
     .subtleBtn {
@@ -339,15 +339,15 @@
     .toggleWrap {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
+      gap: 8px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 9px 11px;
       color: #dddde7;
       font-size: 13px;
       font-weight: 600;
-      min-height: 44px;
+      min-height: 42px;
     }
 
     .toggleWrap input {
@@ -357,28 +357,28 @@
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(110px, 1fr));
-      gap: 12px;
-      margin-top: 18px;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .statCard {
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 14px 14px 13px;
-      box-shadow: var(--shadow-md);
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 13px;
+      box-shadow: none;
     }
 
     .statValue {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 800;
       color: #fff;
       letter-spacing: -0.02em;
     }
 
     .statLabel {
-      margin-top: 5px;
-      font-size: 11px;
+      margin-top: 4px;
+      font-size: 10px;
       color: var(--muted-2);
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -390,7 +390,7 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      margin-top: 14px;
+      margin-top: 10px;
       align-items: center;
     }
 
@@ -405,12 +405,12 @@
     }
 
     .rootCard {
-      background: linear-gradient(180deg, rgba(28,28,35,0.94), rgba(16,16,21,0.95));
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 24px;
-      padding: 22px;
-      margin-bottom: 18px;
-      box-shadow: var(--shadow-lg);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
     }
 
     .rootHeader {
@@ -423,7 +423,7 @@
     }
 
     .rootTitle {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 800;
       margin: 0;
       letter-spacing: -0.02em;
@@ -432,33 +432,33 @@
     #panels {
       display: grid;
       grid-template-columns: repeat(2, minmax(320px, 1fr));
-      gap: 18px;
+      gap: 16px;
       align-items: start;
     }
 
     .panel {
-      background: linear-gradient(180deg, rgba(20,20,26,0.95), rgba(16,16,21,0.96));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
       box-shadow: var(--shadow-md);
-      min-height: 240px;
+      min-height: 220px;
       height: fit-content;
       align-self: start;
     }
 
     .panel.status-panel-pending {
-      border-color: rgba(255,255,255,0.08);
+      border-color: var(--border);
     }
 
     .panel.status-panel-progress {
-      border-color: rgba(190, 26, 72, 0.28);
-      box-shadow: 0 10px 28px rgba(190, 26, 72, 0.08);
+      border-color: rgba(190, 26, 72, 0.18);
+      box-shadow: 0 8px 20px rgba(190, 26, 72, 0.05);
     }
 
     .panel.status-panel-complete {
-      border-color: rgba(110, 240, 138, 0.22);
-      box-shadow: 0 10px 28px rgba(110, 240, 138, 0.06);
+      border-color: rgba(110, 240, 138, 0.18);
+      box-shadow: 0 8px 20px rgba(110, 240, 138, 0.04);
     }
 
     .panel.hiddenBySearch {
@@ -513,7 +513,7 @@
       width: 100%;
       height: 10px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -532,22 +532,22 @@
     }
 
     .treeNode {
-      background: linear-gradient(180deg, rgba(28,28,34,0.98), rgba(20,20,25,0.98));
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 18px;
-      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 13px;
       margin-top: 12px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+      box-shadow: none;
     }
 
     .treeNode.completeNode {
-      border-color: rgba(110, 240, 138, 0.24);
-      box-shadow: 0 6px 18px rgba(110, 240, 138, 0.05);
+      border-color: rgba(110, 240, 138, 0.18);
+      box-shadow: 0 4px 14px rgba(110, 240, 138, 0.03);
     }
 
     .treeNode.matched {
-      border-color: rgba(190, 26, 72, 0.46);
-      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.16);
+      border-color: rgba(190, 26, 72, 0.30);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.10);
     }
 
     .treeNodeHeader {
@@ -569,7 +569,7 @@
     .childrenWrap {
       margin-top: 12px;
       padding-left: 14px;
-      border-left: 1px solid rgba(255,255,255,0.07);
+      border-left: 1px solid rgba(255,255,255,0.06);
     }
 
     .nodeActions {
@@ -601,9 +601,9 @@
     .editorGrid textarea,
     .editorGrid select {
       width: 100%;
-      background: rgba(255,255,255,0.045);
+      background: rgba(255,255,255,0.04);
       color: #ededf4;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 12px;
       padding: 11px 12px;
       font-size: 14px;
@@ -621,9 +621,9 @@
     .editorGrid input:focus,
     .editorGrid textarea:focus,
     .editorGrid select:focus {
-      border-color: rgba(190, 26, 72, 0.48);
-      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.11);
-      background: rgba(255,255,255,0.06);
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.09);
+      background: rgba(255,255,255,0.05);
     }
 
     .metaChip {
@@ -634,8 +634,8 @@
       padding: 7px 11px;
       font-size: 12px;
       font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
       color: #c1c2ce;
     }
 
@@ -657,8 +657,8 @@
     }
 
     #loadingCard {
-      background: rgba(18,18,24,0.96);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 18px;
       padding: 26px 30px;
       text-align: center;
@@ -713,6 +713,31 @@
       color: #f6d9df;
     }
 
+    body.compact-mode .hero {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(13, 13, 18, 0.55);
+    }
+
+    body.compact-mode .heroTitle p,
+    body.compact-mode .workspaceStrip,
+    body.compact-mode .stats,
+    body.compact-mode .statusMetaRow {
+      display: none;
+    }
+
+    body.compact-mode .heroControls {
+      margin-top: 10px;
+    }
+
+    body.compact-mode .eyebrow {
+      margin-bottom: 6px;
+    }
+
+    body.compact-mode .heroTitle h1 {
+      font-size: 22px;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -756,11 +781,11 @@
       .hero,
       .rootCard,
       .panel {
-        padding: 16px;
+        padding: 15px;
       }
 
       .heroTitle h1 {
-        font-size: 28px;
+        font-size: 24px;
       }
 
       .rootTitle {
@@ -817,9 +842,7 @@
         </div>
         <div class="workspaceCard">
           <div class="workspaceLabel">History tools</div>
-          <div class="workspaceValue">
-            History and diff viewer planned in Phase 2.
-          </div>
+          <div class="workspaceValue">History and diff viewer planned in Phase 2.</div>
         </div>
       </div>
 
@@ -829,6 +852,10 @@
           <label class="toggleWrap">
             <input id="autoSaveGitHubToggle" type="checkbox" />
             Auto-save to GitHub
+          </label>
+          <label class="toggleWrap">
+            <input id="compactModeToggle" type="checkbox" />
+            Compact Mode
           </label>
           <button class="ghostBtn" type="button" disabled>History Coming Soon</button>
           <button onclick="expandAllSections()">Expand All</button>
@@ -872,10 +899,11 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v4";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v5";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
+    const COMPACT_MODE_KEY = "dungeon-call-roadmap-compact-mode-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
 
@@ -984,14 +1012,30 @@
       return !!document.getElementById("autoSaveGitHubToggle")?.checked;
     }
 
+    function compactModeEnabled() {
+      return !!document.getElementById("compactModeToggle")?.checked;
+    }
+
     function persistSettings() {
       localStorage.setItem(AUTO_SAVE_GITHUB_KEY, autoSaveToGitHubEnabled() ? "1" : "0");
+      localStorage.setItem(COMPACT_MODE_KEY, compactModeEnabled() ? "1" : "0");
+    }
+
+    function applyCompactModeUI(enabled) {
+      document.body.classList.toggle("compact-mode", !!enabled);
     }
 
     function restoreSettings() {
-      const enabled = localStorage.getItem(AUTO_SAVE_GITHUB_KEY) === "1";
-      const toggle = document.getElementById("autoSaveGitHubToggle");
-      if (toggle) toggle.checked = enabled;
+      const autoEnabled = localStorage.getItem(AUTO_SAVE_GITHUB_KEY) === "1";
+      const compactEnabled = localStorage.getItem(COMPACT_MODE_KEY) === "1";
+
+      const autoToggle = document.getElementById("autoSaveGitHubToggle");
+      const compactToggle = document.getElementById("compactModeToggle");
+
+      if (autoToggle) autoToggle.checked = autoEnabled;
+      if (compactToggle) compactToggle.checked = compactEnabled;
+
+      applyCompactModeUI(compactEnabled);
     }
 
     function restoreRemoteSaveMeta() {
@@ -1744,6 +1788,12 @@
           clearTimeout(githubAutosaveTimer);
           setStatus("Auto-save to GitHub disabled.");
         }
+      });
+
+      const compactModeToggle = document.getElementById("compactModeToggle");
+      compactModeToggle.addEventListener("change", () => {
+        applyCompactModeUI(compactModeEnabled());
+        persistSettings();
       });
 
       document.addEventListener("input", (event) => {
