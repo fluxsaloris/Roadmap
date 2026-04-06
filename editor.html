@@ -16,8 +16,6 @@
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --accent-soft: rgba(190, 26, 72, 0.18);
-      --accent-strong: rgba(190, 26, 72, 0.45);
       --ok: #6ef08a;
       --ok-soft: rgba(110, 240, 138, 0.13);
       --warn: #ffd27a;
@@ -26,10 +24,6 @@
       --error-soft: rgba(255, 138, 138, 0.14);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
-      --radius-xl: 22px;
-      --radius-lg: 18px;
-      --radius-md: 14px;
-      --radius-sm: 12px;
     }
 
     * { box-sizing: border-box; }
@@ -413,6 +407,33 @@
       box-shadow: var(--shadow-md);
     }
 
+    .cardCollapsed .cardCollapsibleBody {
+      display: none;
+    }
+
+    .cardHeaderRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cardHeaderLeft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .collapseBtn {
+      min-width: 40px;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1;
+    }
+
     .rootHeader {
       display: flex;
       justify-content: space-between;
@@ -442,7 +463,7 @@
       border-radius: 18px;
       padding: 14px;
       box-shadow: var(--shadow-md);
-      min-height: 180px;
+      min-height: 140px;
       height: fit-content;
       align-self: start;
     }
@@ -470,48 +491,53 @@
       justify-content: space-between;
       align-items: flex-start;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+    }
+
+    .panelHeaderText {
+      min-width: 0;
+      flex: 1;
     }
 
     .panelHeaderText h2 {
-      margin: 0 0 6px;
-      font-size: 20px;
-      line-height: 1.12;
+      margin: 0 0 4px;
+      font-size: 19px;
+      line-height: 1.1;
       letter-spacing: -0.01em;
     }
 
     .panelDescription {
       margin: 0;
       color: #bebecb;
-      line-height: 1.5;
-      font-size: 13px;
+      line-height: 1.45;
+      font-size: 12.5px;
     }
 
     .panelBody {
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .panelTopMeta {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .progressWrap {
-      margin: 10px 0 12px;
+      margin: 8px 0 10px;
     }
 
     .progressText {
       font-size: 11px;
       color: #c0c1cd;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       font-weight: 600;
     }
 
     .progressTrack {
       width: 100%;
-      height: 8px;
+      height: 7px;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 999px;
@@ -532,11 +558,11 @@
     }
 
     .treeNode {
-      background: var(--surface);
+      background: rgba(255,255,255,0.02);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px;
-      margin-top: 10px;
+      border-radius: 13px;
+      padding: 9px;
+      margin-top: 8px;
       box-shadow: none;
     }
 
@@ -556,19 +582,19 @@
       gap: 8px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .treeNodeTitle {
       margin: 0;
-      font-size: 15px;
-      line-height: 1.28;
+      font-size: 14px;
+      line-height: 1.22;
       letter-spacing: -0.01em;
     }
 
     .childrenWrap {
-      margin-top: 10px;
-      padding-left: 12px;
+      margin-top: 8px;
+      padding-left: 10px;
       border-left: 1px solid rgba(255,255,255,0.06);
     }
 
@@ -576,7 +602,7 @@
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .actionGroup {
@@ -592,9 +618,10 @@
 
     .editorGrid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(140px, 1fr) 1.6fr 140px;
       gap: 7px;
-      margin-top: 8px;
+      margin-top: 7px;
+      align-items: start;
     }
 
     .editorGrid input,
@@ -605,7 +632,7 @@
       color: #ededf4;
       border: 1px solid rgba(255,255,255,0.07);
       border-radius: 10px;
-      padding: 9px 11px;
+      padding: 8px 10px;
       font-size: 13px;
       outline: none;
       font-family: inherit;
@@ -613,9 +640,9 @@
     }
 
     .editorGrid textarea {
-      min-height: 72px;
+      min-height: 56px;
       resize: vertical;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     .editorGrid input:focus,
@@ -631,8 +658,8 @@
       align-items: center;
       gap: 6px;
       border-radius: 999px;
-      padding: 6px 9px;
-      font-size: 11px;
+      padding: 5px 8px;
+      font-size: 10.5px;
       font-weight: 700;
       border: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.03);
@@ -642,7 +669,7 @@
     .emptyState {
       color: var(--muted-2);
       font-size: 12px;
-      padding-top: 8px;
+      padding-top: 6px;
     }
 
     #loadingOverlay {
@@ -742,6 +769,12 @@
       to { transform: rotate(360deg); }
     }
 
+    @media (max-width: 1200px) {
+      .editorGrid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 1100px) {
       .hero {
         position: relative;
@@ -781,7 +814,7 @@
       .hero,
       .rootCard,
       .panel {
-        padding: 14px;
+        padding: 12px;
       }
 
       .heroTitle h1 {
@@ -899,11 +932,12 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v6";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v7";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
     const COMPACT_MODE_KEY = "dungeon-call-roadmap-compact-mode-v1";
+    const COLLAPSE_STATE_KEY = "dungeon-call-roadmap-collapse-state-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
 
@@ -916,6 +950,7 @@
     let currentSearch = "";
     let hasUnsavedChanges = false;
     let isSavingToGitHub = false;
+    let collapsedMajorCards = new Set();
 
     let lastLocalSaveAt = null;
     let lastRemoteSaveAt = null;
@@ -1078,6 +1113,40 @@
       } catch (err) {
         console.error("Failed to persist snapshot meta:", err);
       }
+    }
+
+    function restoreCollapseState() {
+      try {
+        const raw = localStorage.getItem(COLLAPSE_STATE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          collapsedMajorCards = new Set(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to restore collapse state:", err);
+      }
+    }
+
+    function persistCollapseState() {
+      try {
+        localStorage.setItem(COLLAPSE_STATE_KEY, JSON.stringify([...collapsedMajorCards]));
+      } catch (err) {
+        console.error("Failed to persist collapse state:", err);
+      }
+    }
+
+    function isMajorCardCollapsed(key) {
+      return collapsedMajorCards.has(String(key));
+    }
+
+    function toggleMajorCard(key) {
+      const normalized = String(key);
+      if (collapsedMajorCards.has(normalized)) collapsedMajorCards.delete(normalized);
+      else collapsedMajorCards.add(normalized);
+      persistCollapseState();
+      renderRootPanel();
+      renderPanels();
     }
 
     function markDirty(reason = "Unsaved changes") {
@@ -1444,10 +1513,12 @@
       );
 
       expandedNodes.delete(Number(id));
+      collapsedMajorCards.delete(`panel-${id}`);
       rebuildMaps();
       updateStats();
       renderRootPanel();
       renderPanels();
+      persistCollapseState();
       markDirty("Deleted node.");
     }
 
@@ -1530,36 +1601,45 @@
       const rootNode = getNodeById(rootId);
       if (!rootNode) return;
       const stats = getCompletionStats(rootId);
+      const isCollapsed = isMajorCardCollapsed("root");
 
+      document.getElementById("rootPanel").className = `rootCard${isCollapsed ? " cardCollapsed" : ""}`;
       document.getElementById("rootPanel").innerHTML = `
-        <div class="rootHeader">
-          <div>
-            <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+        <div class="cardHeaderRow">
+          <div class="cardHeaderLeft">
+            <button class="collapseBtn" onclick="toggleMajorCard('root')">${isCollapsed ? "+" : "−"}</button>
+            <div class="rootHeader" style="margin:0; flex:1;">
+              <div>
+                <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+              </div>
+            </div>
           </div>
           ${createStatusBadge(rootNode.status)}
         </div>
 
-        <div class="panelTopMeta">
-          <span class="metaChip">${stats.total - 1} total sub-items</span>
-          <span class="metaChip">${stats.percent}% complete</span>
-        </div>
+        <div class="cardCollapsibleBody">
+          <div class="panelTopMeta" style="margin-top:10px;">
+            <span class="metaChip">${stats.total - 1} total sub-items</span>
+            <span class="metaChip">${stats.percent}% complete</span>
+          </div>
 
-        ${renderProgressBar(stats)}
+          ${renderProgressBar(stats)}
 
-        <div class="editorGrid">
-          <input id="label-${rootNode.id}" type="text" value="${escapeHtml(rootNode.label)}" placeholder="Label" />
-          <textarea id="desc-${rootNode.id}" placeholder="Description">${escapeHtml(rootNode.description || "")}</textarea>
-          <select id="status-${rootNode.id}">
-            <option value="pending" ${rootNode.status === "pending" ? "selected" : ""}>Pending</option>
-            <option value="progress" ${rootNode.status === "progress" ? "selected" : ""}>In Progress</option>
-            <option value="complete" ${rootNode.status === "complete" ? "selected" : ""}>Complete</option>
-          </select>
-        </div>
+          <div class="editorGrid">
+            <input id="label-${rootNode.id}" type="text" value="${escapeHtml(rootNode.label)}" placeholder="Label" />
+            <textarea id="desc-${rootNode.id}" placeholder="Description">${escapeHtml(rootNode.description || "")}</textarea>
+            <select id="status-${rootNode.id}">
+              <option value="pending" ${rootNode.status === "pending" ? "selected" : ""}>Pending</option>
+              <option value="progress" ${rootNode.status === "progress" ? "selected" : ""}>In Progress</option>
+              <option value="complete" ${rootNode.status === "complete" ? "selected" : ""}>Complete</option>
+            </select>
+          </div>
 
-        <div class="nodeActions">
-          <div class="actionGroup">
-            <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
-            <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
+          <div class="nodeActions">
+            <div class="actionGroup">
+              <button onclick="updateNodeFromInputs(${rootNode.id})">Apply Root Changes</button>
+              <button onclick="addChild(${rootNode.id})">Add Top-Level Panel</button>
+            </div>
           </div>
         </div>
       `;
@@ -1578,52 +1658,59 @@
         const childIds = getChildren(id).filter(childId => subtreeMatches(childId, search));
         const descendants = countDescendants(id);
         const stats = getCompletionStats(id);
+        const collapseKey = `panel-${id}`;
+        const isCollapsed = isMajorCardCollapsed(collapseKey);
 
         return `
-          <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}">
-            <div class="panelHeader">
-              <div class="panelHeaderText">
-                <h2>${escapeHtml(node.label)}</h2>
-                <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+          <article class="panel status-panel-${node.status}${visible ? "" : " hiddenBySearch"}${isCollapsed ? " cardCollapsed" : ""}">
+            <div class="cardHeaderRow">
+              <div class="cardHeaderLeft">
+                <button class="collapseBtn" onclick="toggleMajorCard('${collapseKey}')">${isCollapsed ? "+" : "−"}</button>
+                <div class="panelHeaderText">
+                  <h2>${escapeHtml(node.label)}</h2>
+                  <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+                </div>
               </div>
               ${createStatusBadge(node.status)}
             </div>
 
-            <div class="panelTopMeta">
-              <span class="metaChip">${descendants} sub-items</span>
-              <span class="metaChip">${childIds.length} direct children</span>
-              <span class="metaChip">${stats.percent}% complete</span>
-            </div>
-
-            ${renderProgressBar(stats)}
-
-            <div class="editorGrid">
-              <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
-              <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
-              <select id="status-${id}">
-                <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
-                <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
-                <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
-              </select>
-            </div>
-
-            <div class="nodeActions">
-              <div class="actionGroup">
-                <button onclick="updateNodeFromInputs(${id})">Apply</button>
-                <button onclick="addChild(${id})">Add Child</button>
-                <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
-                <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
+            <div class="cardCollapsibleBody">
+              <div class="panelTopMeta" style="margin-top:8px;">
+                <span class="metaChip">${descendants} sub-items</span>
+                <span class="metaChip">${childIds.length} direct children</span>
+                <span class="metaChip">${stats.percent}% complete</span>
               </div>
-              <div class="actionGroup secondary">
-                <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
-              </div>
-            </div>
 
-            <div class="panelBody">
-              ${childIds.length
-                ? childIds.map(childId => renderTreeNode(childId, search)).join("")
-                : `<div class="emptyState">No child items yet.</div>`
-              }
+              ${renderProgressBar(stats)}
+
+              <div class="editorGrid">
+                <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
+                <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
+                <select id="status-${id}">
+                  <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
+                  <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
+                  <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
+                </select>
+              </div>
+
+              <div class="nodeActions">
+                <div class="actionGroup">
+                  <button onclick="updateNodeFromInputs(${id})">Apply</button>
+                  <button onclick="addChild(${id})">Add Child</button>
+                  <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
+                  <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
+                </div>
+                <div class="actionGroup secondary">
+                  <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
+                </div>
+              </div>
+
+              <div class="panelBody">
+                ${childIds.length
+                  ? childIds.map(childId => renderTreeNode(childId, search)).join("")
+                  : `<div class="emptyState">No child items yet.</div>`
+                }
+              </div>
             </div>
           </article>
         `;
@@ -1634,11 +1721,21 @@
       for (const node of graphData.nodes) {
         if (getChildren(node.id).length) expandedNodes.add(node.id);
       }
+      collapsedMajorCards.clear();
+      persistCollapseState();
+      renderRootPanel();
       renderPanels();
     }
 
     function collapseAllSections() {
       expandedNodes.clear();
+      collapsedMajorCards.clear();
+      collapsedMajorCards.add("root");
+      for (const id of getChildren(rootId)) {
+        collapsedMajorCards.add(`panel-${id}`);
+      }
+      persistCollapseState();
+      renderRootPanel();
       renderPanels();
     }
 
@@ -1770,6 +1867,7 @@
       restoreSettings();
       restoreRemoteSaveMeta();
       restoreSnapshotMeta();
+      restoreCollapseState();
       updateSaveMetaUI();
 
       const searchInput = document.getElementById("searchInput");
@@ -1835,6 +1933,7 @@
     window.saveRoadmap = saveRoadmap;
     window.moveTopLevelPanel = moveTopLevelPanel;
     window.discardLocalDraft = discardLocalDraft;
+    window.toggleMajorCard = toggleMajorCard;
 
     (async function init() {
       try {
