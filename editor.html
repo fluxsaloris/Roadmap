@@ -407,23 +407,23 @@
     .rootCard {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 16px;
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 14px;
       box-shadow: var(--shadow-md);
     }
 
     .rootHeader {
       display: flex;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .rootTitle {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
       margin: 0;
       letter-spacing: -0.02em;
@@ -432,17 +432,17 @@
     #panels {
       display: grid;
       grid-template-columns: repeat(2, minmax(320px, 1fr));
-      gap: 16px;
+      gap: 14px;
       align-items: start;
     }
 
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
+      border-radius: 18px;
+      padding: 14px;
       box-shadow: var(--shadow-md);
-      min-height: 220px;
+      min-height: 180px;
       height: fit-content;
       align-self: start;
     }
@@ -469,49 +469,49 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     .panelHeaderText h2 {
-      margin: 0 0 8px;
-      font-size: 22px;
-      line-height: 1.15;
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.12;
       letter-spacing: -0.01em;
     }
 
     .panelDescription {
       margin: 0;
       color: #bebecb;
-      line-height: 1.58;
-      font-size: 14px;
+      line-height: 1.5;
+      font-size: 13px;
     }
 
     .panelBody {
-      margin-top: 14px;
+      margin-top: 10px;
     }
 
     .panelTopMeta {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .progressWrap {
-      margin: 14px 0 16px;
+      margin: 10px 0 12px;
     }
 
     .progressText {
-      font-size: 12px;
+      font-size: 11px;
       color: #c0c1cd;
-      margin-bottom: 7px;
+      margin-bottom: 6px;
       font-weight: 600;
     }
 
     .progressTrack {
       width: 100%;
-      height: 10px;
+      height: 8px;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 999px;
@@ -534,9 +534,9 @@
     .treeNode {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 13px;
-      margin-top: 12px;
+      border-radius: 14px;
+      padding: 10px;
+      margin-top: 10px;
       box-shadow: none;
     }
 
@@ -553,48 +553,48 @@
     .treeNodeHeader {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .treeNodeTitle {
       margin: 0;
-      font-size: 16px;
-      line-height: 1.35;
+      font-size: 15px;
+      line-height: 1.28;
       letter-spacing: -0.01em;
     }
 
     .childrenWrap {
-      margin-top: 12px;
-      padding-left: 14px;
+      margin-top: 10px;
+      padding-left: 12px;
       border-left: 1px solid rgba(255,255,255,0.06);
     }
 
     .nodeActions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .actionGroup {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       width: 100%;
     }
 
     .actionGroup.secondary {
-      padding-top: 2px;
+      padding-top: 0;
     }
 
     .editorGrid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 9px;
-      margin-top: 10px;
+      gap: 7px;
+      margin-top: 8px;
     }
 
     .editorGrid input,
@@ -604,18 +604,18 @@
       background: rgba(255,255,255,0.04);
       color: #ededf4;
       border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-size: 14px;
+      border-radius: 10px;
+      padding: 9px 11px;
+      font-size: 13px;
       outline: none;
       font-family: inherit;
       transition: 0.18s ease;
     }
 
     .editorGrid textarea {
-      min-height: 100px;
+      min-height: 72px;
       resize: vertical;
-      line-height: 1.5;
+      line-height: 1.45;
     }
 
     .editorGrid input:focus,
@@ -629,10 +629,10 @@
     .metaChip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
+      padding: 6px 9px;
+      font-size: 11px;
       font-weight: 700;
       border: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.03);
@@ -641,8 +641,8 @@
 
     .emptyState {
       color: var(--muted-2);
-      font-size: 13px;
-      padding-top: 10px;
+      font-size: 12px;
+      padding-top: 8px;
     }
 
     #loadingOverlay {
@@ -781,7 +781,7 @@
       .hero,
       .rootCard,
       .panel {
-        padding: 15px;
+        padding: 14px;
       }
 
       .heroTitle h1 {
@@ -789,11 +789,11 @@
       }
 
       .rootTitle {
-        font-size: 24px;
+        font-size: 22px;
       }
 
       .panelHeaderText h2 {
-        font-size: 20px;
+        font-size: 18px;
       }
 
       .stats {
@@ -899,7 +899,7 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v5";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v6";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
@@ -1491,7 +1491,7 @@
             ${createStatusBadge(node.status)}
           </div>
 
-          <div class="smallRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <div class="smallRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
             <span class="metaChip">${stats.total - 1} nested</span>
             <span class="metaChip">${stats.percent}% done</span>
           </div>
