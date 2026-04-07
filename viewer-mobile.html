@@ -6,12 +6,16 @@
   <title>Dungeon Call Roadmap Mobile</title>
   <style>
     :root {
-      --bg: #000;
-      --panel: rgba(18, 18, 18, 0.94);
-      --border: #2a2a2a;
-      --text: #f2f2f2;
-      --muted: #a5a5a5;
-      --accent: #BE1A48;
+      --bg: #070709;
+      --surface: rgba(20, 20, 26, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.025);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #f4f4f7;
+      --muted: #a7a7b5;
+      --muted-2: #7f8091;
+      --accent: #be1a48;
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
     }
 
     * {
@@ -26,14 +30,17 @@
       max-width: 100%;
       min-height: 100%;
       overflow-x: hidden;
-      background: #000;
+      background: var(--bg);
       color: var(--text);
-      font-family: Arial, sans-serif;
+      font-family: Inter, Arial, sans-serif;
     }
 
     body {
       position: relative;
-      background: radial-gradient(circle at 30% 20%, #111, #000 70%);
+      background:
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
+        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
     }
 
     body::before {
@@ -41,26 +48,24 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.5px 1.5px at 50% 40%, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.7), transparent);
-      opacity: 0.20;
       pointer-events: none;
+      opacity: 0.10;
+      background-image:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
 
     body::after {
       content: "";
       position: fixed;
-      top: 6px;
-      left: 6px;
-      right: 6px;
-      bottom: 6px;
-      border: 2px solid var(--accent);
-      border-radius: 14px;
+      inset: 0;
+      margin: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(190, 26, 72, 0.10);
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
       pointer-events: none;
-      box-shadow: 0 0 25px rgba(190, 26, 72, 0.18);
       z-index: 1;
     }
 
@@ -69,33 +74,45 @@
       z-index: 2;
       width: 100%;
       max-width: 100%;
-      padding: calc(14px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom));
+      padding: calc(14px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom));
       overflow-x: hidden;
     }
 
     .hero {
       width: 100%;
       max-width: 100%;
-      background: rgba(15, 15, 15, 0.92);
+      background: rgba(13, 13, 18, 0.68);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px;
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.35);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md);
       margin-bottom: 12px;
     }
 
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d98aa0;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
     .hero h1 {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: 24px;
-      line-height: 1.15;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
       word-break: break-word;
     }
 
     .hero p {
-      margin: 0;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.5;
     }
 
@@ -107,18 +124,20 @@
       width: 100%;
       max-width: 100%;
       margin-top: 14px;
-      background: #111;
-      color: #e5e5e5;
-      border: 1px solid #303030;
-      border-radius: 12px;
-      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px 13px;
       font-size: 14px;
       outline: none;
+      transition: 0.18s ease;
     }
 
     #searchInput:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(190, 26, 72, 0.2);
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
+      background: rgba(255,255,255,0.05);
     }
 
     .toolbar {
@@ -129,18 +148,34 @@
     }
 
     button {
-      background: #111;
-      color: #ddd;
-      border: 1px solid #2b2b2b;
-      border-radius: 10px;
-      padding: 10px 12px;
+      appearance: none;
+      background: rgba(255,255,255,0.04);
+      color: #e5e5ec;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 9px 12px;
       font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       max-width: 100%;
+      transition: 0.18s ease;
     }
 
     button:hover {
-      background: #171717;
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-1px);
+    }
+
+    .primaryBtn {
+      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
+      border-color: rgba(255,255,255,0.05);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
+    }
+
+    .primaryBtn:hover {
+      background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
     }
 
     .statusBadge {
@@ -148,7 +183,7 @@
       align-items: center;
       gap: 8px;
       border-radius: 999px;
-      padding: 7px 12px;
+      padding: 7px 11px;
       font-size: 12px;
       font-weight: 700;
       border: 1px solid transparent;
@@ -157,21 +192,21 @@
     }
 
     .status-pending {
-      background: #151515;
-      border-color: #353535;
-      color: #9a9a9a;
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.08);
+      color: #c8c8d4;
     }
 
     .status-progress {
-      background: rgba(190, 26, 72, 0.16);
-      border-color: rgba(190, 26, 72, 0.55);
-      color: #ffb3c9;
+      background: rgba(190, 26, 72, 0.12);
+      border-color: rgba(190, 26, 72, 0.30);
+      color: #ffc0d1;
     }
 
     .status-complete {
-      background: rgba(57, 255, 20, 0.16);
-      border-color: rgba(57, 255, 20, 0.72);
-      color: #b8ffab;
+      background: rgba(110, 240, 138, 0.12);
+      border-color: rgba(110, 240, 138, 0.34);
+      color: #c7ffd4;
     }
 
     .stats {
@@ -182,25 +217,27 @@
     }
 
     .statCard {
-      background: rgba(20,20,20,0.9);
-      border: 1px solid #2c2c2c;
-      border-radius: 12px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
       padding: 12px;
       min-width: 0;
     }
 
     .statValue {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       color: #fff;
+      letter-spacing: -0.02em;
     }
 
     .statLabel {
       margin-top: 4px;
-      font-size: 11px;
-      color: #9d9d9d;
+      font-size: 10px;
+      color: var(--muted-2);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
+      font-weight: 700;
     }
 
     .progressWrap {
@@ -209,17 +246,18 @@
     }
 
     .progressText {
-      font-size: 12px;
-      color: #bdbdbd;
-      margin-bottom: 6px;
+      font-size: 11px;
+      color: #c0c1cd;
+      margin-bottom: 5px;
+      font-weight: 600;
       word-break: break-word;
     }
 
     .progressTrack {
       width: 100%;
-      height: 10px;
-      background: #101010;
-      border: 1px solid #2a2a2a;
+      height: 7px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -227,40 +265,93 @@
     .progressFill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #BE1A48, #ff4f86);
+      background: linear-gradient(90deg, #be1a48, #ff5c90);
       border-radius: 999px;
       transition: width 0.25s ease;
     }
 
-    .rootCard {
+    #statusLine {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .rootCard,
+    .panel {
       width: 100%;
       max-width: 100%;
-      background: linear-gradient(180deg, rgba(30,30,30,0.96), rgba(18,18,18,0.96));
-      border: 1px solid #313131;
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
       padding: 14px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .rootCard {
       margin-bottom: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.35);
+    }
+
+    .rootHeader,
+    .panelHeader,
+    .treeNodeHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .rootTitle,
+    .panelHeader h2,
+    .treeNodeTitle {
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: break-word;
     }
 
     .rootTitle {
-      margin: 0 0 8px;
-      font-size: 21px;
-      font-weight: 700;
+      font-size: 22px;
+    }
+
+    .panelHeader h2 {
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .treeNodeTitle {
+      font-size: 14px;
+      line-height: 1.22;
+      letter-spacing: -0.01em;
+    }
+
+    .rootDescription,
+    .panelDescription,
+    .treeNodeDescription {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+      white-space: pre-wrap;
       word-break: break-word;
     }
 
     .rootDescription {
-      margin: 0;
-      color: #cfcfcf;
-      line-height: 1.6;
-      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .miniDescription {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
       word-break: break-word;
     }
 
     .metaRow {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       margin: 10px 0 0;
       width: 100%;
@@ -269,14 +360,14 @@
     .metaChip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       border-radius: 999px;
-      padding: 7px 12px;
-      font-size: 12px;
+      padding: 5px 8px;
+      font-size: 10.5px;
       font-weight: 700;
-      border: 1px solid #333;
-      background: #141414;
-      color: #b6b6b6;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #c1c2ce;
       max-width: 100%;
     }
 
@@ -288,67 +379,26 @@
       max-width: 100%;
     }
 
-    .panel {
-      width: 100%;
-      max-width: 100%;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-
-    .panel.status-panel-pending {
-      border-color: #2a2a2a;
-    }
-
     .panel.status-panel-progress {
-      border-color: rgba(190, 26, 72, 0.35);
-      box-shadow: 0 0 18px rgba(190, 26, 72, 0.08);
+      border-color: rgba(190, 26, 72, 0.18);
     }
 
     .panel.status-panel-complete {
-      border-color: rgba(57, 255, 20, 0.42);
-      box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+      border-color: rgba(110, 240, 138, 0.18);
     }
 
     .panel.hiddenBySearch {
       display: none;
     }
 
-    .panelHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .panelHeader h2 {
-      margin: 0 0 6px;
-      font-size: 20px;
-      line-height: 1.2;
-      word-break: break-word;
-    }
-
-    .panelHeader > div {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .panelDescription {
-      margin: 0;
-      color: #bdbdbd;
-      line-height: 1.5;
-      font-size: 14px;
-      word-break: break-word;
+    .panelBody {
+      margin-top: 10px;
     }
 
     .panel.status-panel-complete .progressFill,
-    .treeNode.completeNode .progressFill {
-      background: linear-gradient(90deg, #39ff14, #8dff77);
+    .treeNode.completeNode .progressFill,
+    .rootCard.status-root-complete .progressFill {
+      background: linear-gradient(90deg, #52e878, #8dffab);
     }
 
     .nodeActions {
@@ -362,70 +412,41 @@
     .treeNode {
       width: 100%;
       max-width: 100%;
-      background: rgba(22,22,22,0.96);
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 10px;
+      margin-top: 8px;
       overflow: hidden;
     }
 
     .treeNode.completeNode {
-      border-color: rgba(57, 255, 20, 0.34);
-      box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+      border-color: rgba(110, 240, 138, 0.18);
     }
 
     .treeNode.matched {
-      border-color: rgba(190, 26, 72, 0.62);
-      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.24);
-    }
-
-    .treeNodeHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .treeNodeHeader > div {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .treeNodeTitle {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .treeNodeDescription {
-      margin: 0;
-      color: #adadad;
-      font-size: 13px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
+      border-color: rgba(190, 26, 72, 0.30);
+      box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.10);
     }
 
     .childrenWrap {
-      margin-top: 10px;
+      margin-top: 8px;
       padding-left: 10px;
-      border-left: 1px solid #2a2a2a;
+      border-left: 1px solid rgba(255,255,255,0.06);
       width: 100%;
     }
 
     .emptyState {
-      color: #888;
-      font-size: 13px;
-      padding-top: 10px;
+      color: var(--muted-2);
+      font-size: 12px;
+      padding-top: 6px;
     }
 
     #loadingOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.84);
+      background: rgba(4,4,8,0.82);
+      backdrop-filter: blur(8px);
       z-index: 100;
       display: flex;
       align-items: center;
@@ -433,29 +454,28 @@
     }
 
     #loadingCard {
-      background: rgba(20,20,20,0.96);
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
       padding: 24px 28px;
       text-align: center;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 20px rgba(0,0,0,0.45);
+      box-shadow: var(--shadow-lg);
       min-width: 220px;
       max-width: calc(100vw - 32px);
     }
 
     #loadingText {
       font-size: 14px;
-      color: #ddd;
+      color: #e2e2ea;
     }
 
     .spinner {
       width: 34px;
       height: 34px;
-      border: 3px solid #333;
-      border-top: 3px solid #BE1A48;
+      border: 3px solid rgba(255,255,255,0.10);
+      border-top: 3px solid #be1a48;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.95s linear infinite;
       margin: 0 auto 14px;
     }
 
@@ -465,12 +485,12 @@
       left: 14px;
       right: 14px;
       z-index: 40;
-      background: rgba(35, 12, 18, 0.96);
-      border: 1px solid rgba(190, 26, 72, 0.5);
-      border-radius: 14px;
+      background: rgba(36, 13, 18, 0.96);
+      border: 1px solid rgba(255, 138, 138, 0.28);
+      border-radius: 16px;
       padding: 14px;
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.18);
-      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
       display: none;
     }
 
@@ -480,15 +500,15 @@
 
     #errorPanelTitle {
       font-size: 14px;
-      font-weight: 700;
-      color: #ffb3c9;
+      font-weight: 800;
+      color: #ffced6;
       margin-bottom: 6px;
     }
 
     #errorPanelText {
       font-size: 13px;
-      line-height: 1.45;
-      color: #f2d7df;
+      line-height: 1.5;
+      color: #f6d9df;
     }
 
     @keyframes spin {
@@ -511,6 +531,7 @@
 
   <div id="app">
     <section class="hero">
+      <div class="eyebrow">Development roadmap</div>
       <h1>Dungeon Call Roadmap</h1>
       <p>Track progress, browse major systems, and expand sections to explore nested roadmap items.</p>
 
@@ -521,21 +542,21 @@
       <div class="toolbar">
         <button onclick="expandAllSections()">Expand All</button>
         <button onclick="collapseAllSections()">Collapse All</button>
-        <button onclick="reloadRoadmap()">Refresh</button>
+        <button class="primaryBtn" onclick="reloadRoadmap()">Refresh</button>
       </div>
 
       <div class="stats">
         <div class="statCard">
           <div class="statValue" id="statTotal">0</div>
-          <div class="statLabel">Total</div>
+          <div class="statLabel">Total Nodes</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statComplete">0</div>
-          <div class="statLabel">Done</div>
+          <div class="statLabel">Complete</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statProgress">0</div>
-          <div class="statLabel">Progress</div>
+          <div class="statLabel">In Progress</div>
         </div>
         <div class="statCard">
           <div class="statValue" id="statPending">0</div>
@@ -580,7 +601,7 @@
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
       el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#999";
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
     }
 
     function showErrorPanel(message) {
@@ -636,9 +657,11 @@
           const ax = typeof na?.x === "number" ? na.x : 0;
           const bx = typeof nb?.x === "number" ? nb.x : 0;
           if (ax !== bx) return ax - bx;
+
           const ay = typeof na?.y === "number" ? na.y : 0;
           const by = typeof nb?.y === "number" ? nb.y : 0;
           if (ay !== by) return ay - by;
+
           return (na?.label || "").localeCompare(nb?.label || "");
         });
       }
@@ -705,6 +728,9 @@
       const badge = document.getElementById("rootStatusBadge");
       badge.className = `statusBadge status-${rootNode?.status || "pending"}`;
       badge.textContent = getStatusLabel(rootNode?.status || "pending");
+
+      const rootPanel = document.getElementById("rootPanel");
+      rootPanel.className = `rootCard status-root-${rootNode?.status || "pending"}`;
     }
 
     function escapeHtml(value) {
@@ -756,14 +782,16 @@
     }
 
     function toggleSection(id) {
-      if (expandedNodes.has(id)) expandedNodes.delete(id);
-      else expandedNodes.add(id);
+      const normalized = Number(id);
+      if (expandedNodes.has(normalized)) expandedNodes.delete(normalized);
+      else expandedNodes.add(normalized);
       renderPanels();
     }
 
     function togglePanel(id) {
-      if (collapsedPanels.has(Number(id))) collapsedPanels.delete(Number(id));
-      else collapsedPanels.add(Number(id));
+      const normalized = Number(id);
+      if (collapsedPanels.has(normalized)) collapsedPanels.delete(normalized);
+      else collapsedPanels.add(normalized);
       renderPanels();
     }
 
@@ -776,7 +804,7 @@
       const subtreeMatch = selfMatch || children.length > 0;
       if (!subtreeMatch) return "";
 
-      const isExpanded = expandedNodes.has(id) || !!search;
+      const isExpanded = expandedNodes.has(Number(id)) || !!search;
       const hasChildren = children.length > 0;
       const matchedClass = selfMatch ? " matched" : "";
       const stats = getCompletionStats(id);
@@ -786,6 +814,7 @@
           <div class="treeNodeHeader">
             <div>
               <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
+              ${node.description ? `<div class="miniDescription">${escapeHtml(node.description).slice(0, 120)}${node.description.length > 120 ? "..." : ""}</div>` : ""}
             </div>
             ${createStatusBadge(node.status)}
           </div>
@@ -815,14 +844,22 @@
       const stats = getCompletionStats(rootId);
 
       document.getElementById("rootPanel").innerHTML = `
-        <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
-        ${createStatusBadge(rootNode.status)}
+        <div class="rootHeader">
+          <div>
+            <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+            ${rootNode.description ? `<div class="miniDescription">${escapeHtml(rootNode.description).slice(0, 200)}${rootNode.description.length > 200 ? "..." : ""}</div>` : ""}
+          </div>
+          ${createStatusBadge(rootNode.status)}
+        </div>
+
         <div class="metaRow">
           <span class="metaChip">${stats.total - 1} total sub-items</span>
           <span class="metaChip">${stats.percent}% complete</span>
         </div>
+
         ${renderProgressBar(stats)}
-        <p class="rootDescription">${escapeHtml(rootNode.description || "")}</p>
+
+        ${rootNode.description ? `<p class="rootDescription">${escapeHtml(rootNode.description)}</p>` : ""}
       `;
     }
 
@@ -879,13 +916,14 @@
     function expandAllSections() {
       collapsedPanels.clear();
       for (const node of graphData.nodes) {
-        if (getChildren(node.id).length) expandedNodes.add(node.id);
+        if (getChildren(node.id).length) expandedNodes.add(Number(node.id));
       }
       renderPanels();
     }
 
     function collapseAllSections() {
       expandedNodes.clear();
+      collapsedPanels.clear();
       const topLevel = getChildren(rootId);
       for (const id of topLevel) collapsedPanels.add(Number(id));
       renderPanels();
