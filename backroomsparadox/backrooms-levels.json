@@ -102,6 +102,15 @@
         "one-way",
         "chaotic"
       ]
+    },
+    {
+      "id": "new-level-1",
+      "label": "New Level 1",
+      "description": "",
+      "x": 1486,
+      "y": 3,
+      "color": "#888888",
+      "tags": []
     }
   ],
   "edges": [
