@@ -16,6 +16,9 @@
       --accent: #be1a48;
       --line: rgba(255,255,255,0.18);
       --line-active: rgba(190, 26, 72, 0.95);
+      --ok: #6ef08a;
+      --warn: #ffd27a;
+      --error: #ff8a8a;
       --shadow-lg: 0 20px 48px rgba(0,0,0,0.35);
       --shadow-md: 0 12px 24px rgba(0,0,0,0.2);
     }
@@ -54,7 +57,7 @@
 
     #app {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 380px;
+      grid-template-columns: minmax(0, 1fr) 400px;
       height: 100vh;
       width: 100vw;
       position: relative;
@@ -122,8 +125,20 @@
       transform: translateY(-1px);
     }
 
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .primaryBtn {
       background: linear-gradient(180deg, rgba(190,26,72,0.9), rgba(148,16,53,0.95));
+      border-color: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .successBtn {
+      background: linear-gradient(180deg, rgba(70,170,98,0.92), rgba(43,124,67,0.96));
       border-color: rgba(255,255,255,0.05);
       color: #fff;
     }
@@ -297,26 +312,6 @@
       box-shadow: 0 0 0 4px rgba(190,26,72,0.10);
     }
 
-    .chipRow {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 6px 9px;
-      font-size: 11px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: #cdd0db;
-    }
-
     .row {
       display: flex;
       gap: 8px;
@@ -328,6 +323,18 @@
       color: var(--muted-2);
       font-size: 12px;
       line-height: 1.45;
+    }
+
+    .good {
+      color: #bff3cb;
+    }
+
+    .warn {
+      color: #ffe3a3;
+    }
+
+    .bad {
+      color: #ffc3c3;
     }
 
     .listTitle {
@@ -393,7 +400,7 @@
       <div class="topbar">
         <div class="titleWrap">
           <h1>Backrooms Graph Editor</h1>
-          <p>Drag nodes, edit details, create links, and export JSON for your level map.</p>
+          <p>Drag nodes, edit details, create links, and save the level graph directly to GitHub.</p>
         </div>
 
         <div class="toolbar">
@@ -401,7 +408,8 @@
           <button onclick="zoomIn()">Zoom In</button>
           <button onclick="resetView()">Reset View</button>
           <button onclick="addNode()">Add Node</button>
-          <button class="primaryBtn" onclick="exportJson()">Export JSON</button>
+          <button onclick="exportJson()">Refresh JSON</button>
+          <button class="successBtn" onclick="saveGraphToGitHub()" id="saveBtn">Save to GitHub</button>
         </div>
       </div>
 
@@ -420,11 +428,12 @@
       <div class="sideCard">
         <div class="eyebrow">Editor state</div>
         <div id="editorStatus" class="muted">Loading graph...</div>
+        <div id="saveStatus" class="muted" style="margin-top:8px;">No saves yet.</div>
         <div class="row">
           <button onclick="startConnectMode()" id="connectBtn">Connect Mode</button>
           <button onclick="cancelConnectMode()">Cancel Connect</button>
         </div>
-        <div class="sideText">In connect mode, click a source node, then click a target node.</div>
+        <div class="sideText">In connect mode, click a source node, then click a target node. Double-click an edge to delete it.</div>
       </div>
 
       <div class="sideCard">
@@ -486,10 +495,14 @@
 
   <script>
     const GRAPH_JSON_URL = "./backrooms-levels.json";
+    const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
+    const PROJECT_NAME = "backroomsparadox";
 
     let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
     let connectingFromNodeId = null;
+    let isSaving = false;
+    let lastSavedAt = null;
 
     let camera = { x: 0, y: 0, scale: 1 };
 
@@ -511,6 +524,7 @@
     const previewLayer = document.getElementById("previewLayer");
     const nodeLayer = document.getElementById("nodeLayer");
     const viewportWrap = document.getElementById("viewportWrap");
+    const saveBtn = document.getElementById("saveBtn");
 
     const nodeIdInput = document.getElementById("nodeIdInput");
     const nodeLabelInput = document.getElementById("nodeLabelInput");
@@ -519,8 +533,37 @@
     const nodeDescriptionInput = document.getElementById("nodeDescriptionInput");
     const jsonOutput = document.getElementById("jsonOutput");
 
-    function setEditorStatus(text) {
-      document.getElementById("editorStatus").textContent = text;
+    function setEditorStatus(text, tone = "") {
+      const el = document.getElementById("editorStatus");
+      el.className = tone ? tone : "muted";
+      el.textContent = text;
+    }
+
+    function setSaveStatus(text, tone = "") {
+      const el = document.getElementById("saveStatus");
+      el.className = tone ? tone : "muted";
+      el.textContent = text;
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return "never";
+      try {
+        return new Date(ts).toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      } catch {
+        return "unknown";
+      }
+    }
+
+    function setSavingState(saving) {
+      isSaving = saving;
+      saveBtn.disabled = saving;
+      saveBtn.textContent = saving ? "Saving..." : "Save to GitHub";
     }
 
     function normalizeGraphData(raw) {
@@ -555,15 +598,6 @@
 
     function getIncomingEdges(nodeId) {
       return graphData.edges.filter(edge => edge.to === nodeId);
-    }
-
-    function getConnectedNodeIds(nodeId) {
-      const connected = new Set();
-      for (const edge of graphData.edges) {
-        if (edge.from === nodeId) connected.add(edge.to);
-        if (edge.to === nodeId) connected.add(edge.from);
-      }
-      return connected;
     }
 
     function escapeHtml(value) {
@@ -658,11 +692,13 @@
           event.stopPropagation();
           const confirmed = confirm(`Delete edge "${edge.from} -> ${edge.to}"?`);
           if (!confirmed) return;
-          graphData.edges = graphData.edges.filter(e => !(e.from === edge.from && e.to === edge.to && e.label === edge.label));
+          graphData.edges = graphData.edges.filter(
+            e => !(e.from === edge.from && e.to === edge.to && e.label === edge.label)
+          );
           renderGraph();
           renderSidebar();
           refreshJsonOutput();
-          setEditorStatus("Deleted edge.");
+          setEditorStatus("Deleted edge.", "warn");
         });
         edgeLayer.appendChild(path);
 
@@ -705,14 +741,16 @@
           if (connectingFromNodeId) {
             if (connectingFromNodeId !== node.id) {
               const edgeLabel = prompt("Optional edge label:", "") || "";
-              const exists = graphData.edges.some(edge => edge.from === connectingFromNodeId && edge.to === node.id && edge.label === edgeLabel);
+              const exists = graphData.edges.some(
+                edge => edge.from === connectingFromNodeId && edge.to === node.id && edge.label === edgeLabel
+              );
               if (!exists) {
                 graphData.edges.push({
                   from: connectingFromNodeId,
                   to: node.id,
                   label: edgeLabel
                 });
-                setEditorStatus(`Connected ${connectingFromNodeId} -> ${node.id}`);
+                setEditorStatus(`Connected ${connectingFromNodeId} -> ${node.id}`, "good");
                 refreshJsonOutput();
               }
             }
@@ -828,7 +866,7 @@
       renderGraph();
       renderSidebar();
       refreshJsonOutput();
-      setEditorStatus(`Added node ${newId}`);
+      setEditorStatus(`Added node ${newId}`, "good");
     }
 
     function applyNodeChanges() {
@@ -871,7 +909,7 @@
       renderGraph();
       renderSidebar();
       refreshJsonOutput();
-      setEditorStatus(`Updated ${newId}`);
+      setEditorStatus(`Updated ${newId}`, "good");
     }
 
     function deleteSelectedNode() {
@@ -883,7 +921,9 @@
       if (!confirmed) return;
 
       graphData.nodes = graphData.nodes.filter(n => n.id !== selectedNodeId);
-      graphData.edges = graphData.edges.filter(edge => edge.from !== selectedNodeId && edge.to !== selectedNodeId);
+      graphData.edges = graphData.edges.filter(
+        edge => edge.from !== selectedNodeId && edge.to !== selectedNodeId
+      );
 
       selectedNodeId = null;
       if (connectingFromNodeId === node.id) connectingFromNodeId = null;
@@ -891,7 +931,7 @@
       renderGraph();
       renderSidebar();
       refreshJsonOutput();
-      setEditorStatus("Deleted node.");
+      setEditorStatus("Deleted node.", "warn");
     }
 
     function startConnectMode() {
@@ -901,7 +941,7 @@
       }
       connectingFromNodeId = selectedNodeId;
       renderGraph();
-      setEditorStatus(`Connect mode: click a target node for ${connectingFromNodeId}`);
+      setEditorStatus(`Connect mode: click a target node for ${connectingFromNodeId}`, "warn");
     }
 
     function cancelConnectMode() {
@@ -919,10 +959,10 @@
       refreshJsonOutput();
       try {
         await navigator.clipboard.writeText(jsonOutput.value);
-        setEditorStatus("Copied JSON to clipboard.");
+        setEditorStatus("Copied JSON to clipboard.", "good");
       } catch (err) {
         console.error(err);
-        setEditorStatus("Failed to copy JSON.");
+        setEditorStatus("Failed to copy JSON.", "bad");
       }
     }
 
@@ -935,7 +975,51 @@
       a.download = "backrooms-levels.json";
       a.click();
       URL.revokeObjectURL(url);
-      setEditorStatus("Downloaded backrooms-levels.json");
+      setEditorStatus("Downloaded backrooms-levels.json", "good");
+    }
+
+    async function saveGraphToGitHub() {
+      if (isSaving) return;
+
+      try {
+        setSavingState(true);
+        refreshJsonOutput();
+        setEditorStatus("Saving to GitHub...", "warn");
+        setSaveStatus("Saving latest graph...");
+
+        const payload = {
+          project: PROJECT_NAME,
+          data: serializeGraphData()
+        };
+
+        const res = await fetch(SAVE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          throw new Error(json && json.error ? json.error : "Save failed");
+        }
+
+        lastSavedAt = json && json.savedAt ? json.savedAt : new Date().toISOString();
+
+        setEditorStatus("Saved to GitHub successfully.", "good");
+        setSaveStatus(
+          json && json.version
+            ? `Saved ${formatTimestamp(lastSavedAt)} • Snapshot ${json.version}`
+            : `Saved ${formatTimestamp(lastSavedAt)}`
+        );
+      } catch (err) {
+        console.error(err);
+        setEditorStatus("Save failed.", "bad");
+        setSaveStatus(err && err.message ? err.message : "Unknown save error", "bad");
+        alert("Save failed: " + (err && err.message ? err.message : "Unknown error"));
+      } finally {
+        setSavingState(false);
+      }
     }
 
     viewportWrap.addEventListener("mousedown", (event) => {
@@ -1013,9 +1097,11 @@
         renderSidebar();
         refreshJsonOutput();
         setEditorStatus("Loaded graph.");
+        setSaveStatus("No saves yet.");
       } catch (error) {
         console.error(error);
-        setEditorStatus(error.message || "Failed to load graph.");
+        setEditorStatus(error.message || "Failed to load graph.", "bad");
+        setSaveStatus("Could not load local graph file.", "bad");
         refreshJsonOutput();
       }
     }
