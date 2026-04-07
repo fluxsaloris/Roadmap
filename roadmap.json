@@ -99,7 +99,7 @@
     {
       "id": 51,
       "label": "Dungeon",
-      "status": "progress",
+      "status": "pending",
       "description": "The dungeon itself is a living entity inside of Veilmar at the centre of the city. The city is built to contain the mysteries of the Dungeon from outside of the world but at the same time the Dungeon fuels the profits of the city with the vast profits it can draw in. What mysteries could you uncover?",
       "x": 720,
       "y": 0
@@ -203,7 +203,7 @@
     {
       "id": 46,
       "label": "Inventory System & Stat System",
-      "status": "progress",
+      "status": "pending",
       "description": "Coming Soon",
       "x": 1120,
       "y": 0
@@ -219,7 +219,7 @@
     {
       "id": 2,
       "label": "Veilmar",
-      "status": "progress",
+      "status": "pending",
       "description": "Veilmar is the primarily city in the world of Dungeon Call and acts as a fortress city to protect the world from the Dungeon but also protects you from the dangers of the world. This place will be the primary hub for you and NPCs to conduct business and ensure you have everything you need.",
       "x": 1520,
       "y": 0
