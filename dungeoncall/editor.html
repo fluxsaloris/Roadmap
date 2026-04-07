@@ -993,7 +993,8 @@
 
   <script>
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/dungeoncall/roadmap.json";
+    const RAW_JSON_URL = "./roadmap.json";
+    const PROJECT_NAME = "dungeoncall";
 
     const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v10";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
@@ -1559,7 +1560,7 @@
 
     async function fetchHistoryIndex() {
       if (historyIndexCache) return historyIndexCache;
-      const res = await fetch(SAVE_URL + "?action=history", { method: "GET" });
+      const res = await fetch(SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=history", { method: "GET" });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
       historyIndexCache = json;
@@ -1569,9 +1570,10 @@
     async function fetchSnapshotByPath(path) {
       if (snapshotCache.has(path)) return snapshotCache.get(path);
 
-      const res = await fetch(SAVE_URL + "?action=snapshot&path=" + encodeURIComponent(path), {
-        method: "GET"
-      });
+      const res = await fetch(
+        SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=snapshot&path=" + encodeURIComponent(path),
+        { method: "GET" }
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
 
@@ -2347,7 +2349,10 @@
         const res = await fetch(SAVE_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: payload })
+          body: JSON.stringify({
+            project: PROJECT_NAME,
+            data: payload
+          })
         });
 
         const json = await res.json().catch(() => null);
