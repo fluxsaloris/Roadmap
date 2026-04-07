@@ -1,1 +1,39 @@
-
+{
+  "nodes": [
+    {
+      "id": "level-0",
+      "label": "Level 0",
+      "description": "Endless yellow office-like maze.",
+      "x": 200,
+      "y": 140,
+      "color": "#d4b15a",
+      "tags": ["start", "safe-ish"]
+    },
+    {
+      "id": "level-fun",
+      "label": "Level Fun",
+      "description": "Party-themed deceptive level.",
+      "x": 640,
+      "y": 220,
+      "color": "#ff66aa",
+      "tags": ["hostile", "partygoers"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "level-0",
+      "to": "level-1",
+      "label": "find stairwell"
+    },
+    {
+      "from": "level-1",
+      "to": "level-0",
+      "label": "rare backtrack"
+    },
+    {
+      "from": "level-7",
+      "to": "level-fun",
+      "label": "red slide"
+    }
+  ]
+}
