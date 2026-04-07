@@ -1,1 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backrooms Graph Editor</title>
+  <style>
+    :root {
+      --bg: #070709;
+      --surface: rgba(20, 20, 26, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f7;
+      --muted: #a7a7b5;
+      --muted-2: #7f8091;
+      --accent: #be1a48;
+      --line: rgba(255,255,255,0.18);
+      --line-active: rgba(190, 26, 72, 0.95);
+      --shadow-lg: 0 20px 48px rgba(0,0,0,0.35);
+      --shadow-md: 0 12px 24px rgba(0,0,0,0.2);
+    }
 
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 85% 10%, rgba(255,255,255,0.025), transparent 18%),
+        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
+    }
+
+    #app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid var(--border);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13, 13, 18, 0.76);
+      backdrop-filter: blur(10px);
+    }
+
+    .titleWrap h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .titleWrap p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      appearance: none;
+      background: rgba(255,255,255,0.04);
+      color: #e7e7ef;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-1px);
+    }
+
+    .primaryBtn {
+      background: linear-gradient(180deg, rgba(190,26,72,0.9), rgba(148,16,53,0.95));
+      border-color: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .dangerBtn {
+      background: rgba(255, 80, 80, 0.08);
+      color: #ffd0d0;
+      border-color: rgba(255, 80, 80, 0.18);
+    }
+
+    .viewportWrap {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      cursor: grab;
+    }
+
+    .viewportWrap.dragging {
+      cursor: grabbing;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      user-select: none;
+    }
+
+    .edge {
+      stroke: var(--line);
+      stroke-width: 2.2;
+      fill: none;
+      transition: 0.18s ease;
+      pointer-events: stroke;
+    }
+
+    .edge.active {
+      stroke: var(--line-active);
+      stroke-width: 3.4;
+    }
+
+    .edge-label {
+      fill: var(--muted);
+      font-size: 11px;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .node-group {
+      cursor: pointer;
+    }
+
+    .node-circle {
+      stroke: rgba(255,255,255,0.22);
+      stroke-width: 2;
+      transition: 0.18s ease;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.28));
+    }
+
+    .node-group.selected .node-circle {
+      stroke: #ffd3df;
+      stroke-width: 3.2;
+      filter: drop-shadow(0 0 18px rgba(190,26,72,0.35));
+    }
+
+    .node-group.connecting .node-circle {
+      stroke: #ffd3df;
+      stroke-width: 3.2;
+    }
+
+    .node-label {
+      fill: #f2f2f7;
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .node-sub {
+      fill: var(--muted);
+      font-size: 10px;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .sidebar {
+      background: rgba(14, 14, 18, 0.92);
+      backdrop-filter: blur(12px);
+      padding: 16px;
+      overflow-y: auto;
+      min-width: 0;
+    }
+
+    .sideCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .sideCard + .sideCard {
+      margin-top: 12px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d98aa0;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .sideTitle {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .sideText {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: rgba(190,26,72,0.45);
+      box-shadow: 0 0 0 4px rgba(190,26,72,0.10);
+    }
+
+    .chipRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #cdd0db;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .muted {
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .listTitle {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .linkList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d7d9e4;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .linkList li + li {
+      margin-top: 5px;
+    }
+
+    .jsonBox {
+      width: 100%;
+      min-height: 180px;
+      background: rgba(255,255,255,0.03);
+      color: #ededf4;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      line-height: 1.5;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      .main {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        min-height: 58vh;
+      }
+
+      .sidebar {
+        max-height: 42vh;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <section class="main">
+      <div class="topbar">
+        <div class="titleWrap">
+          <h1>Backrooms Graph Editor</h1>
+          <p>Drag nodes, edit details, create links, and export JSON for your level map.</p>
+        </div>
+
+        <div class="toolbar">
+          <button onclick="zoomOut()">Zoom Out</button>
+          <button onclick="zoomIn()">Zoom In</button>
+          <button onclick="resetView()">Reset View</button>
+          <button onclick="addNode()">Add Node</button>
+          <button class="primaryBtn" onclick="exportJson()">Export JSON</button>
+        </div>
+      </div>
+
+      <div id="viewportWrap" class="viewportWrap">
+        <svg id="graphSvg" viewBox="0 0 1800 1200" preserveAspectRatio="xMidYMid meet">
+          <g id="cameraLayer">
+            <g id="edgeLayer"></g>
+            <g id="previewLayer"></g>
+            <g id="nodeLayer"></g>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sideCard">
+        <div class="eyebrow">Editor state</div>
+        <div id="editorStatus" class="muted">Loading graph...</div>
+        <div class="row">
+          <button onclick="startConnectMode()" id="connectBtn">Connect Mode</button>
+          <button onclick="cancelConnectMode()">Cancel Connect</button>
+        </div>
+        <div class="sideText">In connect mode, click a source node, then click a target node.</div>
+      </div>
+
+      <div class="sideCard">
+        <div class="eyebrow">Selected node</div>
+        <h2 id="nodeTitle" class="sideTitle">Nothing selected</h2>
+        <div id="nodeInfo" class="muted" style="margin-top:6px;">Click a node to edit it.</div>
+
+        <div class="field">
+          <label for="nodeIdInput">ID</label>
+          <input id="nodeIdInput" type="text" />
+        </div>
+
+        <div class="field">
+          <label for="nodeLabelInput">Title</label>
+          <input id="nodeLabelInput" type="text" />
+        </div>
+
+        <div class="field">
+          <label for="nodeColorInput">Color</label>
+          <input id="nodeColorInput" type="color" value="#888888" />
+        </div>
+
+        <div class="field">
+          <label for="nodeTagsInput">Tags (comma separated)</label>
+          <input id="nodeTagsInput" type="text" />
+        </div>
+
+        <div class="field">
+          <label for="nodeDescriptionInput">Description</label>
+          <textarea id="nodeDescriptionInput"></textarea>
+        </div>
+
+        <div class="row">
+          <button onclick="applyNodeChanges()">Apply Node Changes</button>
+          <button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button>
+        </div>
+      </div>
+
+      <div class="sideCard">
+        <h3 class="listTitle">Outgoing links</h3>
+        <ul id="outgoingList" class="linkList"></ul>
+      </div>
+
+      <div class="sideCard">
+        <h3 class="listTitle">Incoming links</h3>
+        <ul id="incomingList" class="linkList"></ul>
+      </div>
+
+      <div class="sideCard">
+        <div class="eyebrow">Export</div>
+        <textarea id="jsonOutput" class="jsonBox" readonly></textarea>
+        <div class="row">
+          <button onclick="copyJson()">Copy JSON</button>
+          <button onclick="downloadJson()">Download JSON</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const GRAPH_JSON_URL = "./backrooms-levels.json";
+
+    let graphData = { nodes: [], edges: [] };
+    let selectedNodeId = null;
+    let connectingFromNodeId = null;
+
+    let camera = { x: 0, y: 0, scale: 1 };
+
+    let dragState = {
+      canvasDragging: false,
+      nodeDragging: false,
+      nodeId: null,
+      startX: 0,
+      startY: 0,
+      cameraX: 0,
+      cameraY: 0,
+      nodeStartX: 0,
+      nodeStartY: 0
+    };
+
+    const svg = document.getElementById("graphSvg");
+    const cameraLayer = document.getElementById("cameraLayer");
+    const edgeLayer = document.getElementById("edgeLayer");
+    const previewLayer = document.getElementById("previewLayer");
+    const nodeLayer = document.getElementById("nodeLayer");
+    const viewportWrap = document.getElementById("viewportWrap");
+
+    const nodeIdInput = document.getElementById("nodeIdInput");
+    const nodeLabelInput = document.getElementById("nodeLabelInput");
+    const nodeColorInput = document.getElementById("nodeColorInput");
+    const nodeTagsInput = document.getElementById("nodeTagsInput");
+    const nodeDescriptionInput = document.getElementById("nodeDescriptionInput");
+    const jsonOutput = document.getElementById("jsonOutput");
+
+    function setEditorStatus(text) {
+      document.getElementById("editorStatus").textContent = text;
+    }
+
+    function normalizeGraphData(raw) {
+      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+
+      return {
+        nodes: rawNodes.map(node => ({
+          id: String(node.id ?? ""),
+          label: typeof node.label === "string" ? node.label : "Unnamed",
+          description: typeof node.description === "string" ? node.description : "",
+          x: typeof node.x === "number" ? node.x : 0,
+          y: typeof node.y === "number" ? node.y : 0,
+          color: typeof node.color === "string" ? node.color : "#888888",
+          tags: Array.isArray(node.tags) ? node.tags.map(String) : []
+        })),
+        edges: rawEdges.map(edge => ({
+          from: String(edge.from ?? ""),
+          to: String(edge.to ?? ""),
+          label: typeof edge.label === "string" ? edge.label : ""
+        }))
+      };
+    }
+
+    function getNodeById(id) {
+      return graphData.nodes.find(node => node.id === id) || null;
+    }
+
+    function getOutgoingEdges(nodeId) {
+      return graphData.edges.filter(edge => edge.from === nodeId);
+    }
+
+    function getIncomingEdges(nodeId) {
+      return graphData.edges.filter(edge => edge.to === nodeId);
+    }
+
+    function getConnectedNodeIds(nodeId) {
+      const connected = new Set();
+      for (const edge of graphData.edges) {
+        if (edge.from === nodeId) connected.add(edge.to);
+        if (edge.to === nodeId) connected.add(edge.from);
+      }
+      return connected;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function updateCamera() {
+      cameraLayer.setAttribute(
+        "transform",
+        `translate(${camera.x} ${camera.y}) scale(${camera.scale})`
+      );
+    }
+
+    function clampScale(value) {
+      return Math.max(0.4, Math.min(2.5, value));
+    }
+
+    function zoomIn() {
+      camera.scale = clampScale(camera.scale * 1.14);
+      updateCamera();
+    }
+
+    function zoomOut() {
+      camera.scale = clampScale(camera.scale / 1.14);
+      updateCamera();
+    }
+
+    function resetView() {
+      camera.x = 0;
+      camera.y = 0;
+      camera.scale = 1;
+      updateCamera();
+    }
+
+    function serializeGraphData() {
+      return {
+        nodes: graphData.nodes.map(node => ({
+          id: node.id,
+          label: node.label,
+          description: node.description,
+          x: node.x,
+          y: node.y,
+          color: node.color,
+          tags: node.tags
+        })),
+        edges: graphData.edges.map(edge => ({
+          from: edge.from,
+          to: edge.to,
+          label: edge.label
+        }))
+      };
+    }
+
+    function refreshJsonOutput() {
+      jsonOutput.value = JSON.stringify(serializeGraphData(), null, 2);
+    }
+
+    function createCurvedPath(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const curve = Math.max(50, Math.abs(dx) * 0.18 + Math.abs(dy) * 0.12);
+      const cx1 = x1 + dx * 0.28;
+      const cy1 = y1;
+      const cx2 = x2 - dx * 0.28;
+      const cy2 = y2;
+      return `M ${x1} ${y1} C ${cx1} ${cy1 - curve * 0.08}, ${cx2} ${cy2 + curve * 0.08}, ${x2} ${y2}`;
+    }
+
+    function renderGraph() {
+      edgeLayer.innerHTML = "";
+      nodeLayer.innerHTML = "";
+      previewLayer.innerHTML = "";
+
+      for (const edge of graphData.edges) {
+        const fromNode = getNodeById(edge.from);
+        const toNode = getNodeById(edge.to);
+        if (!fromNode || !toNode) continue;
+
+        const isActive =
+          selectedNodeId &&
+          (edge.from === selectedNodeId || edge.to === selectedNodeId);
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", createCurvedPath(fromNode.x, fromNode.y, toNode.x, toNode.y));
+        path.setAttribute("class", `edge${isActive ? " active" : ""}`);
+        path.addEventListener("dblclick", (event) => {
+          event.stopPropagation();
+          const confirmed = confirm(`Delete edge "${edge.from} -> ${edge.to}"?`);
+          if (!confirmed) return;
+          graphData.edges = graphData.edges.filter(e => !(e.from === edge.from && e.to === edge.to && e.label === edge.label));
+          renderGraph();
+          renderSidebar();
+          refreshJsonOutput();
+          setEditorStatus("Deleted edge.");
+        });
+        edgeLayer.appendChild(path);
+
+        if (edge.label) {
+          const midX = (fromNode.x + toNode.x) / 2;
+          const midY = (fromNode.y + toNode.y) / 2 - 8;
+          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          label.setAttribute("x", midX);
+          label.setAttribute("y", midY);
+          label.setAttribute("class", "edge-label");
+          label.textContent = edge.label;
+          edgeLayer.appendChild(label);
+        }
+      }
+
+      for (const node of graphData.nodes) {
+        const isSelected = node.id === selectedNodeId;
+        const isConnecting = node.id === connectingFromNodeId;
+
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.setAttribute(
+          "class",
+          `node-group${isSelected ? " selected" : ""}${isConnecting ? " connecting" : ""}`
+        );
+        group.setAttribute("transform", `translate(${node.x} ${node.y})`);
+
+        group.addEventListener("mousedown", (event) => {
+          event.stopPropagation();
+          dragState.nodeDragging = true;
+          dragState.nodeId = node.id;
+          dragState.startX = event.clientX;
+          dragState.startY = event.clientY;
+          dragState.nodeStartX = node.x;
+          dragState.nodeStartY = node.y;
+        });
+
+        group.addEventListener("click", (event) => {
+          event.stopPropagation();
+
+          if (connectingFromNodeId) {
+            if (connectingFromNodeId !== node.id) {
+              const edgeLabel = prompt("Optional edge label:", "") || "";
+              const exists = graphData.edges.some(edge => edge.from === connectingFromNodeId && edge.to === node.id && edge.label === edgeLabel);
+              if (!exists) {
+                graphData.edges.push({
+                  from: connectingFromNodeId,
+                  to: node.id,
+                  label: edgeLabel
+                });
+                setEditorStatus(`Connected ${connectingFromNodeId} -> ${node.id}`);
+                refreshJsonOutput();
+              }
+            }
+            connectingFromNodeId = null;
+            renderGraph();
+            renderSidebar();
+            return;
+          }
+
+          selectedNodeId = node.id;
+          renderGraph();
+          renderSidebar();
+        });
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", 20);
+        circle.setAttribute("cx", 0);
+        circle.setAttribute("cy", 0);
+        circle.setAttribute("fill", node.color || "#888");
+        circle.setAttribute("class", "node-circle");
+        group.appendChild(circle);
+
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        title.setAttribute("x", 0);
+        title.setAttribute("y", 40);
+        title.setAttribute("class", "node-label");
+        title.textContent = node.label;
+        group.appendChild(title);
+
+        if ((node.tags || []).length) {
+          const sub = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          sub.setAttribute("x", 0);
+          sub.setAttribute("y", 56);
+          sub.setAttribute("class", "node-sub");
+          sub.textContent = node.tags.slice(0, 2).join(" • ");
+          group.appendChild(sub);
+        }
+
+        nodeLayer.appendChild(group);
+      }
+    }
+
+    function renderSidebar() {
+      const titleEl = document.getElementById("nodeTitle");
+      const infoEl = document.getElementById("nodeInfo");
+      const outgoingEl = document.getElementById("outgoingList");
+      const incomingEl = document.getElementById("incomingList");
+
+      if (!selectedNodeId) {
+        titleEl.textContent = "Nothing selected";
+        infoEl.textContent = "Click a node to edit it.";
+        nodeIdInput.value = "";
+        nodeLabelInput.value = "";
+        nodeColorInput.value = "#888888";
+        nodeTagsInput.value = "";
+        nodeDescriptionInput.value = "";
+        outgoingEl.innerHTML = `<li class="muted">No node selected.</li>`;
+        incomingEl.innerHTML = `<li class="muted">No node selected.</li>`;
+        return;
+      }
+
+      const node = getNodeById(selectedNodeId);
+      if (!node) return;
+
+      titleEl.textContent = node.label;
+      infoEl.textContent = `Editing ${node.id}`;
+
+      nodeIdInput.value = node.id;
+      nodeLabelInput.value = node.label;
+      nodeColorInput.value = node.color || "#888888";
+      nodeTagsInput.value = (node.tags || []).join(", ");
+      nodeDescriptionInput.value = node.description || "";
+
+      const outgoing = getOutgoingEdges(node.id);
+      const incoming = getIncomingEdges(node.id);
+
+      outgoingEl.innerHTML = outgoing.length
+        ? outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            return `<li><strong>${escapeHtml(target?.label || edge.to)}</strong>${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : `<li class="muted">No outgoing links.</li>`;
+
+      incomingEl.innerHTML = incoming.length
+        ? incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            return `<li><strong>${escapeHtml(source?.label || edge.from)}</strong>${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : `<li class="muted">No incoming links.</li>`;
+    }
+
+    function addNode() {
+      const nextIdBase = "new-level";
+      let counter = 1;
+      let newId = `${nextIdBase}-${counter}`;
+
+      while (getNodeById(newId)) {
+        counter++;
+        newId = `${nextIdBase}-${counter}`;
+      }
+
+      graphData.nodes.push({
+        id: newId,
+        label: `New Level ${counter}`,
+        description: "",
+        x: 600 + (counter * 20),
+        y: 350 + (counter * 20),
+        color: "#888888",
+        tags: []
+      });
+
+      selectedNodeId = newId;
+      renderGraph();
+      renderSidebar();
+      refreshJsonOutput();
+      setEditorStatus(`Added node ${newId}`);
+    }
+
+    function applyNodeChanges() {
+      if (!selectedNodeId) return;
+
+      const node = getNodeById(selectedNodeId);
+      if (!node) return;
+
+      const oldId = node.id;
+      const newId = nodeIdInput.value.trim();
+
+      if (!newId) {
+        alert("Node ID cannot be empty.");
+        return;
+      }
+
+      if (newId !== oldId && getNodeById(newId)) {
+        alert("That node ID already exists.");
+        return;
+      }
+
+      node.id = newId;
+      node.label = nodeLabelInput.value.trim() || "Unnamed";
+      node.color = nodeColorInput.value || "#888888";
+      node.description = nodeDescriptionInput.value || "";
+      node.tags = nodeTagsInput.value
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(Boolean);
+
+      if (newId !== oldId) {
+        for (const edge of graphData.edges) {
+          if (edge.from === oldId) edge.from = newId;
+          if (edge.to === oldId) edge.to = newId;
+        }
+        selectedNodeId = newId;
+        if (connectingFromNodeId === oldId) connectingFromNodeId = newId;
+      }
+
+      renderGraph();
+      renderSidebar();
+      refreshJsonOutput();
+      setEditorStatus(`Updated ${newId}`);
+    }
+
+    function deleteSelectedNode() {
+      if (!selectedNodeId) return;
+      const node = getNodeById(selectedNodeId);
+      if (!node) return;
+
+      const confirmed = confirm(`Delete node "${node.label}" and all connected edges?`);
+      if (!confirmed) return;
+
+      graphData.nodes = graphData.nodes.filter(n => n.id !== selectedNodeId);
+      graphData.edges = graphData.edges.filter(edge => edge.from !== selectedNodeId && edge.to !== selectedNodeId);
+
+      selectedNodeId = null;
+      if (connectingFromNodeId === node.id) connectingFromNodeId = null;
+
+      renderGraph();
+      renderSidebar();
+      refreshJsonOutput();
+      setEditorStatus("Deleted node.");
+    }
+
+    function startConnectMode() {
+      if (!selectedNodeId) {
+        alert("Select a source node first.");
+        return;
+      }
+      connectingFromNodeId = selectedNodeId;
+      renderGraph();
+      setEditorStatus(`Connect mode: click a target node for ${connectingFromNodeId}`);
+    }
+
+    function cancelConnectMode() {
+      connectingFromNodeId = null;
+      renderGraph();
+      setEditorStatus("Connect mode cancelled.");
+    }
+
+    function exportJson() {
+      refreshJsonOutput();
+      setEditorStatus("JSON refreshed.");
+    }
+
+    async function copyJson() {
+      refreshJsonOutput();
+      try {
+        await navigator.clipboard.writeText(jsonOutput.value);
+        setEditorStatus("Copied JSON to clipboard.");
+      } catch (err) {
+        console.error(err);
+        setEditorStatus("Failed to copy JSON.");
+      }
+    }
+
+    function downloadJson() {
+      refreshJsonOutput();
+      const blob = new Blob([jsonOutput.value], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "backrooms-levels.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      setEditorStatus("Downloaded backrooms-levels.json");
+    }
+
+    viewportWrap.addEventListener("mousedown", (event) => {
+      if (event.target.closest(".node-group")) return;
+      dragState.canvasDragging = true;
+      viewportWrap.classList.add("dragging");
+      dragState.startX = event.clientX;
+      dragState.startY = event.clientY;
+      dragState.cameraX = camera.x;
+      dragState.cameraY = camera.y;
+    });
+
+    window.addEventListener("mousemove", (event) => {
+      if (dragState.nodeDragging && dragState.nodeId) {
+        const node = getNodeById(dragState.nodeId);
+        if (!node) return;
+
+        const dx = (event.clientX - dragState.startX) / camera.scale;
+        const dy = (event.clientY - dragState.startY) / camera.scale;
+
+        node.x = Math.round(dragState.nodeStartX + dx);
+        node.y = Math.round(dragState.nodeStartY + dy);
+
+        renderGraph();
+        refreshJsonOutput();
+        return;
+      }
+
+      if (!dragState.canvasDragging) return;
+      const dx = event.clientX - dragState.startX;
+      const dy = event.clientY - dragState.startY;
+      camera.x = dragState.cameraX + dx;
+      camera.y = dragState.cameraY + dy;
+      updateCamera();
+    });
+
+    window.addEventListener("mouseup", () => {
+      dragState.canvasDragging = false;
+      dragState.nodeDragging = false;
+      dragState.nodeId = null;
+      viewportWrap.classList.remove("dragging");
+    });
+
+    viewportWrap.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const scaleFactor = event.deltaY > 0 ? 0.92 : 1.08;
+      camera.scale = clampScale(camera.scale * scaleFactor);
+      updateCamera();
+    }, { passive: false });
+
+    svg.addEventListener("click", () => {
+      if (connectingFromNodeId) return;
+      selectedNodeId = null;
+      renderGraph();
+      renderSidebar();
+    });
+
+    async function loadGraphData() {
+      const response = await fetch(GRAPH_JSON_URL + "?v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not load backrooms-levels.json");
+      }
+
+      graphData = normalizeGraphData(await response.json());
+    }
+
+    async function init() {
+      try {
+        await loadGraphData();
+        updateCamera();
+        renderGraph();
+        renderSidebar();
+        refreshJsonOutput();
+        setEditorStatus("Loaded graph.");
+      } catch (error) {
+        console.error(error);
+        setEditorStatus(error.message || "Failed to load graph.");
+        refreshJsonOutput();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
