@@ -7,7 +7,11 @@
       "x": 260,
       "y": 260,
       "color": "#d4b15a",
-      "tags": ["start", "baseline", "familiar"]
+      "tags": [
+        "start",
+        "baseline",
+        "familiar"
+      ]
     },
     {
       "id": "level-1",
@@ -16,7 +20,10 @@
       "x": 520,
       "y": 260,
       "color": "#6c9cff",
-      "tags": ["industrial", "progression"]
+      "tags": [
+        "industrial",
+        "progression"
+      ]
     },
     {
       "id": "level-2",
@@ -25,7 +32,11 @@
       "x": 760,
       "y": 220,
       "color": "#6c9cff",
-      "tags": ["maintenance", "heat", "progression"]
+      "tags": [
+        "maintenance",
+        "heat",
+        "progression"
+      ]
     },
     {
       "id": "level-4",
@@ -34,16 +45,24 @@
       "x": 760,
       "y": 480,
       "color": "#6c9cff",
-      "tags": ["hub", "safe-ish", "office"]
+      "tags": [
+        "hub",
+        "safe-ish",
+        "office"
+      ]
     },
     {
       "id": "level-7",
       "label": "Level 7",
       "description": "Deep flooded isolation. Certain transitions from here can fling players into wildly different branches.",
-      "x": 1040,
-      "y": 200,
+      "x": 1017,
+      "y": -23,
       "color": "#ff7d7d",
-      "tags": ["water", "danger", "isolated"]
+      "tags": [
+        "water",
+        "danger",
+        "isolated"
+      ]
     },
     {
       "id": "level-fun",
@@ -52,7 +71,11 @@
       "x": 1280,
       "y": 330,
       "color": "#ff7d7d",
-      "tags": ["hostile", "partygoers", "trap"]
+      "tags": [
+        "hostile",
+        "partygoers",
+        "trap"
+      ]
     },
     {
       "id": "level-11",
@@ -61,28 +84,76 @@
       "x": 1080,
       "y": 560,
       "color": "#ad7bff",
-      "tags": ["city", "large", "branching"]
+      "tags": [
+        "city",
+        "large",
+        "branching"
+      ]
     },
     {
       "id": "slide-route",
       "label": "Red Slide Route",
       "description": "A reminder node for a dangerous special transition.",
-      "x": 980,
-      "y": 350,
+      "x": 1357,
+      "y": 43,
       "color": "#ff7d7d",
-      "tags": ["special route", "one-way", "chaotic"]
+      "tags": [
+        "special route",
+        "one-way",
+        "chaotic"
+      ]
     }
   ],
   "edges": [
-    { "from": "level-0", "to": "level-1", "label": "stairwell / noclip path" },
-    { "from": "level-1", "to": "level-2", "label": "maintenance access" },
-    { "from": "level-1", "to": "level-4", "label": "alternate progression" },
-    { "from": "level-2", "to": "level-7", "label": "deeper route" },
-    { "from": "level-4", "to": "level-11", "label": "safer branch" },
-    { "from": "level-7", "to": "slide-route", "label": "red slide trigger" },
-    { "from": "slide-route", "to": "level-fun", "label": "good luck" },
-    { "from": "level-fun", "to": "level-0", "label": "rare reset loop" },
-    { "from": "level-11", "to": "level-4", "label": "return route" },
-    { "from": "level-11", "to": "level-fun", "label": "bad route" }
+    {
+      "from": "level-0",
+      "to": "level-1",
+      "label": "stairwell / noclip path"
+    },
+    {
+      "from": "level-1",
+      "to": "level-2",
+      "label": "maintenance access"
+    },
+    {
+      "from": "level-1",
+      "to": "level-4",
+      "label": "alternate progression"
+    },
+    {
+      "from": "level-2",
+      "to": "level-7",
+      "label": "deeper route"
+    },
+    {
+      "from": "level-4",
+      "to": "level-11",
+      "label": "safer branch"
+    },
+    {
+      "from": "level-7",
+      "to": "slide-route",
+      "label": "red slide trigger"
+    },
+    {
+      "from": "slide-route",
+      "to": "level-fun",
+      "label": "good luck"
+    },
+    {
+      "from": "level-fun",
+      "to": "level-0",
+      "label": "rare reset loop"
+    },
+    {
+      "from": "level-11",
+      "to": "level-4",
+      "label": "return route"
+    },
+    {
+      "from": "level-11",
+      "to": "level-fun",
+      "label": "bad route"
+    }
   ]
 }
