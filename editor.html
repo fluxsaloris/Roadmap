@@ -382,7 +382,8 @@
     }
 
     .rootCard,
-    .panel {
+    .panel,
+    .changePanel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
@@ -390,7 +391,8 @@
       box-shadow: var(--shadow-md);
     }
 
-    .rootCard {
+    .rootCard,
+    .changePanel {
       margin-bottom: 14px;
     }
 
@@ -427,7 +429,8 @@
     }
 
     .rootTitle,
-    .panelHeaderText h2 {
+    .panelHeaderText h2,
+    .changePanelTitle {
       margin: 0;
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -437,7 +440,8 @@
       font-size: 26px;
     }
 
-    .panelHeaderText h2 {
+    .panelHeaderText h2,
+    .changePanelTitle {
       font-size: 19px;
       line-height: 1.1;
     }
@@ -662,6 +666,72 @@
       padding-top: 6px;
     }
 
+    .changeSummaryMeta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 12px;
+    }
+
+    .changeToolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .changeGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .changeBucket {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .changeBucket h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .changeList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d8d9e2;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .changeList li + li {
+      margin-top: 4px;
+    }
+
+    .changeEmpty {
+      color: var(--muted-2);
+      font-size: 12px;
+    }
+
+    .changeTextarea {
+      width: 100%;
+      margin-top: 12px;
+      min-height: 140px;
+      background: rgba(255,255,255,0.03);
+      color: #ededf4;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      font-family: inherit;
+      resize: vertical;
+    }
+
     #loadingOverlay {
       position: fixed;
       inset: 0;
@@ -765,7 +835,8 @@
         top: 0;
       }
 
-      #panels {
+      #panels,
+      .changeGrid {
         grid-template-columns: 1fr;
       }
 
@@ -803,7 +874,8 @@
 
       .hero,
       .rootCard,
-      .panel {
+      .panel,
+      .changePanel {
         padding: 12px;
       }
 
@@ -815,7 +887,8 @@
         font-size: 22px;
       }
 
-      .panelHeaderText h2 {
+      .panelHeaderText h2,
+      .changePanelTitle {
         font-size: 18px;
       }
 
@@ -865,7 +938,7 @@
         </div>
         <div class="workspaceCard">
           <div class="workspaceLabel">History tools</div>
-          <div class="workspaceValue">History and diff viewer planned in Phase 2.</div>
+          <div class="workspaceValue">Update log is now live below.</div>
         </div>
       </div>
 
@@ -880,7 +953,6 @@
             <input id="compactModeToggle" type="checkbox" />
             Compact Mode
           </label>
-          <button class="ghostBtn" type="button" disabled>History Coming Soon</button>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
           <button class="primaryBtn" onclick="saveRoadmap()">Save to GitHub</button>
@@ -914,6 +986,7 @@
       </div>
     </section>
 
+    <section id="changeSummaryPanel" class="changePanel"></section>
     <section id="rootPanel" class="rootCard"></section>
     <section id="panels"></section>
   </div>
@@ -922,7 +995,7 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v9";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v10";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
@@ -951,6 +1024,11 @@
 
     let localAutosaveTimer = null;
     let githubAutosaveTimer = null;
+
+    let historyIndexCache = null;
+    let snapshotCache = new Map();
+    let changeSummaryTimer = null;
+    let latestDiffContext = null;
 
     function showLoading(text = "Loading roadmap...") {
       document.getElementById("loadingText").textContent = text;
@@ -1183,6 +1261,7 @@
       setStatus(reason);
       queueLocalAutosave();
       queueGitHubAutosave();
+      queueChangeSummaryRefresh();
       updateSaveMetaUI();
     }
 
@@ -1190,6 +1269,7 @@
       hasUnsavedChanges = false;
       setSaveBadge("save-clean", message);
       setStatus(message);
+      queueChangeSummaryRefresh();
       updateSaveMetaUI();
     }
 
@@ -1464,6 +1544,426 @@
       }, GITHUB_AUTOSAVE_DELAY);
     }
 
+    function invalidateHistoryCache() {
+      historyIndexCache = null;
+      snapshotCache = new Map();
+      latestDiffContext = null;
+    }
+
+    function queueChangeSummaryRefresh() {
+      clearTimeout(changeSummaryTimer);
+      changeSummaryTimer = setTimeout(() => {
+        refreshChangeSummary();
+      }, 250);
+    }
+
+    async function fetchHistoryIndex() {
+      if (historyIndexCache) return historyIndexCache;
+      const res = await fetch(SAVE_URL + "?action=history", { method: "GET" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
+      historyIndexCache = json;
+      return json;
+    }
+
+    async function fetchSnapshotByPath(path) {
+      if (snapshotCache.has(path)) return snapshotCache.get(path);
+
+      const res = await fetch(SAVE_URL + "?action=snapshot&path=" + encodeURIComponent(path), {
+        method: "GET"
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
+
+      const data = json?.data ? normalizeGraphData(json.data) : normalizeGraphData(json);
+      snapshotCache.set(path, data);
+      return data;
+    }
+
+    function buildParentMapFromData(data) {
+      const map = new Map();
+      const children = new Map();
+
+      for (const node of data.nodes) children.set(Number(node.id), []);
+      for (const edge of data.edges) {
+        const from = Number(edge.from);
+        const to = Number(edge.to);
+        map.set(to, from);
+        if (!children.has(from)) children.set(from, []);
+        children.get(from).push(to);
+      }
+
+      return { parentMap: map, childMap: children };
+    }
+
+    function getRootIdFromData(data) {
+      const childIds = new Set(data.edges.map(e => Number(e.to)));
+      const root = data.nodes.find(n => !childIds.has(Number(n.id)));
+      return root ? Number(root.id) : (data.nodes[0] ? Number(data.nodes[0].id) : null);
+    }
+
+    function getOrderedTopLevelChildren(data) {
+      const root = getRootIdFromData(data);
+      const nodesById = new Map(data.nodes.map(n => [Number(n.id), n]));
+      const top = data.edges
+        .filter(e => Number(e.from) === Number(root))
+        .map(e => Number(e.to));
+
+      top.sort((a, b) => {
+        const na = nodesById.get(a);
+        const nb = nodesById.get(b);
+        const ax = typeof na?.x === "number" ? na.x : 0;
+        const bx = typeof nb?.x === "number" ? nb.x : 0;
+        if (ax !== bx) return ax - bx;
+        const ay = typeof na?.y === "number" ? na.y : 0;
+        const by = typeof nb?.y === "number" ? nb.y : 0;
+        if (ay !== by) return ay - by;
+        return (na?.label || "").localeCompare(nb?.label || "");
+      });
+
+      return { rootId: root, order: top, nodesById };
+    }
+
+    function computeDiff(previousData, currentData) {
+      const prevNodes = new Map(previousData.nodes.map(n => [Number(n.id), n]));
+      const currNodes = new Map(currentData.nodes.map(n => [Number(n.id), n]));
+      const prevTree = buildParentMapFromData(previousData);
+      const currTree = buildParentMapFromData(currentData);
+
+      const added = [];
+      const deleted = [];
+      const renamed = [];
+      const statusChanged = [];
+      const descriptionChanged = [];
+      const moved = [];
+      const reordered = [];
+
+      for (const [id, curr] of currNodes.entries()) {
+        if (!prevNodes.has(id)) {
+          const parentId = currTree.parentMap.get(id);
+          const parentLabel = currNodes.get(parentId)?.label || (Number(id) === Number(getRootIdFromData(currentData)) ? "Root" : "Unknown");
+          added.push({ id, label: curr.label, parentLabel });
+        }
+      }
+
+      for (const [id, prev] of prevNodes.entries()) {
+        if (!currNodes.has(id)) {
+          const parentId = prevTree.parentMap.get(id);
+          const parentLabel = prevNodes.get(parentId)?.label || (Number(id) === Number(getRootIdFromData(previousData)) ? "Root" : "Unknown");
+          deleted.push({ id, label: prev.label, parentLabel });
+        }
+      }
+
+      for (const [id, curr] of currNodes.entries()) {
+        const prev = prevNodes.get(id);
+        if (!prev) continue;
+
+        if ((prev.label || "") !== (curr.label || "")) {
+          renamed.push({ id, from: prev.label || "Unnamed", to: curr.label || "Unnamed" });
+        }
+
+        if ((prev.status || "pending") !== (curr.status || "pending")) {
+          statusChanged.push({
+            id,
+            label: curr.label || prev.label || "Unnamed",
+            from: prev.status || "pending",
+            to: curr.status || "pending"
+          });
+        }
+
+        if ((prev.description || "") !== (curr.description || "")) {
+          descriptionChanged.push({
+            id,
+            label: curr.label || prev.label || "Unnamed"
+          });
+        }
+
+        const prevParentId = prevTree.parentMap.get(id) ?? null;
+        const currParentId = currTree.parentMap.get(id) ?? null;
+        if (prevParentId !== currParentId) {
+          moved.push({
+            id,
+            label: curr.label || prev.label || "Unnamed",
+            from: prevNodes.get(prevParentId)?.label || "Root",
+            to: currNodes.get(currParentId)?.label || "Root"
+          });
+        }
+      }
+
+      const prevTop = getOrderedTopLevelChildren(previousData);
+      const currTop = getOrderedTopLevelChildren(currentData);
+
+      const sharedTop = currTop.order.filter(id => prevTop.order.includes(id));
+      for (const id of sharedTop) {
+        const prevIndex = prevTop.order.indexOf(id);
+        const currIndex = currTop.order.indexOf(id);
+        if (prevIndex !== currIndex) {
+          reordered.push({
+            id,
+            label: currTop.nodesById.get(id)?.label || prevTop.nodesById.get(id)?.label || "Unnamed",
+            from: prevIndex + 1,
+            to: currIndex + 1
+          });
+        }
+      }
+
+      return {
+        counts: {
+          added: added.length,
+          deleted: deleted.length,
+          renamed: renamed.length,
+          statusChanged: statusChanged.length,
+          descriptionChanged: descriptionChanged.length,
+          moved: moved.length,
+          reordered: reordered.length
+        },
+        added,
+        deleted,
+        renamed,
+        statusChanged,
+        descriptionChanged,
+        moved,
+        reordered
+      };
+    }
+
+    function formatDiffSummary(diff, contextLabel) {
+      const lines = [];
+      lines.push("Update Log");
+      if (contextLabel) lines.push(contextLabel);
+      lines.push("");
+
+      if (!hasAnyDiff(diff)) {
+        lines.push("- No changes detected");
+        return lines.join("\n");
+      }
+
+      for (const item of diff.added) {
+        lines.push(`- Added: ${item.label}${item.parentLabel ? " (under " + item.parentLabel + ")" : ""}`);
+      }
+
+      for (const item of diff.deleted) {
+        lines.push(`- Deleted: ${item.label}${item.parentLabel ? " (from " + item.parentLabel + ")" : ""}`);
+      }
+
+      for (const item of diff.renamed) {
+        lines.push(`- Renamed: ${item.from} -> ${item.to}`);
+      }
+
+      for (const item of diff.statusChanged) {
+        lines.push(`- Updated status: ${item.label} (${getStatusLabel(item.from)} -> ${getStatusLabel(item.to)})`);
+      }
+
+      for (const item of diff.descriptionChanged) {
+        lines.push(`- Updated description: ${item.label}`);
+      }
+
+      for (const item of diff.moved) {
+        lines.push(`- Moved: ${item.label} (${item.from} -> ${item.to})`);
+      }
+
+      for (const item of diff.reordered) {
+        lines.push(`- Reordered: ${item.label} (${item.from} -> ${item.to})`);
+      }
+
+      return lines.join("\n");
+    }
+
+    function formatDiscordLog(diff, contextLabel) {
+      const lines = [];
+      lines.push("Roadmap Update");
+      if (contextLabel) lines.push(contextLabel);
+      lines.push("");
+
+      if (!hasAnyDiff(diff)) {
+        lines.push("- No major roadmap changes");
+        return lines.join("\n");
+      }
+
+      if (diff.added.length) lines.push(`- Added: ${diff.added.map(x => x.label).join(", ")}`);
+      if (diff.deleted.length) lines.push(`- Deleted: ${diff.deleted.map(x => x.label).join(", ")}`);
+      if (diff.renamed.length) lines.push(`- Renamed: ${diff.renamed.map(x => `${x.from} -> ${x.to}`).join("; ")}`);
+      if (diff.statusChanged.length) lines.push(`- Status updates: ${diff.statusChanged.map(x => `${x.label} -> ${getStatusLabel(x.to)}`).join("; ")}`);
+      if (diff.descriptionChanged.length) lines.push(`- Description updates: ${diff.descriptionChanged.map(x => x.label).join(", ")}`);
+      if (diff.moved.length) lines.push(`- Moved: ${diff.moved.map(x => `${x.label} (${x.from} -> ${x.to})`).join("; ")}`);
+      if (diff.reordered.length) lines.push(`- Reordered: ${diff.reordered.map(x => x.label).join(", ")}`);
+
+      return lines.join("\n");
+    }
+
+    function hasAnyDiff(diff) {
+      return Object.values(diff.counts).some(count => count > 0);
+    }
+
+    function renderChangeBucket(title, items, formatter) {
+      return `
+        <div class="changeBucket">
+          <h3>${escapeHtml(title)}</h3>
+          ${
+            items.length
+              ? `<ul class="changeList">${items.map(item => `<li>${formatter(item)}</li>`).join("")}</ul>`
+              : `<div class="changeEmpty">No changes in this section.</div>`
+          }
+        </div>
+      `;
+    }
+
+    async function buildDiffContext() {
+      const history = await fetchHistoryIndex();
+      const versions = Array.isArray(history?.versions) ? history.versions : [];
+
+      if (!versions.length) {
+        return {
+          baselineLabel: "No saved history found yet.",
+          targetLabel: "Current draft",
+          diff: {
+            counts: {
+              added: 0, deleted: 0, renamed: 0,
+              statusChanged: 0, descriptionChanged: 0,
+              moved: 0, reordered: 0
+            },
+            added: [], deleted: [], renamed: [],
+            statusChanged: [], descriptionChanged: [],
+            moved: [], reordered: []
+          }
+        };
+      }
+
+      let baselineMeta = null;
+      let targetMeta = null;
+      let baselineData = null;
+      let targetData = null;
+      const currentData = normalizeGraphData(getSerializableGraphData());
+
+      if (hasUnsavedChanges || !lastSnapshotPath) {
+        baselineMeta = versions[0];
+        baselineData = await fetchSnapshotByPath(baselineMeta.path);
+        targetData = currentData;
+        return {
+          baselineLabel: `Comparing current draft to saved snapshot from ${formatTimestamp(Date.parse(baselineMeta.savedAt))}.`,
+          targetLabel: "Current draft",
+          diff: computeDiff(baselineData, targetData)
+        };
+      }
+
+      if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
+        targetMeta = versions[0];
+        baselineMeta = versions[1];
+        baselineData = await fetchSnapshotByPath(baselineMeta.path);
+        targetData = await fetchSnapshotByPath(targetMeta.path);
+
+        return {
+          baselineLabel: `Comparing latest saved snapshot (${formatTimestamp(Date.parse(targetMeta.savedAt))}) against previous saved snapshot (${formatTimestamp(Date.parse(baselineMeta.savedAt))}).`,
+          targetLabel: "Latest saved snapshot",
+          diff: computeDiff(baselineData, targetData)
+        };
+      }
+
+      baselineMeta = versions[0];
+      baselineData = await fetchSnapshotByPath(baselineMeta.path);
+      targetData = currentData;
+
+      return {
+        baselineLabel: `Comparing current draft to saved snapshot from ${formatTimestamp(Date.parse(baselineMeta.savedAt))}.`,
+        targetLabel: "Current draft",
+        diff: computeDiff(baselineData, targetData)
+      };
+    }
+
+    async function refreshChangeSummary() {
+      const panel = document.getElementById("changeSummaryPanel");
+      if (!panel) return;
+
+      panel.innerHTML = `
+        <div class="cardHeaderRow">
+          <div class="cardTitleBlock">
+            <h2 class="changePanelTitle">Change Summary</h2>
+            <div class="miniDescription">Checking saved history and current draft changes...</div>
+          </div>
+        </div>
+      `;
+
+      try {
+        latestDiffContext = await buildDiffContext();
+        const diff = latestDiffContext.diff;
+
+        panel.innerHTML = `
+          <div class="cardHeaderRow">
+            <div class="cardTitleBlock">
+              <h2 class="changePanelTitle">Change Summary</h2>
+              <div class="miniDescription">${escapeHtml(latestDiffContext.baselineLabel || "")}</div>
+            </div>
+          </div>
+
+          <div class="changeSummaryMeta">
+            <span class="metaChip">${diff.counts.added} added</span>
+            <span class="metaChip">${diff.counts.deleted} deleted</span>
+            <span class="metaChip">${diff.counts.renamed} renamed</span>
+            <span class="metaChip">${diff.counts.statusChanged} status</span>
+            <span class="metaChip">${diff.counts.descriptionChanged} description</span>
+            <span class="metaChip">${diff.counts.moved} moved</span>
+            <span class="metaChip">${diff.counts.reordered} reordered</span>
+          </div>
+
+          <div class="changeToolbar">
+            <button onclick="refreshChangeSummary()">Refresh Diff</button>
+            <button onclick="copyChangeSummary()">Copy Summary</button>
+            <button onclick="copyDiscordLog()">Copy Discord Log</button>
+          </div>
+
+          <div class="changeGrid">
+            ${renderChangeBucket("Added", diff.added, item => `${escapeHtml(item.label)}${item.parentLabel ? ` <span style="color:#8e8fa0;">(under ${escapeHtml(item.parentLabel)})</span>` : ""}`)}
+            ${renderChangeBucket("Deleted", diff.deleted, item => `${escapeHtml(item.label)}${item.parentLabel ? ` <span style="color:#8e8fa0;">(from ${escapeHtml(item.parentLabel)})</span>` : ""}`)}
+            ${renderChangeBucket("Renamed", diff.renamed, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}`)}
+            ${renderChangeBucket("Status Changed", diff.statusChanged, item => `${escapeHtml(item.label)} <span style="color:#8e8fa0;">(${escapeHtml(getStatusLabel(item.from))} → ${escapeHtml(getStatusLabel(item.to))})</span>`)}
+            ${renderChangeBucket("Description Changed", diff.descriptionChanged, item => escapeHtml(item.label))}
+            ${renderChangeBucket("Moved / Reordered", diff.moved.concat(diff.reordered), item => {
+              if (Object.prototype.hasOwnProperty.call(item, "from") && Object.prototype.hasOwnProperty.call(item, "to") && typeof item.from === "string") {
+                return `${escapeHtml(item.label)} <span style="color:#8e8fa0;">(${escapeHtml(item.from)} → ${escapeHtml(item.to)})</span>`;
+              }
+              return `${escapeHtml(item.label)} <span style="color:#8e8fa0;">(${item.from} → ${item.to})</span>`;
+            })}
+          </div>
+
+          <textarea class="changeTextarea" readonly>${formatDiffSummary(diff, latestDiffContext.baselineLabel)}</textarea>
+        `;
+      } catch (err) {
+        console.error(err);
+        panel.innerHTML = `
+          <div class="cardHeaderRow">
+            <div class="cardTitleBlock">
+              <h2 class="changePanelTitle">Change Summary</h2>
+              <div class="miniDescription">Couldn’t load history diff yet.</div>
+            </div>
+          </div>
+          <div class="changeEmpty" style="margin-top:10px;">${escapeHtml(err.message || "Unknown diff error")}</div>
+          <div class="changeToolbar">
+            <button onclick="refreshChangeSummary()">Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    async function copyTextToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("Copied update log to clipboard.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Copy failed.", true);
+      }
+    }
+
+    function copyChangeSummary() {
+      if (!latestDiffContext) return;
+      copyTextToClipboard(formatDiffSummary(latestDiffContext.diff, latestDiffContext.baselineLabel));
+    }
+
+    function copyDiscordLog() {
+      if (!latestDiffContext) return;
+      copyTextToClipboard(formatDiscordLog(latestDiffContext.diff, latestDiffContext.baselineLabel));
+    }
+
     function moveTopLevelPanel(id, direction) {
       syncAllVisibleInputsToGraph(false);
 
@@ -1644,7 +2144,6 @@
           </div>
 
           ${renderProgressBar(stats)}
-
           ${renderCompactEditor(node, detailsKey)}
 
           <div class="nodeActions">
@@ -1691,7 +2190,6 @@
           </div>
 
           ${renderProgressBar(stats)}
-
           ${renderCompactEditor(rootNode, "root-details", "Root Details")}
 
           <div class="nodeActions">
@@ -1743,7 +2241,6 @@
               </div>
 
               ${renderProgressBar(stats)}
-
               ${renderCompactEditor(node, collapseKey)}
 
               <div class="nodeActions">
@@ -1870,6 +2367,7 @@
         persistRemoteSaveMeta();
         persistSnapshotMeta();
         saveDraftToLocal();
+        invalidateHistoryCache();
 
         setSaveBadge("save-clean", "Saved to GitHub");
         setStatus(
@@ -1878,6 +2376,7 @@
             : "Saved to GitHub successfully."
         );
         updateSaveMetaUI();
+        queueChangeSummaryRefresh();
       } catch (err) {
         console.error(err);
         setStatus("Save failed.", true);
@@ -1997,6 +2496,9 @@
     window.discardLocalDraft = discardLocalDraft;
     window.toggleMajorCard = toggleMajorCard;
     window.toggleDetails = toggleDetails;
+    window.refreshChangeSummary = refreshChangeSummary;
+    window.copyChangeSummary = copyChangeSummary;
+    window.copyDiscordLog = copyDiscordLog;
 
     (async function init() {
       try {
@@ -2018,6 +2520,7 @@
           setStatus("Recovered unsaved local draft.");
           updateSaveMetaUI();
           requestAnimationFrame(autoGrowAllTextareas);
+          queueChangeSummaryRefresh();
           return;
         }
 
@@ -2032,12 +2535,19 @@
         markClean("Loaded latest roadmap.");
         updateSaveMetaUI();
         requestAnimationFrame(autoGrowAllTextareas);
+        queueChangeSummaryRefresh();
       } catch (err) {
         console.error(err);
         hideLoading();
         showErrorPanel("Initial load failed. Please refresh or check your connection.");
         setStatus("Initial load failed.", true);
         setSaveBadge("save-error", "Load failed");
+        document.getElementById("changeSummaryPanel").innerHTML = `
+          <div class="cardTitleBlock">
+            <h2 class="changePanelTitle">Change Summary</h2>
+            <div class="changeEmpty" style="margin-top:10px;">Couldn’t load roadmap editor state yet.</div>
+          </div>
+        `;
       }
     })();
   </script>
