@@ -7,20 +7,15 @@
   <style>
     :root {
       --bg: #070709;
-      --bg-soft: #0d0d11;
       --surface: rgba(20, 20, 26, 0.92);
-      --surface-soft: rgba(20, 20, 26, 0.72);
+      --surface-soft: rgba(255, 255, 255, 0.025);
       --border: rgba(255, 255, 255, 0.06);
-      --border-strong: rgba(255, 255, 255, 0.11);
       --text: #f4f4f7;
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --ok: #6ef08a;
       --ok-soft: rgba(110, 240, 138, 0.13);
-      --warn: #ffd27a;
       --warn-soft: rgba(255, 210, 122, 0.14);
-      --error: #ff8a8a;
       --error-soft: rgba(255, 138, 138, 0.14);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
@@ -52,7 +47,7 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      opacity: 0.12;
+      opacity: 0.10;
       background-image:
         radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
         radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
@@ -66,8 +61,8 @@
       inset: 0;
       margin: 8px;
       border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.12);
-      box-shadow: 0 0 24px rgba(190, 26, 72, 0.05);
+      border: 1px solid rgba(190, 26, 72, 0.10);
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
       pointer-events: none;
       z-index: 1;
     }
@@ -84,7 +79,7 @@
       position: sticky;
       top: 8px;
       z-index: 20;
-      background: rgba(13, 13, 18, 0.65);
+      background: rgba(13, 13, 18, 0.68);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 14px 16px;
@@ -92,7 +87,6 @@
       -webkit-backdrop-filter: blur(10px);
       box-shadow: var(--shadow-md);
       margin-bottom: 14px;
-      transition: padding 0.18s ease, border-radius 0.18s ease, background 0.18s ease;
     }
 
     .heroTop {
@@ -104,7 +98,7 @@
     }
 
     .heroTitle {
-      min-width: 300px;
+      min-width: 280px;
       flex: 1;
     }
 
@@ -128,9 +122,9 @@
     .heroTitle p {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13.5px;
-      line-height: 1.55;
-      max-width: 860px;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 820px;
     }
 
     .topRightMeta {
@@ -156,8 +150,8 @@
     }
 
     .status-pending {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.08);
       color: #c8c8d4;
     }
 
@@ -213,7 +207,7 @@
 
     .workspaceCard {
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.025);
+      background: var(--surface-soft);
       border-radius: 14px;
       padding: 10px 12px;
       min-height: 66px;
@@ -278,8 +272,8 @@
       color: #e5e5ec;
       border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      padding: 10px 13px;
-      font-size: 14px;
+      padding: 9px 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: 0.18s ease;
@@ -307,22 +301,12 @@
 
     .primaryBtn:hover {
       background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
-      border-color: rgba(255,255,255,0.08);
     }
 
     .dangerBtn {
       border-color: rgba(255, 138, 138, 0.26);
       color: #ffcbcb;
       background: rgba(255, 138, 138, 0.05);
-    }
-
-    .dangerBtn:hover {
-      background: rgba(255, 138, 138, 0.09);
-      border-color: rgba(255, 138, 138, 0.36);
-    }
-
-    .subtleBtn {
-      color: #d1d2dd;
     }
 
     .ghostBtn {
@@ -341,7 +325,7 @@
       color: #dddde7;
       font-size: 13px;
       font-weight: 600;
-      min-height: 42px;
+      min-height: 40px;
     }
 
     .toggleWrap input {
@@ -356,11 +340,10 @@
     }
 
     .statCard {
-      background: rgba(255,255,255,0.025);
+      background: var(--surface-soft);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 12px 13px;
-      box-shadow: none;
     }
 
     .statValue {
@@ -398,13 +381,17 @@
       color: var(--muted-2);
     }
 
-    .rootCard {
+    .rootCard,
+    .panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 14px;
-      margin-bottom: 14px;
       box-shadow: var(--shadow-md);
+    }
+
+    .rootCard {
+      margin-bottom: 14px;
     }
 
     .cardCollapsed .cardCollapsibleBody {
@@ -421,33 +408,45 @@
 
     .cardHeaderLeft {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
       min-width: 0;
       flex: 1;
     }
 
     .collapseBtn {
-      min-width: 40px;
+      min-width: 38px;
       padding: 8px 10px;
       font-size: 13px;
       line-height: 1;
     }
 
-    .rootHeader {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
+    .cardTitleBlock {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .rootTitle,
+    .panelHeaderText h2 {
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
     .rootTitle {
       font-size: 26px;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: -0.02em;
+    }
+
+    .panelHeaderText h2 {
+      font-size: 19px;
+      line-height: 1.1;
+    }
+
+    .miniDescription {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
     }
 
     #panels {
@@ -458,63 +457,25 @@
     }
 
     .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: var(--shadow-md);
-      min-height: 140px;
+      min-height: 120px;
       height: fit-content;
       align-self: start;
     }
 
-    .panel.status-panel-pending {
-      border-color: var(--border);
-    }
-
     .panel.status-panel-progress {
       border-color: rgba(190, 26, 72, 0.18);
-      box-shadow: 0 8px 20px rgba(190, 26, 72, 0.05);
     }
 
     .panel.status-panel-complete {
       border-color: rgba(110, 240, 138, 0.18);
-      box-shadow: 0 8px 20px rgba(110, 240, 138, 0.04);
     }
 
     .panel.hiddenBySearch {
       display: none;
     }
 
-    .panelHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .panelHeaderText {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .panelHeaderText h2 {
-      margin: 0 0 4px;
-      font-size: 19px;
-      line-height: 1.1;
-      letter-spacing: -0.01em;
-    }
-
-    .panelDescription {
-      margin: 0;
-      color: #bebecb;
-      line-height: 1.45;
-      font-size: 12.5px;
-    }
-
-    .panelBody {
-      margin-top: 8px;
+    .cardCollapsibleBody {
+      margin-top: 10px;
     }
 
     .panelTopMeta {
@@ -557,18 +518,88 @@
       background: linear-gradient(90deg, #52e878, #8dffab);
     }
 
+    .compactForm {
+      display: grid;
+      gap: 8px;
+    }
+
+    .titleStatusRow {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) 160px;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .fieldBlock {
+      display: grid;
+      gap: 5px;
+    }
+
+    .fieldLabel {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-2);
+      font-weight: 700;
+    }
+
+    .compactInput,
+    .compactTextarea,
+    .compactSelect {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      color: #ededf4;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      transition: 0.18s ease;
+    }
+
+    .compactTextarea {
+      min-height: 78px;
+      resize: vertical;
+      line-height: 1.42;
+      overflow: hidden;
+    }
+
+    .compactInput:focus,
+    .compactTextarea:focus,
+    .compactSelect:focus {
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.09);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .detailsRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .detailsSection {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .detailsHidden {
+      display: none;
+    }
+
     .treeNode {
       background: rgba(255,255,255,0.02);
       border: 1px solid var(--border);
       border-radius: 13px;
-      padding: 9px;
+      padding: 10px;
       margin-top: 8px;
-      box-shadow: none;
     }
 
     .treeNode.completeNode {
       border-color: rgba(110, 240, 138, 0.18);
-      box-shadow: 0 4px 14px rgba(110, 240, 138, 0.03);
     }
 
     .treeNode.matched {
@@ -582,7 +613,7 @@
       gap: 8px;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .treeNodeTitle {
@@ -610,56 +641,6 @@
       gap: 6px;
       flex-wrap: wrap;
       width: 100%;
-    }
-
-    .actionGroup.secondary {
-      padding-top: 0;
-    }
-
-    .editorGrid {
-      display: grid;
-      grid-template-columns: 170px minmax(220px, 1fr) 140px;
-      gap: 7px;
-      margin-top: 7px;
-      align-items: start;
-    }
-
-    body.fit-fields .editorGrid {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    body.fit-fields .editorGrid textarea {
-      min-height: 72px;
-    }
-
-    .editorGrid input,
-    .editorGrid textarea,
-    .editorGrid select {
-      width: 100%;
-      background: rgba(255,255,255,0.04);
-      color: #ededf4;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: 13px;
-      outline: none;
-      font-family: inherit;
-      transition: 0.18s ease;
-    }
-
-    .editorGrid textarea {
-      min-height: 56px;
-      resize: vertical;
-      line-height: 1.4;
-      overflow: hidden;
-    }
-
-    .editorGrid input:focus,
-    .editorGrid textarea:focus,
-    .editorGrid select:focus {
-      border-color: rgba(190, 26, 72, 0.42);
-      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.09);
-      background: rgba(255,255,255,0.05);
     }
 
     .metaChip {
@@ -778,16 +759,6 @@
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 1200px) {
-      .editorGrid {
-        grid-template-columns: 1fr;
-      }
-
-      body.fit-fields .editorGrid {
-        grid-template-columns: 1fr;
-      }
-    }
-
     @media (max-width: 1100px) {
       .hero {
         position: relative;
@@ -815,6 +786,12 @@
       }
 
       .workspaceStrip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .titleStatusRow {
         grid-template-columns: 1fr;
       }
     }
@@ -903,10 +880,6 @@
             <input id="compactModeToggle" type="checkbox" />
             Compact Mode
           </label>
-          <label class="toggleWrap">
-            <input id="fitFieldsToggle" type="checkbox" />
-            Fit Fields
-          </label>
           <button class="ghostBtn" type="button" disabled>History Coming Soon</button>
           <button onclick="expandAllSections()">Expand All</button>
           <button onclick="collapseAllSections()">Collapse All</button>
@@ -949,13 +922,13 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/roadmap.json";
 
-    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v8";
+    const LOCAL_DRAFT_KEY = "dungeon-call-roadmap-draft-v9";
     const AUTO_SAVE_GITHUB_KEY = "dungeon-call-roadmap-auto-github-v1";
     const LAST_REMOTE_SAVE_KEY = "dungeon-call-roadmap-last-remote-save-v2";
     const LAST_SNAPSHOT_META_KEY = "dungeon-call-roadmap-last-snapshot-meta-v1";
     const COMPACT_MODE_KEY = "dungeon-call-roadmap-compact-mode-v1";
-    const FIT_FIELDS_KEY = "dungeon-call-roadmap-fit-fields-v1";
     const COLLAPSE_STATE_KEY = "dungeon-call-roadmap-collapse-state-v1";
+    const DETAILS_STATE_KEY = "dungeon-call-roadmap-details-state-v1";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 3500;
 
@@ -969,6 +942,7 @@
     let hasUnsavedChanges = false;
     let isSavingToGitHub = false;
     let collapsedMajorCards = new Set();
+    let openDetailsCards = new Set();
 
     let lastLocalSaveAt = null;
     let lastRemoteSaveAt = null;
@@ -1069,41 +1043,26 @@
       return !!document.getElementById("compactModeToggle")?.checked;
     }
 
-    function fitFieldsEnabled() {
-      return !!document.getElementById("fitFieldsToggle")?.checked;
-    }
-
     function persistSettings() {
       localStorage.setItem(AUTO_SAVE_GITHUB_KEY, autoSaveToGitHubEnabled() ? "1" : "0");
       localStorage.setItem(COMPACT_MODE_KEY, compactModeEnabled() ? "1" : "0");
-      localStorage.setItem(FIT_FIELDS_KEY, fitFieldsEnabled() ? "1" : "0");
     }
 
     function applyCompactModeUI(enabled) {
       document.body.classList.toggle("compact-mode", !!enabled);
     }
 
-    function applyFitFieldsUI(enabled) {
-      document.body.classList.toggle("fit-fields", !!enabled);
-      requestAnimationFrame(autoGrowAllTextareas);
-    }
-
     function restoreSettings() {
       const autoEnabled = localStorage.getItem(AUTO_SAVE_GITHUB_KEY) === "1";
       const compactEnabled = localStorage.getItem(COMPACT_MODE_KEY) === "1";
-      const fitFieldsStored = localStorage.getItem(FIT_FIELDS_KEY);
-      const fitEnabled = fitFieldsStored === null ? true : fitFieldsStored === "1";
 
       const autoToggle = document.getElementById("autoSaveGitHubToggle");
       const compactToggle = document.getElementById("compactModeToggle");
-      const fitToggle = document.getElementById("fitFieldsToggle");
 
       if (autoToggle) autoToggle.checked = autoEnabled;
       if (compactToggle) compactToggle.checked = compactEnabled;
-      if (fitToggle) fitToggle.checked = fitEnabled;
 
       applyCompactModeUI(compactEnabled);
-      applyFitFieldsUI(fitEnabled);
     }
 
     function restoreRemoteSaveMeta() {
@@ -1169,6 +1128,27 @@
       }
     }
 
+    function restoreDetailsState() {
+      try {
+        const raw = localStorage.getItem(DETAILS_STATE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          openDetailsCards = new Set(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to restore details state:", err);
+      }
+    }
+
+    function persistDetailsState() {
+      try {
+        localStorage.setItem(DETAILS_STATE_KEY, JSON.stringify([...openDetailsCards]));
+      } catch (err) {
+        console.error("Failed to persist details state:", err);
+      }
+    }
+
     function isMajorCardCollapsed(key) {
       return collapsedMajorCards.has(String(key));
     }
@@ -1180,6 +1160,21 @@
       persistCollapseState();
       renderRootPanel();
       renderPanels();
+      requestAnimationFrame(autoGrowAllTextareas);
+    }
+
+    function isDetailsOpen(key) {
+      return openDetailsCards.has(String(key));
+    }
+
+    function toggleDetails(key) {
+      const normalized = String(key);
+      if (openDetailsCards.has(normalized)) openDetailsCards.delete(normalized);
+      else openDetailsCards.add(normalized);
+      persistDetailsState();
+      renderRootPanel();
+      renderPanels();
+      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     function markDirty(reason = "Unsaved changes") {
@@ -1371,11 +1366,11 @@
     function autoGrowTextarea(el) {
       if (!el || el.tagName !== "TEXTAREA") return;
       el.style.height = "auto";
-      el.style.height = Math.max(el.scrollHeight, fitFieldsEnabled() ? 72 : 56) + "px";
+      el.style.height = Math.max(el.scrollHeight, 78) + "px";
     }
 
     function autoGrowAllTextareas() {
-      document.querySelectorAll(".editorGrid textarea").forEach(autoGrowTextarea);
+      document.querySelectorAll("textarea").forEach(autoGrowTextarea);
     }
 
     function saveDraftToLocal() {
@@ -1557,11 +1552,13 @@
 
       expandedNodes.delete(Number(id));
       collapsedMajorCards.delete(`panel-${id}`);
+      openDetailsCards.delete(`panel-${id}`);
       rebuildMaps();
       updateStats();
       renderRootPanel();
       renderPanels();
       persistCollapseState();
+      persistDetailsState();
       markDirty("Deleted node.");
     }
 
@@ -1569,6 +1566,7 @@
       if (expandedNodes.has(id)) expandedNodes.delete(id);
       else expandedNodes.add(id);
       renderPanels();
+      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     function renderProgressBar(stats) {
@@ -1577,6 +1575,39 @@
           <div class="progressText">${stats.complete} / ${stats.total} complete (${stats.percent}%)</div>
           <div class="progressTrack">
             <div class="progressFill" style="width:${stats.percent}%"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCompactEditor(node, detailsKey, detailsLabel = "Details") {
+      const detailsOpen = isDetailsOpen(detailsKey);
+      return `
+        <div class="compactForm">
+          <div class="titleStatusRow">
+            <div class="fieldBlock">
+              <div class="fieldLabel">Title</div>
+              <input class="compactInput" id="label-${node.id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
+            </div>
+            <div class="fieldBlock">
+              <div class="fieldLabel">Status</div>
+              <select class="compactSelect" id="status-${node.id}">
+                <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
+                <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="detailsRow">
+            <button type="button" onclick="toggleDetails('${detailsKey}')">${detailsOpen ? "Hide Details" : detailsLabel}</button>
+          </div>
+
+          <div class="detailsSection ${detailsOpen ? "" : "detailsHidden"}">
+            <div class="fieldBlock">
+              <div class="fieldLabel">Description</div>
+              <textarea class="compactTextarea" id="desc-${node.id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
+            </div>
           </div>
         </div>
       `;
@@ -1595,32 +1626,26 @@
       const hasChildren = children.length > 0;
       const matchedClass = selfMatch ? " matched" : "";
       const stats = getCompletionStats(id);
+      const detailsKey = `node-${id}`;
 
       return `
         <div class="treeNode${matchedClass}${node.status === "complete" ? " completeNode" : ""}">
           <div class="treeNodeHeader">
             <div>
               <h3 class="treeNodeTitle">${escapeHtml(node.label)}</h3>
+              ${node.description ? `<div class="miniDescription">${escapeHtml(node.description).slice(0, 120)}${node.description.length > 120 ? "..." : ""}</div>` : ""}
             </div>
             ${createStatusBadge(node.status)}
           </div>
 
-          <div class="smallRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
             <span class="metaChip">${stats.total - 1} nested</span>
             <span class="metaChip">${stats.percent}% done</span>
           </div>
 
           ${renderProgressBar(stats)}
 
-          <div class="editorGrid">
-            <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
-            <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
-            <select id="status-${id}">
-              <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
-              <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
-            </select>
-          </div>
+          ${renderCompactEditor(node, detailsKey)}
 
           <div class="nodeActions">
             <div class="actionGroup">
@@ -1629,7 +1654,7 @@
               ${hasChildren ? `<button onclick="toggleSection(${id})">${isExpanded ? "Collapse" : "Expand"} (${children.length})</button>` : ""}
             </div>
             ${Number(id) !== Number(rootId) ? `
-              <div class="actionGroup secondary">
+              <div class="actionGroup">
                 <button class="dangerBtn" onclick="deleteNode(${id})">Delete</button>
               </div>
             ` : ""}
@@ -1651,32 +1676,23 @@
         <div class="cardHeaderRow">
           <div class="cardHeaderLeft">
             <button class="collapseBtn" onclick="toggleMajorCard('root')">${isCollapsed ? "+" : "−"}</button>
-            <div class="rootHeader" style="margin:0; flex:1;">
-              <div>
-                <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
-              </div>
+            <div class="cardTitleBlock">
+              <h2 class="rootTitle">${escapeHtml(rootNode.label)}</h2>
+              ${rootNode.description ? `<div class="miniDescription">${escapeHtml(rootNode.description).slice(0, 180)}${rootNode.description.length > 180 ? "..." : ""}</div>` : ""}
             </div>
           </div>
           ${createStatusBadge(rootNode.status)}
         </div>
 
         <div class="cardCollapsibleBody">
-          <div class="panelTopMeta" style="margin-top:10px;">
+          <div class="panelTopMeta">
             <span class="metaChip">${stats.total - 1} total sub-items</span>
             <span class="metaChip">${stats.percent}% complete</span>
           </div>
 
           ${renderProgressBar(stats)}
 
-          <div class="editorGrid">
-            <input id="label-${rootNode.id}" type="text" value="${escapeHtml(rootNode.label)}" placeholder="Label" />
-            <textarea id="desc-${rootNode.id}" placeholder="Description">${escapeHtml(rootNode.description || "")}</textarea>
-            <select id="status-${rootNode.id}">
-              <option value="pending" ${rootNode.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="progress" ${rootNode.status === "progress" ? "selected" : ""}>In Progress</option>
-              <option value="complete" ${rootNode.status === "complete" ? "selected" : ""}>Complete</option>
-            </select>
-          </div>
+          ${renderCompactEditor(rootNode, "root-details", "Root Details")}
 
           <div class="nodeActions">
             <div class="actionGroup">
@@ -1709,16 +1725,18 @@
             <div class="cardHeaderRow">
               <div class="cardHeaderLeft">
                 <button class="collapseBtn" onclick="toggleMajorCard('${collapseKey}')">${isCollapsed ? "+" : "−"}</button>
-                <div class="panelHeaderText">
-                  <h2>${escapeHtml(node.label)}</h2>
-                  <p class="panelDescription">${escapeHtml(node.description || "No description yet.")}</p>
+                <div class="cardTitleBlock">
+                  <div class="panelHeaderText">
+                    <h2>${escapeHtml(node.label)}</h2>
+                  </div>
+                  ${node.description ? `<div class="miniDescription">${escapeHtml(node.description).slice(0, 150)}${node.description.length > 150 ? "..." : ""}</div>` : ""}
                 </div>
               </div>
               ${createStatusBadge(node.status)}
             </div>
 
             <div class="cardCollapsibleBody">
-              <div class="panelTopMeta" style="margin-top:8px;">
+              <div class="panelTopMeta">
                 <span class="metaChip">${descendants} sub-items</span>
                 <span class="metaChip">${childIds.length} direct children</span>
                 <span class="metaChip">${stats.percent}% complete</span>
@@ -1726,24 +1744,16 @@
 
               ${renderProgressBar(stats)}
 
-              <div class="editorGrid">
-                <input id="label-${id}" type="text" value="${escapeHtml(node.label)}" placeholder="Label" />
-                <textarea id="desc-${id}" placeholder="Description">${escapeHtml(node.description || "")}</textarea>
-                <select id="status-${id}">
-                  <option value="pending" ${node.status === "pending" ? "selected" : ""}>Pending</option>
-                  <option value="progress" ${node.status === "progress" ? "selected" : ""}>In Progress</option>
-                  <option value="complete" ${node.status === "complete" ? "selected" : ""}>Complete</option>
-                </select>
-              </div>
+              ${renderCompactEditor(node, collapseKey)}
 
               <div class="nodeActions">
                 <div class="actionGroup">
                   <button onclick="updateNodeFromInputs(${id})">Apply</button>
                   <button onclick="addChild(${id})">Add Child</button>
-                  <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
-                  <button class="subtleBtn" onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
+                  <button onclick="moveTopLevelPanel(${id}, -1)" ${index === 0 ? "disabled" : ""}>Move Left</button>
+                  <button onclick="moveTopLevelPanel(${id}, 1)" ${index === mainChildren.length - 1 ? "disabled" : ""}>Move Right</button>
                 </div>
-                <div class="actionGroup secondary">
+                <div class="actionGroup">
                   <button class="dangerBtn" onclick="deleteNode(${id})">Delete Panel</button>
                 </div>
               </div>
@@ -1758,6 +1768,8 @@
           </article>
         `;
       }).join("");
+
+      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     function expandAllSections() {
@@ -1768,7 +1780,6 @@
       persistCollapseState();
       renderRootPanel();
       renderPanels();
-      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     function collapseAllSections() {
@@ -1781,7 +1792,6 @@
       persistCollapseState();
       renderRootPanel();
       renderPanels();
-      requestAnimationFrame(autoGrowAllTextareas);
     }
 
     async function fetchRemoteRoadmap() {
@@ -1893,14 +1903,14 @@
 
     function handleEditorInputEvent(target) {
       if (
-        !target.matches(".editorGrid input") &&
-        !target.matches(".editorGrid textarea") &&
-        !target.matches(".editorGrid select")
+        !target.matches("input") &&
+        !target.matches("textarea") &&
+        !target.matches("select")
       ) {
         return;
       }
 
-      const rawId = target.id.split("-")[1];
+      const rawId = target.id && target.id.split("-")[1];
       if (!rawId) return;
 
       syncNodeFromDom(rawId);
@@ -1919,13 +1929,13 @@
       restoreRemoteSaveMeta();
       restoreSnapshotMeta();
       restoreCollapseState();
+      restoreDetailsState();
       updateSaveMetaUI();
 
       const searchInput = document.getElementById("searchInput");
       searchInput.addEventListener("input", () => {
         currentSearch = searchInput.value || "";
         renderPanels();
-        requestAnimationFrame(autoGrowAllTextareas);
       });
 
       const autoSaveToggle = document.getElementById("autoSaveGitHubToggle");
@@ -1943,12 +1953,6 @@
       const compactModeToggle = document.getElementById("compactModeToggle");
       compactModeToggle.addEventListener("change", () => {
         applyCompactModeUI(compactModeEnabled());
-        persistSettings();
-      });
-
-      const fitFieldsToggle = document.getElementById("fitFieldsToggle");
-      fitFieldsToggle.addEventListener("change", () => {
-        applyFitFieldsUI(fitFieldsEnabled());
         persistSettings();
       });
 
@@ -1992,6 +1996,7 @@
     window.moveTopLevelPanel = moveTopLevelPanel;
     window.discardLocalDraft = discardLocalDraft;
     window.toggleMajorCard = toggleMajorCard;
+    window.toggleDetails = toggleDetails;
 
     (async function init() {
       try {
