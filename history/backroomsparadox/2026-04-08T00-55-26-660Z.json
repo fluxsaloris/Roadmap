@@ -1,0 +1,215 @@
+{
+  "version": "2026-04-08T00:55:26.660Z",
+  "savedAt": "2026-04-08T00:55:26.660Z",
+  "source": "editor",
+  "project": "backroomsparadox",
+  "stats": {
+    "nodeCount": 9,
+    "edgeCount": 10
+  },
+  "data": {
+    "nodes": [
+      {
+        "id": 0,
+        "label": "Level 0",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "The familiar endless yellow maze. A common entry point and a useful anchor for early routing.",
+        "notes": "",
+        "tags": [
+          "start",
+          "baseline",
+          "familiar"
+        ],
+        "x": 260,
+        "y": 260
+      },
+      {
+        "id": 0,
+        "label": "Level 1",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "Industrial, darker, more dangerous. Often reached from Level 0 through more conventional progression.",
+        "notes": "",
+        "tags": [
+          "industrial",
+          "progression"
+        ],
+        "x": 520,
+        "y": 260
+      },
+      {
+        "id": 0,
+        "label": "Level 2",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "Tight maintenance corridors and heat. A strong midpoint connector for branching routes.",
+        "notes": "",
+        "tags": [
+          "maintenance",
+          "heat",
+          "progression"
+        ],
+        "x": 760,
+        "y": 220
+      },
+      {
+        "id": 0,
+        "label": "Level 4",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "Comparatively safer office spaces. Can serve as a temporary hub in many route plans.",
+        "notes": "",
+        "tags": [
+          "hub",
+          "safe-ish",
+          "office"
+        ],
+        "x": 760,
+        "y": 480
+      },
+      {
+        "id": 0,
+        "label": "Level 7",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "Deep flooded isolation. Certain transitions from here can fling players into wildly different branches.",
+        "notes": "",
+        "tags": [
+          "water",
+          "danger",
+          "isolated"
+        ],
+        "x": 1017,
+        "y": -23
+      },
+      {
+        "id": 0,
+        "label": "Level Fun",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "A party-themed trap level. Bad decisions and bad slides can redirect the route hard.",
+        "notes": "",
+        "tags": [
+          "hostile",
+          "partygoers",
+          "trap"
+        ],
+        "x": 1280,
+        "y": 330
+      },
+      {
+        "id": 0,
+        "label": "Level 11",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "Urban sprawl. Huge, weirdly flexible, and can branch into many plans depending on what rules you adopt.",
+        "notes": "",
+        "tags": [
+          "city",
+          "large",
+          "branching"
+        ],
+        "x": 1080,
+        "y": 560
+      },
+      {
+        "id": 0,
+        "label": "Red Slide Route",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "A reminder node for a dangerous special transition.",
+        "notes": "",
+        "tags": [
+          "special route",
+          "one-way",
+          "chaotic"
+        ],
+        "x": 1357,
+        "y": 43
+      },
+      {
+        "id": 0,
+        "label": "New Level 1",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 1509,
+        "y": -1
+      }
+    ],
+    "edges": [
+      {
+        "from": 0,
+        "to": 0,
+        "label": "stairwell / noclip path",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "maintenance access",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "alternate progression",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "deeper route",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "safer branch",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "red slide trigger",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "good luck",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "rare reset loop",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "return route",
+        "oneWay": false
+      },
+      {
+        "from": 0,
+        "to": 0,
+        "label": "bad route",
+        "oneWay": false
+      }
+    ]
+  }
+}
