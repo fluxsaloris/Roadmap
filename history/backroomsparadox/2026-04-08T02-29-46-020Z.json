@@ -1,0 +1,27 @@
+{
+  "version": "2026-04-08T02:29:46.020Z",
+  "savedAt": "2026-04-08T02:29:46.020Z",
+  "source": "editor",
+  "project": "backroomsparadox",
+  "stats": {
+    "nodeCount": 1,
+    "edgeCount": 0
+  },
+  "data": {
+    "nodes": [
+      {
+        "id": 0,
+        "label": "New Level",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 576,
+        "y": 226
+      }
+    ],
+    "edges": []
+  }
+}
