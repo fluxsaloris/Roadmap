@@ -14,7 +14,7 @@
     },
     {
       "id": 1,
-      "label": "New Level",
+      "label": "Test",
       "subtitle": "",
       "type": "progression",
       "status": "draft",
@@ -25,5 +25,12 @@
       "y": 195
     }
   ],
-  "edges": []
+  "edges": [
+    {
+      "from": 0,
+      "to": 1,
+      "label": "",
+      "oneWay": false
+    }
+  ]
 }
