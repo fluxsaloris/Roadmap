@@ -399,370 +399,451 @@
   </div>
 
   <script>
-    const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
+  const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
 
-    let graphData = { nodes: [], edges: [] };
-    let nodeMap = new Map();
-    let selectedNodeId = null;
-    let currentSearch = "";
+  let graphData = { nodes: [], edges: [] };
+  let nodeMap = new Map();
+  let selectedNodeId = null;
+  let currentSearch = "";
 
-    const viewState = {
-      scale: 1,
-      offsetX: 0,
-      offsetY: 0
+  const viewState = {
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0
+  };
+
+  const dragState = {
+    mode: null,
+    nodeId: null,
+    moved: false,
+    startScreenX: 0,
+    startScreenY: 0,
+    startWorldX: 0,
+    startWorldY: 0,
+    originOffsetX: 0,
+    originOffsetY: 0,
+    nodeStartX: 0,
+    nodeStartY: 0
+  };
+
+  function showLoading(text = "Loading graph...") {
+    const el = document.getElementById("loadingText");
+    if (el) el.textContent = text;
+    document.getElementById("loadingOverlay").style.display = "flex";
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+
+  function setStatus(text, isError = false) {
+    const el = document.getElementById("statusLine");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? "#ff8a8a" : "#999";
+  }
+
+  function normalizeGraphData(raw) {
+    const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+
+    return {
+      nodes: rawNodes.map(n => ({
+        id: Number(n.id),
+        label: typeof n.label === "string" ? n.label : "Unnamed",
+        subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+        description: typeof n.description === "string" ? n.description : "",
+        notes: typeof n.notes === "string" ? n.notes : "",
+        type: typeof n.type === "string" ? n.type : "progression",
+        status: typeof n.status === "string" ? n.status : "draft",
+        tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+        x: typeof n.x === "number" ? n.x : 0,
+        y: typeof n.y === "number" ? n.y : 0
+      })),
+      edges: rawEdges.map(e => ({
+        from: Number(e.from),
+        to: Number(e.to),
+        label: typeof e.label === "string" ? e.label : "",
+        oneWay: !!e.oneWay
+      }))
     };
+  }
 
-    const dragState = {
-      mode: null,
-      startX: 0,
-      startY: 0,
-      originOffsetX: 0,
-      originOffsetY: 0
+  function rebuildMaps() {
+    nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
+  }
+
+  function getNodeById(id) {
+    return nodeMap.get(Number(id)) || null;
+  }
+
+  function getNodeColor(type) {
+    if (type === "start") return "#d8b85c";
+    if (type === "danger") return "#ff7e7e";
+    if (type === "weird") return "#9f7cff";
+    return "#6e9cff";
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function matchesSearch(node) {
+    if (!currentSearch) return true;
+    const hay = [
+      node.label,
+      node.subtitle,
+      node.description,
+      node.notes,
+      ...(Array.isArray(node.tags) ? node.tags : [])
+    ].join(" ").toLowerCase();
+    return hay.includes(currentSearch);
+  }
+
+  function updateStats() {
+    document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+    document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+
+    const selected = getNodeById(selectedNodeId);
+    document.getElementById("statSelected").textContent = selected
+      ? `Selected: ${selected.label}`
+      : "No level selected";
+  }
+
+  function getSvg() {
+    return document.getElementById("graphSvg");
+  }
+
+  function getSvgSize() {
+    const svg = getSvg();
+    const rect = svg.getBoundingClientRect();
+    return {
+      width: rect.width || 1600,
+      height: rect.height || 900
     };
+  }
 
-    function showLoading(text) {
-      document.getElementById("loadingText").textContent = text || "Loading...";
-      document.getElementById("loadingOverlay").style.display = "flex";
+  function getSvgPoint(clientX, clientY) {
+    const rect = getSvg().getBoundingClientRect();
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function worldToScreen(x, y) {
+    return {
+      x: x * viewState.scale + viewState.offsetX,
+      y: y * viewState.scale + viewState.offsetY
+    };
+  }
+
+  function screenToWorld(x, y) {
+    return {
+      x: (x - viewState.offsetX) / viewState.scale,
+      y: (y - viewState.offsetY) / viewState.scale
+    };
+  }
+
+  function fitGraphToView() {
+    if (!graphData.nodes.length) return;
+
+    const { width: svgWidth, height: svgHeight } = getSvgSize();
+    const padding = 120;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const node of graphData.nodes) {
+      if (node.x < minX) minX = node.x;
+      if (node.y < minY) minY = node.y;
+      if (node.x > maxX) maxX = node.x;
+      if (node.y > maxY) maxY = node.y;
     }
 
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
+    const graphWidth = Math.max(1, maxX - minX);
+    const graphHeight = Math.max(1, maxY - minY);
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
-    }
+    const scaleX = (svgWidth - padding * 2) / graphWidth;
+    const scaleY = (svgHeight - padding * 2) / graphHeight;
+    viewState.scale = Math.max(0.35, Math.min(2.2, Math.min(scaleX, scaleY)));
 
-    function normalizeGraphData(raw) {
-      return {
-        nodes: Array.isArray(raw?.nodes)
-          ? raw.nodes.map(n => ({
-              id: Number(n.id),
-              label: typeof n.label === "string" ? n.label : "Unnamed",
-              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-              type: typeof n.type === "string" ? n.type : "progression",
-              status: typeof n.status === "string" ? n.status : "draft",
-              description: typeof n.description === "string" ? n.description : "",
-              notes: typeof n.notes === "string" ? n.notes : "",
-              tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
-              x: typeof n.x === "number" ? n.x : 0,
-              y: typeof n.y === "number" ? n.y : 0
-            }))
-          : [],
-        edges: Array.isArray(raw?.edges)
-          ? raw.edges.map(e => ({
-              from: Number(e.from),
-              to: Number(e.to),
-              label: typeof e.label === "string" ? e.label : "",
-              oneWay: !!e.oneWay
-            }))
-          : []
-      };
-    }
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
 
-    function rebuildMaps() {
-      nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
-    }
+    viewState.offsetX = svgWidth / 2 - centerX * viewState.scale;
+    viewState.offsetY = svgHeight / 2 - centerY * viewState.scale;
+  }
 
-    function getNodeById(id) {
-      return nodeMap.get(Number(id)) || null;
-    }
+  function zoomAt(screenX, screenY, factor) {
+    const oldScale = viewState.scale;
+    const newScale = Math.max(0.25, Math.min(3.5, oldScale * factor));
+    if (newScale === oldScale) return;
 
-    function getNodeColor(type) {
-      if (type === "start") return "var(--node-start)";
-      if (type === "danger") return "var(--node-danger)";
-      if (type === "weird") return "var(--node-weird)";
-      return "var(--node-progression)";
-    }
+    const worldX = (screenX - viewState.offsetX) / oldScale;
+    const worldY = (screenY - viewState.offsetY) / oldScale;
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+    viewState.scale = newScale;
+    viewState.offsetX = screenX - worldX * newScale;
+    viewState.offsetY = screenY - worldY * newScale;
 
-    function matchesSearch(node) {
-      if (!currentSearch) return true;
-      const hay = [
-        node.label,
-        node.subtitle,
-        node.description,
-        node.notes,
-        ...(Array.isArray(node.tags) ? node.tags : [])
-      ].join(" ").toLowerCase();
-      return hay.includes(currentSearch);
-    }
+    renderGraph();
+  }
 
-    function updateStats() {
-      document.getElementById("statNodes").textContent = graphData.nodes.length + " nodes";
-      document.getElementById("statEdges").textContent = graphData.edges.length + " links";
+  function zoomIn() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1.15);
+  }
 
-      const selected = getNodeById(selectedNodeId);
-      document.getElementById("statSelected").textContent = selected
-        ? "Selected: " + selected.label
-        : "No level selected";
-    }
+  function zoomOut() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1 / 1.15);
+  }
 
-    function worldToScreen(x, y) {
-      return {
-        x: x * viewState.scale + viewState.offsetX,
-        y: y * viewState.scale + viewState.offsetY
-      };
-    }
+  function resetView() {
+    fitGraphToView();
+    renderGraph();
+  }
 
-    function getSvgPoint(clientX, clientY) {
-      const svg = document.getElementById("graphSvg");
-      const rect = svg.getBoundingClientRect();
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
+  function clearSelection() {
+    selectedNodeId = null;
+    renderAll();
+  }
 
-    function renderGraph() {
-      const svg = document.getElementById("graphSvg");
-      const selected = getNodeById(selectedNodeId);
+  function renderGraph() {
+    const svg = getSvg();
+    const selected = getNodeById(selectedNodeId);
 
-      const outgoing = new Set();
-      const incoming = new Set();
+    const outgoing = new Set();
+    const incoming = new Set();
 
-      if (selected) {
-        graphData.edges.forEach(edge => {
-          if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
-          if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
-        });
+    if (selected) {
+      for (const edge of graphData.edges) {
+        if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
+        if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
       }
+    }
 
-      const visibleNodes = graphData.nodes.filter(matchesSearch);
-      const visibleNodeIds = new Set(visibleNodes.map(n => Number(n.id)));
+    const visibleNodes = graphData.nodes.filter(matchesSearch);
+    const visibleIds = new Set(visibleNodes.map(n => Number(n.id)));
 
-      const edgeMarkup = graphData.edges
-        .filter(edge => visibleNodeIds.has(Number(edge.from)) && visibleNodeIds.has(Number(edge.to)))
-        .map(edge => {
-          const fromNode = getNodeById(edge.from);
-          const toNode = getNodeById(edge.to);
-          if (!fromNode || !toNode) return "";
+    const edgeMarkup = graphData.edges
+      .filter(edge => visibleIds.has(Number(edge.from)) && visibleIds.has(Number(edge.to)))
+      .map(edge => {
+        const fromNode = getNodeById(edge.from);
+        const toNode = getNodeById(edge.to);
+        if (!fromNode || !toNode) return "";
 
-          const a = worldToScreen(fromNode.x, fromNode.y);
-          const b = worldToScreen(toNode.x, toNode.y);
+        const a = worldToScreen(fromNode.x, fromNode.y);
+        const b = worldToScreen(toNode.x, toNode.y);
 
-          const isSelectedEdge = selected && (
-            Number(edge.from) === Number(selected.id) ||
-            Number(edge.to) === Number(selected.id)
-          );
+        const isSelectedEdge = selected && (
+          Number(edge.from) === Number(selected.id) ||
+          Number(edge.to) === Number(selected.id)
+        );
 
-          const stroke = isSelectedEdge ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)";
-          const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
-
-          const midX = (a.x + b.x) / 2;
-          const midY = (a.y + b.y) / 2;
-
-          return `
-            <g>
-              <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
-              ${edge.label ? `
-                <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
-                  ${escapeHtml(edge.label)}
-                </text>
-              ` : ""}
-            </g>
-          `;
-        }).join("");
-
-      const nodeMarkup = visibleNodes.map(node => {
-        const p = worldToScreen(node.x, node.y);
-        const isSelected = selected && Number(selected.id) === Number(node.id);
-        const isOutgoing = outgoing.has(Number(node.id));
-        const isIncoming = incoming.has(Number(node.id));
-        const fill = getNodeColor(node.type);
-        const stroke = isSelected
-          ? "rgba(255,255,255,0.95)"
-          : (isOutgoing || isIncoming)
-            ? "rgba(255,255,255,0.65)"
-            : "rgba(255,255,255,0.16)";
-        const strokeWidth = isSelected ? 3 : 1.5;
-        const radius = isSelected ? 17 : 15;
+        const stroke = isSelectedEdge ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.18)";
+        const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2;
 
         return `
-          <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
-            <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
-            <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
-            ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
+          <g>
+            <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
+            ${edge.label ? `
+              <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
+                ${escapeHtml(edge.label)}
+              </text>
+            ` : ""}
           </g>
         `;
       }).join("");
 
-      svg.innerHTML = `${edgeMarkup}${nodeMarkup}`;
+    const nodeMarkup = visibleNodes.map(node => {
+      const p = worldToScreen(node.x, node.y);
+      const isSelected = selected && Number(selected.id) === Number(node.id);
+      const isOutgoing = outgoing.has(Number(node.id));
+      const isIncoming = incoming.has(Number(node.id));
+
+      const radius = isSelected ? 17 : 15;
+      const fill = getNodeColor(node.type);
+      const stroke = isSelected
+        ? "rgba(255,255,255,0.95)"
+        : (isOutgoing || isIncoming)
+          ? "rgba(255,255,255,0.65)"
+          : "rgba(255,255,255,0.16)";
+      const strokeWidth = isSelected ? 3 : 1.5;
+
+      return `
+        <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
+          <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
+          <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
+          ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
+        </g>
+      `;
+    }).join("");
+
+    svg.innerHTML = edgeMarkup + nodeMarkup;
+  }
+
+  function renderInspector() {
+    const selected = getNodeById(selectedNodeId);
+
+    document.getElementById("viewerStatusText").textContent = selected
+      ? `Selected ${selected.label}. Highlighting direct links.`
+      : "No level selected.";
+
+    if (!selected) {
+      document.getElementById("selectedPanel").innerHTML = `
+        <div class="empty">Click a node in the graph.</div>
+      `;
+      document.getElementById("outgoingList").innerHTML = `<div class="empty">No node selected.</div>`;
+      document.getElementById("incomingList").innerHTML = `<div class="empty">No node selected.</div>`;
+      return;
     }
 
-    function renderInspector() {
-      const selected = getNodeById(selectedNodeId);
+    document.getElementById("selectedPanel").innerHTML = `
+      <h2 style="margin:0 0 6px;">${escapeHtml(selected.label)}</h2>
+      ${selected.subtitle ? `<div class="muted" style="margin-bottom:8px;">${escapeHtml(selected.subtitle)}</div>` : ""}
+      ${selected.description ? `<div class="muted" style="font-size:13px; line-height:1.55; margin-bottom:10px;">${escapeHtml(selected.description)}</div>` : ""}
+      ${
+        selected.tags?.length
+          ? `<div class="chipRow">${selected.tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>`
+          : `<div class="empty">No tags.</div>`
+      }
+    `;
 
-      document.getElementById("viewerStatusText").textContent = selected
-        ? `Selected ${selected.label}. Highlighting all direct links.`
-        : "No level selected.";
+    const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
+    const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
 
-      if (!selected) {
-        document.getElementById("selectedPanel").innerHTML = `<div class="empty">Click a node in the graph.</div>`;
-        document.getElementById("outgoingList").innerHTML = `<div class="empty">No node selected.</div>`;
-        document.getElementById("incomingList").innerHTML = `<div class="empty">No node selected.</div>`;
+    document.getElementById("outgoingList").innerHTML = outgoing.length
+      ? `<ul class="list">${outgoing.map(edge => {
+          const target = getNodeById(edge.to);
+          return `<li>${escapeHtml(target?.label || String(edge.to))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+        }).join("")}</ul>`
+      : `<div class="empty">No outgoing links.</div>`;
+
+    document.getElementById("incomingList").innerHTML = incoming.length
+      ? `<ul class="list">${incoming.map(edge => {
+          const source = getNodeById(edge.from);
+          return `<li>${escapeHtml(source?.label || String(edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+        }).join("")}</ul>`
+      : `<div class="empty">No incoming links.</div>`;
+  }
+
+  function renderAll() {
+    updateStats();
+    renderGraph();
+    renderInspector();
+  }
+
+  async function reloadGraph() {
+    try {
+      showLoading("Loading latest graph...");
+      setStatus("Loading latest graph...");
+
+      const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || "Could not load graph");
+      }
+
+      graphData = normalizeGraphData(json?.data ? json.data : json);
+      rebuildMaps();
+
+      if (selectedNodeId && !getNodeById(selectedNodeId)) {
+        selectedNodeId = null;
+      }
+
+      fitGraphToView();
+      renderAll();
+      setStatus("Loaded latest graph.");
+      hideLoading();
+    } catch (err) {
+      console.error(err);
+      hideLoading();
+      setStatus("Failed to load graph.", true);
+    }
+  }
+
+  function attachGraphInteractions() {
+    const svg = getSvg();
+
+    svg.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const pt = getSvgPoint(event.clientX, event.clientY);
+      zoomAt(pt.x, pt.y, event.deltaY < 0 ? 1.12 : 1 / 1.12);
+    }, { passive: false });
+
+    svg.addEventListener("mousedown", (event) => {
+      const pt = getSvgPoint(event.clientX, event.clientY);
+      const nodeGroup = event.target.closest(".graph-node");
+
+      dragState.moved = false;
+      dragState.startScreenX = pt.x;
+      dragState.startScreenY = pt.y;
+
+      if (nodeGroup) {
+        selectedNodeId = Number(nodeGroup.getAttribute("data-node-id"));
+        renderAll();
+        dragState.mode = "node";
         return;
       }
 
-      const tags = Array.isArray(selected.tags) ? selected.tags : [];
-      document.getElementById("selectedPanel").innerHTML = `
-        <h2 style="margin:0 0 6px;">${escapeHtml(selected.label)}</h2>
-        ${selected.subtitle ? `<div class="muted" style="margin-bottom:8px;">${escapeHtml(selected.subtitle)}</div>` : ""}
-        ${selected.description ? `<div class="muted" style="font-size:13px; line-height:1.55; margin-bottom:10px;">${escapeHtml(selected.description)}</div>` : ""}
-        ${tags.length ? `<div class="chipRow">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>` : `<div class="empty">No tags.</div>`}
-      `;
-
-      const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
-      const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
-
-      document.getElementById("outgoingList").innerHTML = outgoing.length
-        ? `<ul class="list">${outgoing.map(edge => {
-            const target = getNodeById(edge.to);
-            const text = target ? target.label : String(edge.to);
-            return `<li>${escapeHtml(text)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}${edge.oneWay ? ` <span class="muted">(one way)</span>` : ""}</li>`;
-          }).join("")}</ul>`
-        : `<div class="empty">No outgoing links.</div>`;
-
-      document.getElementById("incomingList").innerHTML = incoming.length
-        ? `<ul class="list">${incoming.map(edge => {
-            const source = getNodeById(edge.from);
-            const text = source ? source.label : String(edge.from);
-            return `<li>${escapeHtml(text)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}${edge.oneWay ? ` <span class="muted">(one way)</span>` : ""}</li>`;
-          }).join("")}</ul>`
-        : `<div class="empty">No incoming links.</div>`;
-    }
-
-    function renderAll() {
-      updateStats();
-      renderGraph();
-      renderInspector();
-    }
-
-    function zoomIn() {
-      viewState.scale = Math.min(2.8, viewState.scale * 1.15);
-      renderGraph();
-    }
-
-    function zoomOut() {
-      viewState.scale = Math.max(0.35, viewState.scale / 1.15);
-      renderGraph();
-    }
-
-    function resetView() {
-      viewState.scale = 1;
-      viewState.offsetX = 0;
-      viewState.offsetY = 0;
-      renderGraph();
-    }
-
-    function clearSelection() {
-      selectedNodeId = null;
-      renderAll();
-    }
-
-    async function reloadGraph() {
-      try {
-        showLoading("Loading Backrooms graph...");
-        setStatus("Loading latest graph...");
-
-        const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), {
-          cache: "no-store"
-        });
-
-        const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json?.error || "Could not load graph");
-        }
-
-        graphData = normalizeGraphData(json?.data ? json.data : json);
-        rebuildMaps();
-
-        if (selectedNodeId && !getNodeById(selectedNodeId)) {
-          selectedNodeId = null;
-        }
-
-        renderAll();
-        setStatus("Loaded latest graph.");
-        hideLoading();
-      } catch (err) {
-        console.error(err);
-        setStatus("Failed to load graph.", true);
-        hideLoading();
-      }
-    }
-
-    function attachGraphInteractions() {
-      const svg = document.getElementById("graphSvg");
-
-      svg.addEventListener("wheel", (event) => {
-        event.preventDefault();
-        if (event.deltaY < 0) zoomIn();
-        else zoomOut();
-      }, { passive: false });
-
-      svg.addEventListener("mousedown", (event) => {
-        const nodeGroup = event.target.closest(".graph-node");
-        const svgPoint = getSvgPoint(event.clientX, event.clientY);
-
-        if (nodeGroup) {
-          selectedNodeId = Number(nodeGroup.getAttribute("data-node-id"));
-          renderAll();
-          return;
-        }
-
-        dragState.mode = "pan";
-        dragState.startX = svgPoint.x;
-        dragState.startY = svgPoint.y;
-        dragState.originOffsetX = viewState.offsetX;
-        dragState.originOffsetY = viewState.offsetY;
-        svg.classList.add("panning");
-      });
-
-      window.addEventListener("mousemove", (event) => {
-        if (dragState.mode !== "pan") return;
-        const svgPoint = getSvgPoint(event.clientX, event.clientY);
-        viewState.offsetX = dragState.originOffsetX + (svgPoint.x - dragState.startX);
-        viewState.offsetY = dragState.originOffsetY + (svgPoint.y - dragState.startY);
-        renderGraph();
-      });
-
-      window.addEventListener("mouseup", () => {
-        dragState.mode = null;
-        svg.classList.remove("panning");
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("searchInput").addEventListener("input", (event) => {
-        currentSearch = (event.target.value || "").trim().toLowerCase();
-        renderGraph();
-      });
-
-      attachGraphInteractions();
+      dragState.mode = "pan";
+      dragState.originOffsetX = viewState.offsetX;
+      dragState.originOffsetY = viewState.offsetY;
+      svg.classList.add("panning");
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        reloadGraph();
+    window.addEventListener("mousemove", (event) => {
+      if (!dragState.mode) return;
+
+      const pt = getSvgPoint(event.clientX, event.clientY);
+
+      if (dragState.mode === "pan") {
+        const dx = pt.x - dragState.startScreenX;
+        const dy = pt.y - dragState.startScreenY;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) dragState.moved = true;
+        viewState.offsetX = dragState.originOffsetX + dx;
+        viewState.offsetY = dragState.originOffsetY + dy;
+        renderGraph();
+        return;
       }
     });
 
-    window.zoomIn = zoomIn;
-    window.zoomOut = zoomOut;
-    window.resetView = resetView;
-    window.clearSelection = clearSelection;
+    window.addEventListener("mouseup", () => {
+      dragState.mode = null;
+      svg.classList.remove("panning");
+    });
+  }
 
-    reloadGraph();
-  </script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("searchInput").addEventListener("input", (event) => {
+      currentSearch = (event.target.value || "").trim().toLowerCase();
+      renderGraph();
+    });
+
+    attachGraphInteractions();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) reloadGraph();
+  });
+
+  window.zoomIn = zoomIn;
+  window.zoomOut = zoomOut;
+  window.resetView = resetView;
+  window.clearSelection = clearSelection;
+  window.reloadGraph = reloadGraph;
+
+  reloadGraph();
+</script>
 </body>
 </html>
