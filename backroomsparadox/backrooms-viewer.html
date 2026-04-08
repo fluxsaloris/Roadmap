@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Backrooms Graph Viewer</title>
+  <title>Backrooms Level Graph</title>
   <style>
     :root {
       --bg: #070709;
-      --surface: rgba(20, 20, 26, 0.92);
-      --surface-soft: rgba(255, 255, 255, 0.03);
-      --border: rgba(255, 255, 255, 0.08);
+      --surface: rgba(20, 20, 26, 0.94);
+      --surface-soft: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.08);
       --text: #f4f4f7;
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --line: rgba(255,255,255,0.18);
-      --line-active: rgba(190, 26, 72, 0.95);
-      --shadow-lg: 0 20px 48px rgba(0,0,0,0.35);
-      --shadow-md: 0 12px 24px rgba(0,0,0,0.2);
-      --node-size: 20;
+      --shadow-lg: 0 18px 40px rgba(0,0,0,0.30);
+      --shadow-md: 0 10px 24px rgba(0,0,0,0.18);
+      --node-start: #d8b85c;
+      --node-progression: #6e9cff;
+      --node-danger: #ff7e7e;
+      --node-weird: #9f7cff;
     }
 
     * { box-sizing: border-box; }
@@ -30,15 +31,14 @@
       background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
-      overflow: hidden;
     }
 
     body {
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
-        radial-gradient(circle at 85% 10%, rgba(255,255,255,0.025), transparent 18%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.09), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.02), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
-      position: relative;
+      overflow: hidden;
     }
 
     body::before {
@@ -56,43 +56,62 @@
 
     #app {
       position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
+      z-index: 2;
       height: 100vh;
-      width: 100vw;
-    }
-
-    .main {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 0;
-      border-right: 1px solid var(--border);
-    }
-
-    .topbar {
       display: grid;
-      grid-template-columns: minmax(240px, 1fr) auto;
+      grid-template-rows: auto 1fr;
       gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(13, 13, 18, 0.76);
-      backdrop-filter: blur(10px);
+      padding: 14px;
     }
 
-    .titleWrap h1 {
+    .hero {
+      background: rgba(13,13,18,0.72);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .heroTop {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .heroTitle h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 28px;
+      line-height: 1.05;
       letter-spacing: -0.02em;
     }
 
-    .titleWrap p {
+    .heroTitle p {
       margin: 6px 0 0;
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
+      max-width: 860px;
+    }
+
+    .heroControls {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 10px;
+    }
+
+    #searchInput {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px 13px;
+      font-size: 14px;
+      outline: none;
     }
 
     .toolbar {
@@ -102,192 +121,60 @@
       justify-content: flex-end;
     }
 
-    input, button {
-      font: inherit;
-    }
-
-    #searchInput {
-      width: 100%;
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 12px;
-      outline: none;
-    }
-
-    #searchInput:focus {
-      border-color: rgba(190,26,72,0.45);
-      box-shadow: 0 0 0 4px rgba(190,26,72,0.10);
-    }
-
     button {
       appearance: none;
       background: rgba(255,255,255,0.04);
-      color: #e7e7ef;
-      border: 1px solid rgba(255,255,255,0.10);
+      color: #e5e5ec;
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: 0.18s ease;
+      padding: 9px 12px;
       font-size: 13px;
       font-weight: 600;
+      cursor: pointer;
+      transition: 0.18s ease;
     }
 
     button:hover {
-      background: rgba(255,255,255,0.08);
-      transform: translateY(-1px);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14);
     }
 
     .primaryBtn {
       background: linear-gradient(180deg, rgba(190,26,72,0.9), rgba(148,16,53,0.95));
       border-color: rgba(255,255,255,0.05);
       color: #fff;
+      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
     }
 
-    .viewportWrap {
-      position: relative;
-      flex: 1;
+    .main {
       min-height: 0;
-      overflow: hidden;
-      background:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
-      cursor: grab;
+      display: grid;
+      grid-template-columns: 1fr 330px;
+      gap: 12px;
     }
 
-    .viewportWrap.dragging {
-      cursor: grabbing;
+    .graphWrap {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
     }
 
-    svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .edge {
-      stroke: var(--line);
-      stroke-width: 2.2;
-      fill: none;
-      transition: 0.18s ease;
-      pointer-events: stroke;
-    }
-
-    .edge.dimmed {
-      opacity: 0.14;
-    }
-
-    .edge.active {
-      stroke: var(--line-active);
-      stroke-width: 3.4;
-      opacity: 1;
-    }
-
-    .edge-label {
-      fill: var(--muted);
-      font-size: 11px;
-      pointer-events: none;
-      text-anchor: middle;
-    }
-
-    .edge-label.active {
-      fill: #ffd0de;
-    }
-
-    .node-group {
-      cursor: pointer;
-      transition: opacity 0.18s ease;
-    }
-
-    .node-group.dimmed {
-      opacity: 0.22;
-    }
-
-    .node-circle {
-      stroke: rgba(255,255,255,0.22);
-      stroke-width: 2;
-      transition: 0.18s ease;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.28));
-    }
-
-    .node-group.selected .node-circle {
-      stroke: #ffd3df;
-      stroke-width: 3.2;
-      filter: drop-shadow(0 0 18px rgba(190,26,72,0.35));
-    }
-
-    .node-group.connected .node-circle {
-      stroke: rgba(255,255,255,0.42);
-    }
-
-    .node-label {
-      fill: #f2f2f7;
-      font-size: 12px;
-      font-weight: 700;
-      text-anchor: middle;
-      pointer-events: none;
-    }
-
-    .node-sub {
-      fill: var(--muted);
-      font-size: 10px;
-      text-anchor: middle;
-      pointer-events: none;
-    }
-
-    .sidebar {
-      background: rgba(14, 14, 18, 0.92);
-      backdrop-filter: blur(12px);
-      padding: 16px;
-      overflow-y: auto;
-      min-width: 0;
-    }
-
-    .sideCard {
+    .panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding: 14px;
       box-shadow: var(--shadow-md);
     }
 
-    .sideCard + .sideCard {
-      margin-top: 12px;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #d98aa0;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .sideTitle {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: -0.02em;
-    }
-
-    .sideText {
-      margin: 8px 0 0;
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 13px;
-      white-space: pre-wrap;
+    .panelPad {
+      padding: 14px;
     }
 
     .chipRow {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-top: 10px;
     }
 
     .chip {
@@ -295,76 +182,131 @@
       align-items: center;
       gap: 6px;
       border-radius: 999px;
-      padding: 6px 9px;
+      padding: 5px 8px;
       font-size: 11px;
       font-weight: 700;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.04);
-      color: #cdd0db;
+      color: #d7d8e2;
     }
 
-    .listTitle {
+    .canvasPanel {
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #graphSvg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      background-position: center center;
+    }
+
+    #graphSvg.panning {
+      cursor: grabbing;
+    }
+
+    .side {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow-md);
+      padding: 14px;
+    }
+
+    .card h2, .card h3 {
       margin: 0 0 8px;
-      font-size: 13px;
-      letter-spacing: 0.01em;
-    }
-
-    .linkList {
-      margin: 0;
-      padding-left: 18px;
-      color: #d7d9e4;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .linkList li + li {
-      margin-top: 5px;
+      font-size: 16px;
     }
 
     .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: #d7d8e2;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .list li + li {
+      margin-top: 4px;
+    }
+
+    .empty {
       color: var(--muted-2);
       font-size: 12px;
     }
 
-    .legendItem {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #d4d6df;
-      font-size: 12px;
-    }
-
-    .legendDot {
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.16);
-      flex: 0 0 auto;
-    }
-
     .statusLine {
       margin-top: 10px;
-      color: var(--muted);
       font-size: 12px;
+      color: var(--muted);
     }
 
-    @media (max-width: 980px) {
-      #app {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1fr) auto;
-      }
+    .loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4,4,8,0.82);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
+    .loadingCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow-lg);
+      min-width: 240px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(255,255,255,0.10);
+      border-top: 3px solid #be1a48;
+      border-radius: 50%;
+      animation: spin 0.95s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1100px) {
       .main {
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-        min-height: 58vh;
+        grid-template-columns: 1fr;
       }
 
-      .sidebar {
-        max-height: 42vh;
+      .side {
+        max-height: 40vh;
       }
 
-      .topbar {
+      .heroControls {
         grid-template-columns: 1fr;
       }
 
@@ -375,19 +317,24 @@
   </style>
 </head>
 <body>
-  <div id="app">
-    <section class="main">
-      <div class="topbar">
-        <div>
-          <div class="titleWrap">
-            <h1>Backrooms Level Graph</h1>
-            <p>Explore level links, loops, dead ends, and weird transitions. Click a level to highlight all direct connections.</p>
-          </div>
-          <div style="margin-top:10px;">
-            <input id="searchInput" type="text" placeholder="Search level name, tag, or description..." />
-          </div>
-        </div>
+  <div id="loadingOverlay" class="loadingOverlay">
+    <div class="loadingCard">
+      <div class="spinner"></div>
+      <div id="loadingText">Loading Backrooms graph...</div>
+    </div>
+  </div>
 
+  <div id="app">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="heroTitle">
+          <h1>Backrooms Level Graph</h1>
+          <p>Explore level links, loops, dead ends, and weird transitions. Click a level to highlight all direct connections.</p>
+        </div>
+      </div>
+
+      <div class="heroControls">
+        <input id="searchInput" type="text" placeholder="Search level name, tag, or description..." />
         <div class="toolbar">
           <button onclick="zoomOut()">Zoom Out</button>
           <button onclick="zoomIn()">Zoom In</button>
@@ -396,371 +343,138 @@
         </div>
       </div>
 
-      <div id="viewportWrap" class="viewportWrap">
-        <svg id="graphSvg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet">
-          <g id="cameraLayer">
-            <g id="edgeLayer"></g>
-            <g id="nodeLayer"></g>
-          </g>
-        </svg>
-      </div>
+      <div id="statusLine" class="statusLine">Loading graph...</div>
     </section>
 
-    <aside class="sidebar">
-      <div class="sideCard">
-        <div class="eyebrow">Viewer status</div>
-        <div id="viewerStatus" class="muted">No level selected.</div>
-      </div>
-
-      <div class="sideCard">
-        <div class="eyebrow">Selected level</div>
-        <h2 id="nodeTitle" class="sideTitle">Nothing selected</h2>
-        <div id="nodeSubtitle" class="muted" style="margin-top:6px;">Click a node in the graph.</div>
-        <p id="nodeDescription" class="sideText">This panel will show a level summary, tags, and all direct links.</p>
-        <div id="nodeTags" class="chipRow"></div>
-      </div>
-
-      <div class="sideCard">
-        <h3 class="listTitle">Outgoing links</h3>
-        <ul id="outgoingList" class="linkList"></ul>
-      </div>
-
-      <div class="sideCard">
-        <h3 class="listTitle">Incoming links</h3>
-        <ul id="incomingList" class="linkList"></ul>
-      </div>
-
-      <div class="sideCard">
-        <h3 class="listTitle">Legend</h3>
-        <div style="display:grid;gap:8px;">
-          <div class="legendItem"><span class="legendDot" style="background:#d4b15a;"></span> Start / standard</div>
-          <div class="legendItem"><span class="legendDot" style="background:#6c9cff;"></span> Stable / progression</div>
-          <div class="legendItem"><span class="legendDot" style="background:#ff7d7d;"></span> Dangerous / hostile</div>
-          <div class="legendItem"><span class="legendDot" style="background:#ad7bff;"></span> Rare / weird / unstable</div>
+    <section class="main">
+      <div class="graphWrap">
+        <div class="panel panelPad">
+          <div class="chipRow">
+            <span class="chip" id="statNodes">0 nodes</span>
+            <span class="chip" id="statEdges">0 links</span>
+            <span class="chip" id="statSelected">No level selected</span>
+          </div>
         </div>
-        <div class="statusLine">Phase 1 viewer: pan, zoom, click, inspect.</div>
+
+        <div class="panel canvasPanel">
+          <svg id="graphSvg" viewBox="0 0 1600 900"></svg>
+        </div>
       </div>
-    </aside>
+
+      <aside class="side">
+        <div class="card">
+          <h3>Viewer Status</h3>
+          <div class="muted" id="viewerStatusText">No level selected.</div>
+        </div>
+
+        <div class="card">
+          <h2>Selected Level</h2>
+          <div id="selectedPanel">
+            <div class="empty">Click a node in the graph.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Outgoing links</h3>
+          <div id="outgoingList" class="empty">No node selected.</div>
+        </div>
+
+        <div class="card">
+          <h3>Incoming links</h3>
+          <div id="incomingList" class="empty">No node selected.</div>
+        </div>
+
+        <div class="card">
+          <h3>Legend</h3>
+          <ul class="list" style="padding-left:18px; margin-top:0;">
+            <li><span style="color:#d8b85c;">●</span> Start / standard</li>
+            <li><span style="color:#6e9cff;">●</span> Stable / progression</li>
+            <li><span style="color:#ff7e7e;">●</span> Dangerous / hostile</li>
+            <li><span style="color:#9f7cff;">●</span> Rare / weird / unstable</li>
+          </ul>
+          <div class="muted" style="margin-top:10px;">Phase 1 viewer: pan, zoom, click, inspect.</div>
+        </div>
+      </aside>
+    </section>
   </div>
 
   <script>
-    const graphData = {
-      nodes: [
-        {
-          id: "level-0",
-          label: "Level 0",
-          description: "The familiar endless yellow maze. A common entry point and a useful anchor for early routing.",
-          x: 260,
-          y: 260,
-          color: "#d4b15a",
-          tags: ["start", "baseline", "familiar"]
-        },
-        {
-          id: "level-1",
-          label: "Level 1",
-          description: "Industrial, darker, more dangerous. Often reached from Level 0 through more conventional progression.",
-          x: 520,
-          y: 260,
-          color: "#6c9cff",
-          tags: ["industrial", "progression"]
-        },
-        {
-          id: "level-2",
-          label: "Level 2",
-          description: "Tight maintenance corridors and heat. A strong midpoint connector for branching routes.",
-          x: 760,
-          y: 220,
-          color: "#6c9cff",
-          tags: ["maintenance", "heat", "progression"]
-        },
-        {
-          id: "level-4",
-          label: "Level 4",
-          description: "Comparatively safer office spaces. Can serve as a temporary hub in many route plans.",
-          x: 760,
-          y: 480,
-          color: "#6c9cff",
-          tags: ["hub", "safe-ish", "office"]
-        },
-        {
-          id: "level-7",
-          label: "Level 7",
-          description: "Deep flooded isolation. Certain transitions from here can fling players into wildly different branches.",
-          x: 1040,
-          y: 200,
-          color: "#ff7d7d",
-          tags: ["water", "danger", "isolated"]
-        },
-        {
-          id: "level-fun",
-          label: "Level Fun",
-          description: "A party-themed trap level. Bad decisions and bad slides can redirect the route hard.",
-          x: 1280,
-          y: 330,
-          color: "#ff7d7d",
-          tags: ["hostile", "partygoers", "trap"]
-        },
-        {
-          id: "level-11",
-          label: "Level 11",
-          description: "Urban sprawl. Huge, weirdly flexible, and can branch into many plans depending on what rules you adopt.",
-          x: 1080,
-          y: 560,
-          color: "#ad7bff",
-          tags: ["city", "large", "branching"]
-        },
-        {
-          id: "slide-route",
-          label: "Red Slide Route",
-          description: "Not really a full level here, more of a reminder node for a dangerous special transition.",
-          x: 980,
-          y: 350,
-          color: "#ff7d7d",
-          tags: ["special route", "one-way", "chaotic"]
-        }
-      ],
-      edges: [
-        { from: "level-0", to: "level-1", label: "stairwell / noclip path" },
-        { from: "level-1", to: "level-2", label: "maintenance access" },
-        { from: "level-1", to: "level-4", label: "alternate progression" },
-        { from: "level-2", to: "level-7", label: "deeper route" },
-        { from: "level-4", to: "level-11", label: "safer branch" },
-        { from: "level-7", to: "slide-route", label: "red slide trigger" },
-        { from: "slide-route", to: "level-fun", label: "good luck" },
-        { from: "level-fun", to: "level-0", label: "rare reset loop" },
-        { from: "level-11", to: "level-4", label: "return route" },
-        { from: "level-11", to: "level-fun", label: "bad route" }
-      ]
-    };
+    const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
 
-    const svg = document.getElementById("graphSvg");
-    const cameraLayer = document.getElementById("cameraLayer");
-    const edgeLayer = document.getElementById("edgeLayer");
-    const nodeLayer = document.getElementById("nodeLayer");
-    const viewportWrap = document.getElementById("viewportWrap");
-    const searchInput = document.getElementById("searchInput");
-
-    const nodesById = new Map(graphData.nodes.map(node => [node.id, node]));
+    let graphData = { nodes: [], edges: [] };
+    let nodeMap = new Map();
     let selectedNodeId = null;
     let currentSearch = "";
 
-    let camera = {
-      x: 0,
-      y: 0,
-      scale: 1
+    const viewState = {
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0
     };
 
-    let dragState = {
-      dragging: false,
+    const dragState = {
+      mode: null,
       startX: 0,
       startY: 0,
-      cameraX: 0,
-      cameraY: 0
+      originOffsetX: 0,
+      originOffsetY: 0
     };
 
-    function updateCamera() {
-      cameraLayer.setAttribute(
-        "transform",
-        `translate(${camera.x} ${camera.y}) scale(${camera.scale})`
-      );
+    function showLoading(text) {
+      document.getElementById("loadingText").textContent = text || "Loading...";
+      document.getElementById("loadingOverlay").style.display = "flex";
     }
 
-    function clampScale(value) {
-      return Math.max(0.4, Math.min(2.4, value));
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
     }
 
-    function zoomIn() {
-      camera.scale = clampScale(camera.scale * 1.14);
-      updateCamera();
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("statusLine");
+      el.textContent = text;
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
     }
 
-    function zoomOut() {
-      camera.scale = clampScale(camera.scale / 1.14);
-      updateCamera();
+    function normalizeGraphData(raw) {
+      return {
+        nodes: Array.isArray(raw?.nodes)
+          ? raw.nodes.map(n => ({
+              id: Number(n.id),
+              label: typeof n.label === "string" ? n.label : "Unnamed",
+              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+              type: typeof n.type === "string" ? n.type : "progression",
+              status: typeof n.status === "string" ? n.status : "draft",
+              description: typeof n.description === "string" ? n.description : "",
+              notes: typeof n.notes === "string" ? n.notes : "",
+              tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+              x: typeof n.x === "number" ? n.x : 0,
+              y: typeof n.y === "number" ? n.y : 0
+            }))
+          : [],
+        edges: Array.isArray(raw?.edges)
+          ? raw.edges.map(e => ({
+              from: Number(e.from),
+              to: Number(e.to),
+              label: typeof e.label === "string" ? e.label : "",
+              oneWay: !!e.oneWay
+            }))
+          : []
+      };
     }
 
-    function resetView() {
-      camera.x = 0;
-      camera.y = 0;
-      camera.scale = 1;
-      updateCamera();
+    function rebuildMaps() {
+      nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
     }
 
-    function clearSelection() {
-      selectedNodeId = null;
-      renderGraph();
-      renderSidebar();
+    function getNodeById(id) {
+      return nodeMap.get(Number(id)) || null;
     }
 
-    function getConnectedNodeIds(nodeId) {
-      const connected = new Set();
-      for (const edge of graphData.edges) {
-        if (edge.from === nodeId) connected.add(edge.to);
-        if (edge.to === nodeId) connected.add(edge.from);
-      }
-      return connected;
-    }
-
-    function getOutgoingEdges(nodeId) {
-      return graphData.edges.filter(edge => edge.from === nodeId);
-    }
-
-    function getIncomingEdges(nodeId) {
-      return graphData.edges.filter(edge => edge.to === nodeId);
-    }
-
-    function nodeMatchesSearch(node) {
-      if (!currentSearch) return true;
-      const hay = `${node.label} ${node.description} ${(node.tags || []).join(" ")}`.toLowerCase();
-      return hay.includes(currentSearch);
-    }
-
-    function edgeMatchesSearch(edge) {
-      const fromNode = nodesById.get(edge.from);
-      const toNode = nodesById.get(edge.to);
-      return nodeMatchesSearch(fromNode) || nodeMatchesSearch(toNode);
-    }
-
-    function createCurvedPath(x1, y1, x2, y2) {
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const curve = Math.max(50, Math.abs(dx) * 0.18 + Math.abs(dy) * 0.12);
-      const cx1 = x1 + dx * 0.28;
-      const cy1 = y1;
-      const cx2 = x2 - dx * 0.28;
-      const cy2 = y2;
-      return `M ${x1} ${y1} C ${cx1} ${cy1 - curve * 0.08}, ${cx2} ${cy2 + curve * 0.08}, ${x2} ${y2}`;
-    }
-
-    function renderGraph() {
-      edgeLayer.innerHTML = "";
-      nodeLayer.innerHTML = "";
-
-      const connectedSet = selectedNodeId ? getConnectedNodeIds(selectedNodeId) : new Set();
-
-      for (const edge of graphData.edges) {
-        const fromNode = nodesById.get(edge.from);
-        const toNode = nodesById.get(edge.to);
-        if (!fromNode || !toNode) continue;
-        if (!edgeMatchesSearch(edge)) continue;
-
-        const edgeIsActive = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-        const shouldDim = selectedNodeId && !edgeIsActive;
-
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", createCurvedPath(fromNode.x, fromNode.y, toNode.x, toNode.y));
-        path.setAttribute("class", `edge${edgeIsActive ? " active" : ""}${shouldDim ? " dimmed" : ""}`);
-        edgeLayer.appendChild(path);
-
-        if (edge.label) {
-          const midX = (fromNode.x + toNode.x) / 2;
-          const midY = (fromNode.y + toNode.y) / 2 - 8;
-          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          label.setAttribute("x", midX);
-          label.setAttribute("y", midY);
-          label.setAttribute("class", `edge-label${edgeIsActive ? " active" : ""}`);
-          label.textContent = edge.label;
-          edgeLayer.appendChild(label);
-        }
-      }
-
-      for (const node of graphData.nodes) {
-        if (!nodeMatchesSearch(node)) continue;
-
-        const isSelected = node.id === selectedNodeId;
-        const isConnected = selectedNodeId && connectedSet.has(node.id);
-        const shouldDim = selectedNodeId && !isSelected && !isConnected;
-
-        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        group.setAttribute(
-          "class",
-          `node-group${isSelected ? " selected" : ""}${isConnected ? " connected" : ""}${shouldDim ? " dimmed" : ""}`
-        );
-        group.setAttribute("transform", `translate(${node.x} ${node.y})`);
-        group.addEventListener("click", (event) => {
-          event.stopPropagation();
-          selectedNodeId = node.id;
-          renderGraph();
-          renderSidebar();
-        });
-
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("r", 20);
-        circle.setAttribute("cx", 0);
-        circle.setAttribute("cy", 0);
-        circle.setAttribute("fill", node.color || "#888");
-        circle.setAttribute("class", "node-circle");
-        group.appendChild(circle);
-
-        const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        title.setAttribute("x", 0);
-        title.setAttribute("y", 40);
-        title.setAttribute("class", "node-label");
-        title.textContent = node.label;
-        group.appendChild(title);
-
-        if ((node.tags || []).length) {
-          const sub = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          sub.setAttribute("x", 0);
-          sub.setAttribute("y", 56);
-          sub.setAttribute("class", "node-sub");
-          sub.textContent = node.tags.slice(0, 2).join(" • ");
-          group.appendChild(sub);
-        }
-
-        nodeLayer.appendChild(group);
-      }
-    }
-
-    function renderSidebar() {
-      const titleEl = document.getElementById("nodeTitle");
-      const subtitleEl = document.getElementById("nodeSubtitle");
-      const descEl = document.getElementById("nodeDescription");
-      const tagsEl = document.getElementById("nodeTags");
-      const outgoingEl = document.getElementById("outgoingList");
-      const incomingEl = document.getElementById("incomingList");
-      const statusEl = document.getElementById("viewerStatus");
-
-      if (!selectedNodeId) {
-        titleEl.textContent = "Nothing selected";
-        subtitleEl.textContent = "Click a node in the graph.";
-        descEl.textContent = "This panel will show a level summary, tags, and all direct links.";
-        tagsEl.innerHTML = "";
-        outgoingEl.innerHTML = `<li class="muted">No node selected.</li>`;
-        incomingEl.innerHTML = `<li class="muted">No node selected.</li>`;
-        statusEl.textContent = "No level selected.";
-        return;
-      }
-
-      const node = nodesById.get(selectedNodeId);
-      if (!node) return;
-
-      const outgoing = getOutgoingEdges(node.id);
-      const incoming = getIncomingEdges(node.id);
-      const connectedCount = getConnectedNodeIds(node.id).size;
-
-      titleEl.textContent = node.label;
-      subtitleEl.textContent = `${connectedCount} directly connected level${connectedCount === 1 ? "" : "s"}`;
-      descEl.textContent = node.description || "No description yet.";
-      statusEl.textContent = `Selected: ${node.label}`;
-
-      tagsEl.innerHTML = (node.tags || []).length
-        ? node.tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")
-        : `<span class="chip">No tags</span>`;
-
-      outgoingEl.innerHTML = outgoing.length
-        ? outgoing.map(edge => {
-            const target = nodesById.get(edge.to);
-            return `<li><strong>${escapeHtml(target?.label || edge.to)}</strong>${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : `<li class="muted">No outgoing links.</li>`;
-
-      incomingEl.innerHTML = incoming.length
-        ? incoming.map(edge => {
-            const source = nodesById.get(edge.from);
-            return `<li><strong>${escapeHtml(source?.label || edge.from)}</strong>${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : `<li class="muted">No incoming links.</li>`;
+    function getNodeColor(type) {
+      if (type === "start") return "var(--node-start)";
+      if (type === "danger") return "var(--node-danger)";
+      if (type === "weird") return "var(--node-weird)";
+      return "var(--node-progression)";
     }
 
     function escapeHtml(value) {
@@ -772,49 +486,283 @@
         .replaceAll("'", "&#039;");
     }
 
-    searchInput.addEventListener("input", () => {
-      currentSearch = searchInput.value.trim().toLowerCase();
+    function matchesSearch(node) {
+      if (!currentSearch) return true;
+      const hay = [
+        node.label,
+        node.subtitle,
+        node.description,
+        node.notes,
+        ...(Array.isArray(node.tags) ? node.tags : [])
+      ].join(" ").toLowerCase();
+      return hay.includes(currentSearch);
+    }
+
+    function updateStats() {
+      document.getElementById("statNodes").textContent = graphData.nodes.length + " nodes";
+      document.getElementById("statEdges").textContent = graphData.edges.length + " links";
+
+      const selected = getNodeById(selectedNodeId);
+      document.getElementById("statSelected").textContent = selected
+        ? "Selected: " + selected.label
+        : "No level selected";
+    }
+
+    function worldToScreen(x, y) {
+      return {
+        x: x * viewState.scale + viewState.offsetX,
+        y: y * viewState.scale + viewState.offsetY
+      };
+    }
+
+    function getSvgPoint(clientX, clientY) {
+      const svg = document.getElementById("graphSvg");
+      const rect = svg.getBoundingClientRect();
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function renderGraph() {
+      const svg = document.getElementById("graphSvg");
+      const selected = getNodeById(selectedNodeId);
+
+      const outgoing = new Set();
+      const incoming = new Set();
+
+      if (selected) {
+        graphData.edges.forEach(edge => {
+          if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
+          if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
+        });
+      }
+
+      const visibleNodes = graphData.nodes.filter(matchesSearch);
+      const visibleNodeIds = new Set(visibleNodes.map(n => Number(n.id)));
+
+      const edgeMarkup = graphData.edges
+        .filter(edge => visibleNodeIds.has(Number(edge.from)) && visibleNodeIds.has(Number(edge.to)))
+        .map(edge => {
+          const fromNode = getNodeById(edge.from);
+          const toNode = getNodeById(edge.to);
+          if (!fromNode || !toNode) return "";
+
+          const a = worldToScreen(fromNode.x, fromNode.y);
+          const b = worldToScreen(toNode.x, toNode.y);
+
+          const isSelectedEdge = selected && (
+            Number(edge.from) === Number(selected.id) ||
+            Number(edge.to) === Number(selected.id)
+          );
+
+          const stroke = isSelectedEdge ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)";
+          const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
+
+          const midX = (a.x + b.x) / 2;
+          const midY = (a.y + b.y) / 2;
+
+          return `
+            <g>
+              <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
+              ${edge.label ? `
+                <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
+                  ${escapeHtml(edge.label)}
+                </text>
+              ` : ""}
+            </g>
+          `;
+        }).join("");
+
+      const nodeMarkup = visibleNodes.map(node => {
+        const p = worldToScreen(node.x, node.y);
+        const isSelected = selected && Number(selected.id) === Number(node.id);
+        const isOutgoing = outgoing.has(Number(node.id));
+        const isIncoming = incoming.has(Number(node.id));
+        const fill = getNodeColor(node.type);
+        const stroke = isSelected
+          ? "rgba(255,255,255,0.95)"
+          : (isOutgoing || isIncoming)
+            ? "rgba(255,255,255,0.65)"
+            : "rgba(255,255,255,0.16)";
+        const strokeWidth = isSelected ? 3 : 1.5;
+        const radius = isSelected ? 17 : 15;
+
+        return `
+          <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
+            <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
+            <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
+            ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
+          </g>
+        `;
+      }).join("");
+
+      svg.innerHTML = `${edgeMarkup}${nodeMarkup}`;
+    }
+
+    function renderInspector() {
+      const selected = getNodeById(selectedNodeId);
+
+      document.getElementById("viewerStatusText").textContent = selected
+        ? `Selected ${selected.label}. Highlighting all direct links.`
+        : "No level selected.";
+
+      if (!selected) {
+        document.getElementById("selectedPanel").innerHTML = `<div class="empty">Click a node in the graph.</div>`;
+        document.getElementById("outgoingList").innerHTML = `<div class="empty">No node selected.</div>`;
+        document.getElementById("incomingList").innerHTML = `<div class="empty">No node selected.</div>`;
+        return;
+      }
+
+      const tags = Array.isArray(selected.tags) ? selected.tags : [];
+      document.getElementById("selectedPanel").innerHTML = `
+        <h2 style="margin:0 0 6px;">${escapeHtml(selected.label)}</h2>
+        ${selected.subtitle ? `<div class="muted" style="margin-bottom:8px;">${escapeHtml(selected.subtitle)}</div>` : ""}
+        ${selected.description ? `<div class="muted" style="font-size:13px; line-height:1.55; margin-bottom:10px;">${escapeHtml(selected.description)}</div>` : ""}
+        ${tags.length ? `<div class="chipRow">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>` : `<div class="empty">No tags.</div>`}
+      `;
+
+      const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
+      const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
+
+      document.getElementById("outgoingList").innerHTML = outgoing.length
+        ? `<ul class="list">${outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            const text = target ? target.label : String(edge.to);
+            return `<li>${escapeHtml(text)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}${edge.oneWay ? ` <span class="muted">(one way)</span>` : ""}</li>`;
+          }).join("")}</ul>`
+        : `<div class="empty">No outgoing links.</div>`;
+
+      document.getElementById("incomingList").innerHTML = incoming.length
+        ? `<ul class="list">${incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            const text = source ? source.label : String(edge.from);
+            return `<li>${escapeHtml(text)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}${edge.oneWay ? ` <span class="muted">(one way)</span>` : ""}</li>`;
+          }).join("")}</ul>`
+        : `<div class="empty">No incoming links.</div>`;
+    }
+
+    function renderAll() {
+      updateStats();
       renderGraph();
+      renderInspector();
+    }
+
+    function zoomIn() {
+      viewState.scale = Math.min(2.8, viewState.scale * 1.15);
+      renderGraph();
+    }
+
+    function zoomOut() {
+      viewState.scale = Math.max(0.35, viewState.scale / 1.15);
+      renderGraph();
+    }
+
+    function resetView() {
+      viewState.scale = 1;
+      viewState.offsetX = 0;
+      viewState.offsetY = 0;
+      renderGraph();
+    }
+
+    function clearSelection() {
+      selectedNodeId = null;
+      renderAll();
+    }
+
+    async function reloadGraph() {
+      try {
+        showLoading("Loading Backrooms graph...");
+        setStatus("Loading latest graph...");
+
+        const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json?.error || "Could not load graph");
+        }
+
+        graphData = normalizeGraphData(json?.data ? json.data : json);
+        rebuildMaps();
+
+        if (selectedNodeId && !getNodeById(selectedNodeId)) {
+          selectedNodeId = null;
+        }
+
+        renderAll();
+        setStatus("Loaded latest graph.");
+        hideLoading();
+      } catch (err) {
+        console.error(err);
+        setStatus("Failed to load graph.", true);
+        hideLoading();
+      }
+    }
+
+    function attachGraphInteractions() {
+      const svg = document.getElementById("graphSvg");
+
+      svg.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        if (event.deltaY < 0) zoomIn();
+        else zoomOut();
+      }, { passive: false });
+
+      svg.addEventListener("mousedown", (event) => {
+        const nodeGroup = event.target.closest(".graph-node");
+        const svgPoint = getSvgPoint(event.clientX, event.clientY);
+
+        if (nodeGroup) {
+          selectedNodeId = Number(nodeGroup.getAttribute("data-node-id"));
+          renderAll();
+          return;
+        }
+
+        dragState.mode = "pan";
+        dragState.startX = svgPoint.x;
+        dragState.startY = svgPoint.y;
+        dragState.originOffsetX = viewState.offsetX;
+        dragState.originOffsetY = viewState.offsetY;
+        svg.classList.add("panning");
+      });
+
+      window.addEventListener("mousemove", (event) => {
+        if (dragState.mode !== "pan") return;
+        const svgPoint = getSvgPoint(event.clientX, event.clientY);
+        viewState.offsetX = dragState.originOffsetX + (svgPoint.x - dragState.startX);
+        viewState.offsetY = dragState.originOffsetY + (svgPoint.y - dragState.startY);
+        renderGraph();
+      });
+
+      window.addEventListener("mouseup", () => {
+        dragState.mode = null;
+        svg.classList.remove("panning");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("searchInput").addEventListener("input", (event) => {
+        currentSearch = (event.target.value || "").trim().toLowerCase();
+        renderGraph();
+      });
+
+      attachGraphInteractions();
     });
 
-    viewportWrap.addEventListener("mousedown", (event) => {
-      if (event.target.closest(".node-group")) return;
-      dragState.dragging = true;
-      viewportWrap.classList.add("dragging");
-      dragState.startX = event.clientX;
-      dragState.startY = event.clientY;
-      dragState.cameraX = camera.x;
-      dragState.cameraY = camera.y;
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        reloadGraph();
+      }
     });
 
-    window.addEventListener("mousemove", (event) => {
-      if (!dragState.dragging) return;
-      const dx = event.clientX - dragState.startX;
-      const dy = event.clientY - dragState.startY;
-      camera.x = dragState.cameraX + dx;
-      camera.y = dragState.cameraY + dy;
-      updateCamera();
-    });
+    window.zoomIn = zoomIn;
+    window.zoomOut = zoomOut;
+    window.resetView = resetView;
+    window.clearSelection = clearSelection;
 
-    window.addEventListener("mouseup", () => {
-      dragState.dragging = false;
-      viewportWrap.classList.remove("dragging");
-    });
-
-    viewportWrap.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      const scaleFactor = event.deltaY > 0 ? 0.92 : 1.08;
-      camera.scale = clampScale(camera.scale * scaleFactor);
-      updateCamera();
-    }, { passive: false });
-
-    svg.addEventListener("click", () => {
-      clearSelection();
-    });
-
-    updateCamera();
-    renderGraph();
-    renderSidebar();
+    reloadGraph();
   </script>
 </body>
 </html>
