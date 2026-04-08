@@ -656,1134 +656,1193 @@
   </div>
 
   <script>
-    const PROJECT_NAME = "backroomsparadox";
-    const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
-    const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
+  const PROJECT_NAME = "backroomsparadox";
+  const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
+  const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
 
-    const LOCAL_DRAFT_KEY = "backrooms-graph-editor-draft-v2";
-    const LAST_REMOTE_SAVE_KEY = "backrooms-graph-last-remote-save-v2";
-    const LAST_SNAPSHOT_META_KEY = "backrooms-graph-last-snapshot-meta-v2";
-    const LOCAL_AUTOSAVE_DELAY = 700;
-    const GITHUB_AUTOSAVE_DELAY = 2500;
+  const LOCAL_DRAFT_KEY = "backrooms-graph-editor-draft-v3";
+  const LAST_REMOTE_SAVE_KEY = "backrooms-graph-last-remote-save-v3";
+  const LAST_SNAPSHOT_META_KEY = "backrooms-graph-last-snapshot-meta-v3";
+  const LOCAL_AUTOSAVE_DELAY = 700;
+  const GITHUB_AUTOSAVE_DELAY = 2500;
 
-    let graphData = { nodes: [], edges: [] };
-    let nodeMap = new Map();
-    let selectedNodeId = null;
-    let currentSearch = "";
+  let graphData = { nodes: [], edges: [] };
+  let nodeMap = new Map();
+  let selectedNodeId = null;
+  let currentSearch = "";
 
-    let hasUnsavedChanges = false;
-    let isSaving = false;
-    let lastLocalSaveAt = null;
-    let lastRemoteSaveAt = null;
-    let lastVersionId = null;
-    let lastSnapshotPath = null;
+  let hasUnsavedChanges = false;
+  let isSaving = false;
+  let lastLocalSaveAt = null;
+  let lastRemoteSaveAt = null;
+  let lastVersionId = null;
+  let lastSnapshotPath = null;
 
-    let localAutosaveTimer = null;
-    let githubAutosaveTimer = null;
+  let localAutosaveTimer = null;
+  let githubAutosaveTimer = null;
+  let diffRefreshTimer = null;
 
-    let historyIndexCache = null;
-    let snapshotCache = new Map();
-    let latestDiffContext = null;
+  let historyIndexCache = null;
+  let snapshotCache = new Map();
+  let latestDiffContext = null;
 
-    const viewState = {
-      scale: 1,
-      offsetX: 0,
-      offsetY: 0
-    };
+  const viewState = {
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0
+  };
 
-    const dragState = {
-      mode: null,
-      nodeId: null,
-      startX: 0,
-      startY: 0,
-      originOffsetX: 0,
-      originOffsetY: 0,
-      nodeStartX: 0,
-      nodeStartY: 0
-    };
+  const dragState = {
+    mode: null,
+    nodeId: null,
+    moved: false,
+    startScreenX: 0,
+    startScreenY: 0,
+    startWorldX: 0,
+    startWorldY: 0,
+    originOffsetX: 0,
+    originOffsetY: 0,
+    nodeStartX: 0,
+    nodeStartY: 0
+  };
 
-    function showLoading(text) {
-      document.getElementById("loadingText").textContent = text || "Loading...";
-      document.getElementById("loadingOverlay").style.display = "flex";
+  function showLoading(text = "Loading graph...") {
+    document.getElementById("loadingText").textContent = text;
+    document.getElementById("loadingOverlay").style.display = "flex";
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+
+  function setStatus(text, isError = false) {
+    const el = document.getElementById("statusLine");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? "#ff8a8a" : "#999";
+  }
+
+  function formatTimestamp(ts) {
+    if (!ts) return "never";
+    try {
+      return new Date(ts).toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    } catch {
+      return "unknown";
+    }
+  }
+
+  function updateSaveUI() {
+    const saveBadge = document.getElementById("saveBadge");
+    const remoteBadge = document.getElementById("remoteBadge");
+    const snapshotBadge = document.getElementById("snapshotBadge");
+    const statLocal = document.getElementById("statLocal");
+
+    if (isSaving) {
+      saveBadge.className = "badge badge-saving";
+      saveBadge.textContent = "Saving to GitHub...";
+    } else if (hasUnsavedChanges) {
+      saveBadge.className = "badge badge-dirty";
+      saveBadge.textContent = "Unsaved changes";
+    } else {
+      saveBadge.className = "badge badge-clean";
+      saveBadge.textContent = "All changes saved locally";
     }
 
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
+    remoteBadge.textContent = lastRemoteSaveAt
+      ? "GitHub: " + formatTimestamp(lastRemoteSaveAt)
+      : "GitHub: not saved yet";
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
-    }
+    snapshotBadge.textContent = lastVersionId
+      ? "Snapshot: " + lastVersionId
+      : "No snapshot yet";
 
-    function formatTimestamp(ts) {
-      if (!ts) return "never";
-      try {
-        return new Date(ts).toLocaleString([], {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit"
-        });
-      } catch {
-        return "unknown";
+    statLocal.textContent = "Local draft: " + formatTimestamp(lastLocalSaveAt);
+  }
+
+  function persistRemoteMeta() {
+    localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt || ""));
+    localStorage.setItem(LAST_SNAPSHOT_META_KEY, JSON.stringify({
+      version: lastVersionId,
+      snapshotPath: lastSnapshotPath
+    }));
+  }
+
+  function restoreRemoteMeta() {
+    const ts = Number(localStorage.getItem(LAST_REMOTE_SAVE_KEY));
+    if (!Number.isNaN(ts) && ts > 0) lastRemoteSaveAt = ts;
+
+    try {
+      const raw = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        lastVersionId = parsed?.version || null;
+        lastSnapshotPath = parsed?.snapshotPath || null;
       }
-    }
+    } catch {}
+  }
 
-    function updateSaveUI() {
-      const saveBadge = document.getElementById("saveBadge");
-      const remoteBadge = document.getElementById("remoteBadge");
-      const snapshotBadge = document.getElementById("snapshotBadge");
-      const statLocal = document.getElementById("statLocal");
+  function normalizeGraphData(raw) {
+    const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
 
-      if (isSaving) {
-        saveBadge.className = "badge badge-saving";
-        saveBadge.textContent = "Saving to GitHub...";
-      } else if (hasUnsavedChanges) {
-        saveBadge.className = "badge badge-dirty";
-        saveBadge.textContent = "Unsaved changes";
-      } else {
-        saveBadge.className = "badge badge-clean";
-        saveBadge.textContent = "All changes saved locally";
-      }
+    return {
+      nodes: rawNodes.map(n => ({
+        id: Number(n.id),
+        label: typeof n.label === "string" ? n.label : "Unnamed",
+        subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+        description: typeof n.description === "string" ? n.description : "",
+        notes: typeof n.notes === "string" ? n.notes : "",
+        type: typeof n.type === "string" ? n.type : "progression",
+        status: typeof n.status === "string" ? n.status : "draft",
+        tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+        x: typeof n.x === "number" ? n.x : 0,
+        y: typeof n.y === "number" ? n.y : 0
+      })),
+      edges: rawEdges.map(e => ({
+        from: Number(e.from),
+        to: Number(e.to),
+        label: typeof e.label === "string" ? e.label : "",
+        oneWay: !!e.oneWay
+      }))
+    };
+  }
 
-      remoteBadge.textContent = lastRemoteSaveAt
-        ? "GitHub: " + formatTimestamp(lastRemoteSaveAt)
-        : "GitHub: not saved yet";
+  function rebuildMaps() {
+    nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
+  }
 
-      snapshotBadge.textContent = lastVersionId
-        ? "Snapshot: " + lastVersionId
-        : "No snapshot yet";
+  function getNodeById(id) {
+    return nodeMap.get(Number(id)) || null;
+  }
 
-      statLocal.textContent = "Local draft: " + formatTimestamp(lastLocalSaveAt);
-    }
+  function getSerializableGraphData() {
+    return {
+      nodes: graphData.nodes.map(node => ({
+        id: Number(node.id),
+        label: node.label || "Unnamed",
+        subtitle: node.subtitle || "",
+        type: node.type || "progression",
+        status: node.status || "draft",
+        description: node.description || "",
+        notes: node.notes || "",
+        tags: Array.isArray(node.tags) ? node.tags : [],
+        x: typeof node.x === "number" ? node.x : 0,
+        y: typeof node.y === "number" ? node.y : 0
+      })),
+      edges: graphData.edges.map(edge => ({
+        from: Number(edge.from),
+        to: Number(edge.to),
+        label: edge.label || "",
+        oneWay: !!edge.oneWay
+      }))
+    };
+  }
 
-    function persistRemoteMeta() {
-      localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt || ""));
-      localStorage.setItem(LAST_SNAPSHOT_META_KEY, JSON.stringify({
-        version: lastVersionId,
-        snapshotPath: lastSnapshotPath
-      }));
-    }
-
-    function restoreRemoteMeta() {
-      const ts = Number(localStorage.getItem(LAST_REMOTE_SAVE_KEY));
-      if (!Number.isNaN(ts) && ts > 0) lastRemoteSaveAt = ts;
-
-      try {
-        const raw = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          lastVersionId = parsed?.version || null;
-          lastSnapshotPath = parsed?.snapshotPath || null;
-        }
-      } catch {}
-    }
-
-    function rebuildMaps() {
-      nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
-    }
-
-    function getNodeById(id) {
-      return nodeMap.get(Number(id)) || null;
-    }
-
-    function getSerializableGraphData() {
-      return {
-        nodes: graphData.nodes.map(node => ({
-          id: Number(node.id),
-          label: node.label || "Unnamed",
-          subtitle: node.subtitle || "",
-          type: node.type || "progression",
-          status: node.status || "draft",
-          description: node.description || "",
-          notes: node.notes || "",
-          tags: Array.isArray(node.tags) ? node.tags : [],
-          x: typeof node.x === "number" ? node.x : 0,
-          y: typeof node.y === "number" ? node.y : 0
-        })),
-        edges: graphData.edges.map(edge => ({
-          from: Number(edge.from),
-          to: Number(edge.to),
-          label: edge.label || "",
-          oneWay: !!edge.oneWay
-        }))
+  function saveDraftToLocal() {
+    try {
+      const payload = {
+        savedAt: Date.now(),
+        data: getSerializableGraphData()
       };
-    }
-
-    function normalizeGraphData(raw) {
-      return {
-        nodes: Array.isArray(raw?.nodes)
-          ? raw.nodes.map(n => ({
-              id: Number(n.id),
-              label: typeof n.label === "string" ? n.label : "Unnamed",
-              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-              type: typeof n.type === "string" ? n.type : "progression",
-              status: typeof n.status === "string" ? n.status : "draft",
-              description: typeof n.description === "string" ? n.description : "",
-              notes: typeof n.notes === "string" ? n.notes : "",
-              tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
-              x: typeof n.x === "number" ? n.x : 0,
-              y: typeof n.y === "number" ? n.y : 0
-            }))
-          : [],
-        edges: Array.isArray(raw?.edges)
-          ? raw.edges.map(e => ({
-              from: Number(e.from),
-              to: Number(e.to),
-              label: typeof e.label === "string" ? e.label : "",
-              oneWay: !!e.oneWay
-            }))
-          : []
-      };
-    }
-
-    function getNodeColor(type) {
-      if (type === "start") return "var(--node-start)";
-      if (type === "danger") return "var(--node-danger)";
-      if (type === "weird") return "var(--node-weird)";
-      return "var(--node-progression)";
-    }
-
-    function matchesSearch(node) {
-      if (!currentSearch) return true;
-      const hay = [
-        node.label,
-        node.subtitle,
-        node.description,
-        node.notes,
-        ...(Array.isArray(node.tags) ? node.tags : [])
-      ].join(" ").toLowerCase();
-      return hay.includes(currentSearch);
-    }
-
-    function updateStats() {
-      document.getElementById("statNodes").textContent = graphData.nodes.length + " nodes";
-      document.getElementById("statEdges").textContent = graphData.edges.length + " links";
-      const selected = getNodeById(selectedNodeId);
-      document.getElementById("statSelected").textContent = selected
-        ? "Selected: " + selected.label
-        : "No level selected";
+      localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
+      lastLocalSaveAt = payload.savedAt;
       updateSaveUI();
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-    function worldToScreen(x, y) {
+  function loadDraftFromLocal() {
+    try {
+      const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.data) return null;
       return {
-        x: x * viewState.scale + viewState.offsetX,
-        y: y * viewState.scale + viewState.offsetY
+        savedAt: parsed.savedAt || null,
+        data: normalizeGraphData(parsed.data)
       };
+    } catch {
+      return null;
+    }
+  }
+
+  function clearLocalDraft() {
+    try {
+      localStorage.removeItem(LOCAL_DRAFT_KEY);
+    } catch {}
+  }
+
+  function markDirty(message = "Unsaved changes.") {
+    hasUnsavedChanges = true;
+    updateSaveUI();
+    setStatus(message);
+    queueLocalAutosave();
+    queueGitHubAutosave();
+    refreshDiffSoon();
+  }
+
+  function markClean(message = "Loaded latest graph.") {
+    hasUnsavedChanges = false;
+    updateSaveUI();
+    setStatus(message);
+    refreshDiffSoon();
+  }
+
+  function queueLocalAutosave() {
+    clearTimeout(localAutosaveTimer);
+    localAutosaveTimer = setTimeout(() => {
+      saveDraftToLocal();
+    }, LOCAL_AUTOSAVE_DELAY);
+  }
+
+  function queueGitHubAutosave() {
+    clearTimeout(githubAutosaveTimer);
+    githubAutosaveTimer = setTimeout(() => {
+      if (!hasUnsavedChanges || isSaving) return;
+      saveGraph(true);
+    }, GITHUB_AUTOSAVE_DELAY);
+  }
+
+  function invalidateHistoryCache() {
+    historyIndexCache = null;
+    snapshotCache = new Map();
+    latestDiffContext = null;
+  }
+
+  function refreshDiffSoon() {
+    clearTimeout(diffRefreshTimer);
+    diffRefreshTimer = setTimeout(refreshDiff, 250);
+  }
+
+  function getNodeColor(type) {
+    if (type === "start") return "#d8b85c";
+    if (type === "danger") return "#ff7e7e";
+    if (type === "weird") return "#9f7cff";
+    return "#6e9cff";
+  }
+
+  function getSvg() {
+    return document.getElementById("graphSvg");
+  }
+
+  function getSvgSize() {
+    const svg = getSvg();
+    const rect = svg.getBoundingClientRect();
+    return {
+      width: rect.width || 1600,
+      height: rect.height || 900
+    };
+  }
+
+  function getSvgPoint(clientX, clientY) {
+    const rect = getSvg().getBoundingClientRect();
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function worldToScreen(x, y) {
+    return {
+      x: x * viewState.scale + viewState.offsetX,
+      y: y * viewState.scale + viewState.offsetY
+    };
+  }
+
+  function screenToWorld(x, y) {
+    return {
+      x: (x - viewState.offsetX) / viewState.scale,
+      y: (y - viewState.offsetY) / viewState.scale
+    };
+  }
+
+  function fitGraphToView() {
+    if (!graphData.nodes.length) return;
+
+    const { width: svgWidth, height: svgHeight } = getSvgSize();
+    const padding = 120;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const node of graphData.nodes) {
+      if (node.x < minX) minX = node.x;
+      if (node.y < minY) minY = node.y;
+      if (node.x > maxX) maxX = node.x;
+      if (node.y > maxY) maxY = node.y;
     }
 
-    function screenToWorld(x, y) {
-      return {
-        x: (x - viewState.offsetX) / viewState.scale,
-        y: (y - viewState.offsetY) / viewState.scale
-      };
-    }
+    const graphWidth = Math.max(1, maxX - minX);
+    const graphHeight = Math.max(1, maxY - minY);
 
-    function getSvgPoint(clientX, clientY) {
-      const svg = document.getElementById("graphSvg");
-      const rect = svg.getBoundingClientRect();
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
+    const scaleX = (svgWidth - padding * 2) / graphWidth;
+    const scaleY = (svgHeight - padding * 2) / graphHeight;
+    viewState.scale = Math.max(0.35, Math.min(2.2, Math.min(scaleX, scaleY)));
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
 
-    function renderGraph() {
-      const svg = document.getElementById("graphSvg");
-      const selected = getNodeById(selectedNodeId);
+    viewState.offsetX = svgWidth / 2 - centerX * viewState.scale;
+    viewState.offsetY = svgHeight / 2 - centerY * viewState.scale;
+  }
 
-      const outgoing = new Set();
-      const incoming = new Set();
+  function zoomAt(screenX, screenY, factor) {
+    const oldScale = viewState.scale;
+    const newScale = Math.max(0.25, Math.min(3.5, oldScale * factor));
+    if (newScale === oldScale) return;
 
-      if (selected) {
-        graphData.edges.forEach(edge => {
-          if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
-          if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
-        });
+    const worldX = (screenX - viewState.offsetX) / oldScale;
+    const worldY = (screenY - viewState.offsetY) / oldScale;
+
+    viewState.scale = newScale;
+    viewState.offsetX = screenX - worldX * newScale;
+    viewState.offsetY = screenY - worldY * newScale;
+
+    renderGraph();
+  }
+
+  function zoomIn() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1.15);
+  }
+
+  function zoomOut() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1 / 1.15);
+  }
+
+  function resetView() {
+    fitGraphToView();
+    renderGraph();
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function matchesSearch(node) {
+    if (!currentSearch) return true;
+    const hay = [
+      node.label,
+      node.subtitle,
+      node.description,
+      node.notes,
+      ...(Array.isArray(node.tags) ? node.tags : [])
+    ].join(" ").toLowerCase();
+    return hay.includes(currentSearch);
+  }
+
+  function updateStats() {
+    document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+    document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+
+    const selected = getNodeById(selectedNodeId);
+    document.getElementById("statSelected").textContent = selected
+      ? `Selected: ${selected.label}`
+      : "No level selected";
+
+    updateSaveUI();
+  }
+
+  function renderGraph() {
+    const svg = getSvg();
+    const selected = getNodeById(selectedNodeId);
+
+    const outgoing = new Set();
+    const incoming = new Set();
+
+    if (selected) {
+      for (const edge of graphData.edges) {
+        if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
+        if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
       }
+    }
 
-      const visibleNodes = graphData.nodes.filter(matchesSearch);
-      const visibleNodeIds = new Set(visibleNodes.map(n => Number(n.id)));
+    const visibleNodes = graphData.nodes.filter(matchesSearch);
+    const visibleIds = new Set(visibleNodes.map(n => Number(n.id)));
 
-      const edgeMarkup = graphData.edges
-        .filter(edge => visibleNodeIds.has(Number(edge.from)) && visibleNodeIds.has(Number(edge.to)))
-        .map(edge => {
-          const fromNode = getNodeById(edge.from);
-          const toNode = getNodeById(edge.to);
-          if (!fromNode || !toNode) return "";
+    const edgeMarkup = graphData.edges
+      .filter(edge => visibleIds.has(Number(edge.from)) && visibleIds.has(Number(edge.to)))
+      .map(edge => {
+        const fromNode = getNodeById(edge.from);
+        const toNode = getNodeById(edge.to);
+        if (!fromNode || !toNode) return "";
 
-          const a = worldToScreen(fromNode.x, fromNode.y);
-          const b = worldToScreen(toNode.x, toNode.y);
+        const a = worldToScreen(fromNode.x, fromNode.y);
+        const b = worldToScreen(toNode.x, toNode.y);
 
-          const isSelectedEdge = selected && (
-            Number(edge.from) === Number(selected.id) ||
-            Number(edge.to) === Number(selected.id)
-          );
+        const isSelectedEdge = selected && (
+          Number(edge.from) === Number(selected.id) ||
+          Number(edge.to) === Number(selected.id)
+        );
 
-          const stroke = isSelectedEdge ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)";
-          const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
-
-          const midX = (a.x + b.x) / 2;
-          const midY = (a.y + b.y) / 2;
-
-          return `
-            <g>
-              <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
-              ${edge.label ? `
-                <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
-                  ${escapeHtml(edge.label)}
-                </text>
-              ` : ""}
-            </g>
-          `;
-        }).join("");
-
-      const nodeMarkup = visibleNodes.map(node => {
-        const p = worldToScreen(node.x, node.y);
-        const isSelected = selected && Number(selected.id) === Number(node.id);
-        const isOutgoing = outgoing.has(Number(node.id));
-        const isIncoming = incoming.has(Number(node.id));
-        const fill = getNodeColor(node.type);
-        const stroke = isSelected
-          ? "rgba(255,255,255,0.95)"
-          : (isOutgoing || isIncoming)
-            ? "rgba(255,255,255,0.65)"
-            : "rgba(255,255,255,0.16)";
-        const strokeWidth = isSelected ? 3 : 1.5;
-        const radius = isSelected ? 17 : 15;
+        const stroke = isSelectedEdge ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.18)";
+        const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2;
 
         return `
-          <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
-            <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
-            <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
-            ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
+          <g>
+            <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
+            ${edge.label ? `
+              <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
+                ${escapeHtml(edge.label)}
+              </text>
+            ` : ""}
           </g>
         `;
       }).join("");
 
-      svg.innerHTML = `
-        <defs>
-          <filter id="softGlow">
-            <feGaussianBlur stdDeviation="2.6" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        ${edgeMarkup}
-        ${nodeMarkup}
+    const nodeMarkup = visibleNodes.map(node => {
+      const p = worldToScreen(node.x, node.y);
+      const isSelected = selected && Number(selected.id) === Number(node.id);
+      const isOutgoing = outgoing.has(Number(node.id));
+      const isIncoming = incoming.has(Number(node.id));
+
+      const radius = isSelected ? 17 : 15;
+      const fill = getNodeColor(node.type);
+      const stroke = isSelected
+        ? "rgba(255,255,255,0.95)"
+        : (isOutgoing || isIncoming)
+          ? "rgba(255,255,255,0.65)"
+          : "rgba(255,255,255,0.16)";
+      const strokeWidth = isSelected ? 3 : 1.5;
+
+      return `
+        <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
+          <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
+          <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
+          ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
+        </g>
       `;
-    }
+    }).join("");
 
-    function renderInspector() {
-      const selected = getNodeById(selectedNodeId);
-      const empty = document.getElementById("selectedEmpty");
-      const editor = document.getElementById("selectedEditor");
+    svg.innerHTML = edgeMarkup + nodeMarkup;
+  }
 
-      if (!selected) {
-        empty.style.display = "block";
-        editor.style.display = "none";
-        document.getElementById("outgoingList").innerHTML = '<div class="empty">No level selected.</div>';
-        document.getElementById("incomingList").innerHTML = '<div class="empty">No level selected.</div>';
-        populateEdgeTargetSelect();
-        return;
-      }
+  function populateEdgeTargetSelect() {
+    const select = document.getElementById("edgeTargetSelect");
+    if (!select) return;
 
-      empty.style.display = "none";
-      editor.style.display = "block";
+    const selected = getNodeById(selectedNodeId);
+    const options = graphData.nodes
+      .filter(node => !selected || Number(node.id) !== Number(selected.id))
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .map(node => `<option value="${node.id}">${escapeHtml(node.label)}</option>`)
+      .join("");
 
-      document.getElementById("nodeLabelInput").value = selected.label || "";
-      document.getElementById("nodeSubtitleInput").value = selected.subtitle || "";
-      document.getElementById("nodeTypeInput").value = selected.type || "progression";
-      document.getElementById("nodeStatusInput").value = selected.status || "draft";
-      document.getElementById("nodeXInput").value = Math.round(selected.x || 0);
-      document.getElementById("nodeYInput").value = Math.round(selected.y || 0);
-      document.getElementById("nodeTagsInput").value = Array.isArray(selected.tags) ? selected.tags.join(", ") : "";
-      document.getElementById("nodeDescriptionInput").value = selected.description || "";
-      document.getElementById("nodeNotesInput").value = selected.notes || "";
+    select.innerHTML = options;
+  }
 
-      const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
-      const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
+  function renderInspector() {
+    const selected = getNodeById(selectedNodeId);
 
-      document.getElementById("outgoingList").innerHTML = outgoing.length
-        ? outgoing.map(edge => {
-            const target = getNodeById(edge.to);
-            return `
-              <div class="edgeRow">
-                <div>
-                  <div><strong>${escapeHtml(target?.label || String(edge.to))}</strong></div>
-                  <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
-                </div>
-                <button class="dangerBtn" onclick="deleteEdge(${selected.id}, ${edge.to}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
-              </div>
-            `;
-          }).join("")
-        : '<div class="empty">No outgoing links.</div>';
+    const empty = document.getElementById("selectedEmpty");
+    const editor = document.getElementById("selectedEditor");
 
-      document.getElementById("incomingList").innerHTML = incoming.length
-        ? incoming.map(edge => {
-            const source = getNodeById(edge.from);
-            return `
-              <div class="edgeRow">
-                <div>
-                  <div><strong>${escapeHtml(source?.label || String(edge.from))}</strong></div>
-                  <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
-                </div>
-                <button class="dangerBtn" onclick="deleteEdge(${edge.from}, ${selected.id}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
-              </div>
-            `;
-          }).join("")
-        : '<div class="empty">No incoming links.</div>';
-
+    if (!selected) {
+      empty.style.display = "block";
+      editor.style.display = "none";
+      document.getElementById("outgoingList").innerHTML = `<div class="empty">No level selected.</div>`;
+      document.getElementById("incomingList").innerHTML = `<div class="empty">No level selected.</div>`;
       populateEdgeTargetSelect();
+      return;
     }
 
-    function populateEdgeTargetSelect() {
-      const select = document.getElementById("edgeTargetSelect");
-      const selected = getNodeById(selectedNodeId);
-
-      const options = graphData.nodes
-        .filter(node => !selected || Number(node.id) !== Number(selected.id))
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(node => `<option value="${node.id}">${escapeHtml(node.label)}</option>`)
-        .join("");
-
-      select.innerHTML = options || "";
-    }
-
-    function renderAll() {
-      rebuildMaps();
-      updateStats();
-      renderGraph();
-      renderInspector();
-      refreshDiffSoon();
-    }
-
-    function markDirty(message) {
-      hasUnsavedChanges = true;
-      updateSaveUI();
-      setStatus(message || "Unsaved changes.");
-      queueLocalAutosave();
-      queueGitHubAutosave();
-    }
-
-    function markClean(message) {
-      hasUnsavedChanges = false;
-      updateSaveUI();
-      setStatus(message || "Loaded latest graph.");
-      refreshDiffSoon();
-    }
-
-    function saveDraftToLocal() {
-      try {
-        const payload = {
-          savedAt: Date.now(),
-          data: getSerializableGraphData()
-        };
-        localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
-        lastLocalSaveAt = payload.savedAt;
-        updateSaveUI();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function loadDraftFromLocal() {
-      try {
-        const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed?.data) return null;
-        return {
-          savedAt: parsed.savedAt || null,
-          data: normalizeGraphData(parsed.data)
-        };
-      } catch {
-        return null;
-      }
-    }
-
-    function clearLocalDraft() {
-      try {
-        localStorage.removeItem(LOCAL_DRAFT_KEY);
-      } catch {}
-    }
-
-    function queueLocalAutosave() {
-      clearTimeout(localAutosaveTimer);
-      localAutosaveTimer = setTimeout(() => {
-        saveDraftToLocal();
-      }, LOCAL_AUTOSAVE_DELAY);
-    }
-
-    function queueGitHubAutosave() {
-      clearTimeout(githubAutosaveTimer);
-      githubAutosaveTimer = setTimeout(() => {
-        if (!hasUnsavedChanges || isSaving) return;
-        saveGraph(true);
-      }, GITHUB_AUTOSAVE_DELAY);
-    }
-
-    function invalidateHistoryCache() {
-      historyIndexCache = null;
-      snapshotCache = new Map();
-      latestDiffContext = null;
-    }
-
-    async function fetchHistoryIndex() {
-      if (historyIndexCache) return historyIndexCache;
-      const res = await fetch(
-        SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=history",
-        { method: "GET" }
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
-      historyIndexCache = json;
-      return json;
-    }
-
-    async function fetchSnapshotByPath(path) {
-      if (snapshotCache.has(path)) return snapshotCache.get(path);
-
-      const res = await fetch(
-        SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=snapshot&path=" + encodeURIComponent(path),
-        { method: "GET" }
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
-
-      const data = json?.data ? normalizeGraphData(json.data) : normalizeGraphData(json);
-      snapshotCache.set(path, data);
-      return data;
-    }
-
-    function computeDiff(previousData, currentData) {
-      const prevNodes = new Map(previousData.nodes.map(n => [Number(n.id), n]));
-      const currNodes = new Map(currentData.nodes.map(n => [Number(n.id), n]));
-
-      const prevEdges = new Map(previousData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
-      const currEdges = new Map(currentData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
-
-      const addedNodes = [];
-      const deletedNodes = [];
-      const movedNodes = [];
-      const updatedNodes = [];
-      const addedEdges = [];
-      const deletedEdges = [];
-
-      for (const [id, node] of currNodes.entries()) {
-        const prev = prevNodes.get(id);
-        if (!prev) {
-          addedNodes.push(node.label);
-          continue;
-        }
-
-        if ((prev.label || "") !== (node.label || "")) {
-          updatedNodes.push(`${prev.label} → ${node.label}`);
-        } else if (
-          (prev.description || "") !== (node.description || "") ||
-          (prev.subtitle || "") !== (node.subtitle || "") ||
-          (prev.type || "") !== (node.type || "") ||
-          (prev.status || "") !== (node.status || "")
-        ) {
-          updatedNodes.push(node.label);
-        }
-
-        if ((prev.x !== node.x) || (prev.y !== node.y)) {
-          movedNodes.push(node.label);
-        }
-      }
-
-      for (const [id, node] of prevNodes.entries()) {
-        if (!currNodes.has(id)) deletedNodes.push(node.label);
-      }
-
-      for (const [key, edge] of currEdges.entries()) {
-        if (!prevEdges.has(key)) {
-          const from = currNodes.get(Number(edge.from))?.label || edge.from;
-          const to = currNodes.get(Number(edge.to))?.label || edge.to;
-          addedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
-        }
-      }
-
-      for (const [key, edge] of prevEdges.entries()) {
-        if (!currEdges.has(key)) {
-          const from = prevNodes.get(Number(edge.from))?.label || edge.from;
-          const to = prevNodes.get(Number(edge.to))?.label || edge.to;
-          deletedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
-        }
-      }
-
-      return {
-        addedNodes,
-        deletedNodes,
-        movedNodes,
-        updatedNodes,
-        addedEdges,
-        deletedEdges
-      };
-    }
-
-    function hasDiff(diff) {
-      return (
-        diff.addedNodes.length ||
-        diff.deletedNodes.length ||
-        diff.movedNodes.length ||
-        diff.updatedNodes.length ||
-        diff.addedEdges.length ||
-        diff.deletedEdges.length
-      );
-    }
-
-    function formatSummary(diff, context) {
-      const lines = ["Backrooms Update Log"];
-      if (context) lines.push(context);
-      lines.push("");
-
-      if (!hasDiff(diff)) {
-        lines.push("- No changes detected");
-        return lines.join("\n");
-      }
-
-      diff.addedNodes.forEach(item => lines.push(`- Added node: ${item}`));
-      diff.deletedNodes.forEach(item => lines.push(`- Deleted node: ${item}`));
-      diff.movedNodes.forEach(item => lines.push(`- Moved node: ${item}`));
-      diff.updatedNodes.forEach(item => lines.push(`- Updated node: ${item}`));
-      diff.addedEdges.forEach(item => lines.push(`- Added link: ${item}`));
-      diff.deletedEdges.forEach(item => lines.push(`- Deleted link: ${item}`));
-
-      return lines.join("\n");
-    }
-
-    function formatDiscordLog(diff, context) {
-      const lines = ["Backrooms Graph Update"];
-      if (context) lines.push(context);
-      lines.push("");
-
-      if (!hasDiff(diff)) {
-        lines.push("- No major changes");
-        return lines.join("\n");
-      }
-
-      if (diff.addedNodes.length) lines.push("- Added levels: " + diff.addedNodes.join(", "));
-      if (diff.deletedNodes.length) lines.push("- Deleted levels: " + diff.deletedNodes.join(", "));
-      if (diff.movedNodes.length) lines.push("- Repositioned levels: " + diff.movedNodes.join(", "));
-      if (diff.updatedNodes.length) lines.push("- Updated levels: " + diff.updatedNodes.join(", "));
-      if (diff.addedEdges.length) lines.push("- Added links: " + diff.addedEdges.join("; "));
-      if (diff.deletedEdges.length) lines.push("- Deleted links: " + diff.deletedEdges.join("; "));
-
-      return lines.join("\n");
-    }
-
-    function renderDiff(diff, context) {
-      document.getElementById("diffContextText").textContent = context || "No saved history found yet.";
-
-      const grid = document.getElementById("changeGrid");
-      const makeBucket = (title, items) => `
-        <div class="changeBucket">
-          <h4>${title}</h4>
-          ${
-            items.length
-              ? `<ul class="list">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-              : `<div class="empty">No changes in this section.</div>`
-          }
-        </div>
-      `;
-
-      grid.innerHTML =
-        makeBucket("Added Nodes", diff.addedNodes) +
-        makeBucket("Deleted Nodes", diff.deletedNodes) +
-        makeBucket("Moved Nodes", diff.movedNodes) +
-        makeBucket("Updated Nodes", diff.updatedNodes) +
-        makeBucket("Added Links", diff.addedEdges) +
-        makeBucket("Deleted Links", diff.deletedEdges);
-
-      document.getElementById("changeText").value = formatSummary(diff, context);
-    }
-
-    async function refreshDiff() {
-      try {
-        const history = await fetchHistoryIndex();
-        const versions = Array.isArray(history?.versions) ? history.versions : [];
-        const currentData = normalizeGraphData(getSerializableGraphData());
-
-        if (!versions.length) {
-          latestDiffContext = {
-            diff: {
-              addedNodes: [],
-              deletedNodes: [],
-              movedNodes: [],
-              updatedNodes: [],
-              addedEdges: [],
-              deletedEdges: []
-            },
-            label: "No saved history found yet."
-          };
-          renderDiff(latestDiffContext.diff, latestDiffContext.label);
-          return;
-        }
-
-        let baselineData;
-        let label;
-
-        if (hasUnsavedChanges || !lastSnapshotPath) {
-          baselineData = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing current draft to latest saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(baselineData, currentData),
-            label
-          };
-        } else if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
-          const previous = await fetchSnapshotByPath(versions[1].path);
-          const latest = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing latest saved snapshot to previous saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(previous, latest),
-            label
-          };
-        } else {
-          baselineData = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing current draft to latest saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(baselineData, currentData),
-            label
-          };
-        }
-
-        renderDiff(latestDiffContext.diff, latestDiffContext.label);
-      } catch (err) {
-        console.error(err);
-        document.getElementById("diffContextText").textContent = err.message || "Could not build diff.";
-        document.getElementById("changeGrid").innerHTML = "";
-        document.getElementById("changeText").value = "";
-      }
-    }
-
-    let refreshDiffTimer = null;
-    function refreshDiffSoon() {
-      clearTimeout(refreshDiffTimer);
-      refreshDiffTimer = setTimeout(refreshDiff, 250);
-    }
-
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        setStatus("Copied to clipboard.");
-      } catch (err) {
-        setStatus("Copy failed.", true);
-      }
-    }
-
-    function copySummary() {
-      if (!latestDiffContext) return;
-      copyText(formatSummary(latestDiffContext.diff, latestDiffContext.label));
-    }
-
-    function copyDiscordLog() {
-      if (!latestDiffContext) return;
-      copyText(formatDiscordLog(latestDiffContext.diff, latestDiffContext.label));
-    }
-
-    function selectNode(id) {
-      selectedNodeId = Number(id);
-      renderAll();
-    }
-
-    function addNodeAtCenter() {
-      const worldCenter = screenToWorld(
-        document.getElementById("graphSvg").clientWidth / 2,
-        document.getElementById("graphSvg").clientHeight / 2
-      );
-
-      const nextId = graphData.nodes.length
-        ? Math.max(...graphData.nodes.map(n => Number(n.id))) + 1
-        : 0;
-
-      graphData.nodes.push({
-        id: nextId,
-        label: "New Level",
-        subtitle: "",
-        type: "progression",
-        status: "draft",
-        description: "",
-        notes: "",
-        tags: [],
-        x: Math.round(worldCenter.x),
-        y: Math.round(worldCenter.y)
-      });
-
-      selectedNodeId = nextId;
-      markDirty("Added new node.");
-      renderAll();
-    }
-
-    function applySelectedNodeEdits() {
-      const node = getNodeById(selectedNodeId);
-      if (!node) return;
-
-      node.label = document.getElementById("nodeLabelInput").value.trim() || "Unnamed";
-      node.subtitle = document.getElementById("nodeSubtitleInput").value.trim();
-      node.type = document.getElementById("nodeTypeInput").value;
-      node.status = document.getElementById("nodeStatusInput").value;
-      node.x = Number(document.getElementById("nodeXInput").value) || 0;
-      node.y = Number(document.getElementById("nodeYInput").value) || 0;
-      node.tags = document.getElementById("nodeTagsInput").value
-        .split(",")
-        .map(x => x.trim())
-        .filter(Boolean);
-      node.description = document.getElementById("nodeDescriptionInput").value;
-      node.notes = document.getElementById("nodeNotesInput").value;
-
-      markDirty("Updated node.");
-      renderAll();
-    }
-
-    function deleteSelectedNode() {
-      const node = getNodeById(selectedNodeId);
-      if (!node) return;
-      if (!confirm(`Delete "${node.label}" and all of its links?`)) return;
-
-      graphData.nodes = graphData.nodes.filter(n => Number(n.id) !== Number(node.id));
-      graphData.edges = graphData.edges.filter(
-        e => Number(e.from) !== Number(node.id) && Number(e.to) !== Number(node.id)
-      );
-      selectedNodeId = null;
-      markDirty("Deleted node.");
-      renderAll();
-    }
-
-    function addEdgeFromSelected() {
-      const source = getNodeById(selectedNodeId);
-      if (!source) return;
-
-      const targetId = Number(document.getElementById("edgeTargetSelect").value);
-      if (!Number.isFinite(targetId)) return;
-
-      const label = document.getElementById("edgeLabelInput").value.trim();
-      const oneWay = document.getElementById("edgeOneWayInput").checked;
-
-      const exists = graphData.edges.some(e =>
-        Number(e.from) === Number(source.id) &&
-        Number(e.to) === Number(targetId) &&
-        (e.label || "") === label
-      );
-
-      if (exists) {
-        setStatus("That exact link already exists.");
-        return;
-      }
-
-      graphData.edges.push({
-        from: Number(source.id),
-        to: Number(targetId),
-        label,
-        oneWay
-      });
-
-      document.getElementById("edgeLabelInput").value = "";
-      document.getElementById("edgeOneWayInput").checked = false;
-
-      markDirty("Added link.");
-      renderAll();
-    }
-
-    function deleteEdge(from, to, encodedLabel) {
-      const label = decodeURIComponent(encodedLabel || "");
-      graphData.edges = graphData.edges.filter(edge => !(
-        Number(edge.from) === Number(from) &&
-        Number(edge.to) === Number(to) &&
-        (edge.label || "") === label
-      ));
-      markDirty("Deleted link.");
-      renderAll();
-    }
-
-    function zoomIn() {
-      viewState.scale = Math.min(2.8, viewState.scale * 1.15);
-      renderGraph();
-    }
-
-    function zoomOut() {
-      viewState.scale = Math.max(0.35, viewState.scale / 1.15);
-      renderGraph();
-    }
-
-    function resetView() {
-      viewState.scale = 1;
-      viewState.offsetX = 0;
-      viewState.offsetY = 0;
-      renderGraph();
-    }
-
-    function saveDragPosition() {
-      const node = getNodeById(dragState.nodeId);
-      if (!node) return;
-      markDirty("Moved node.");
-      renderAll();
-    }
-
-    async function saveGraph(isAuto = false) {
-      try {
-        if (isSaving) return;
-
-        isSaving = true;
-        updateSaveUI();
-        setStatus(isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
-
-        const payload = getSerializableGraphData();
-
-        const res = await fetch(SAVE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            project: PROJECT_NAME,
-            data: payload
-          })
-        });
-
-        const json = await res.json().catch(() => null);
-        if (!res.ok) {
-          throw new Error(json?.error || "Save failed");
-        }
-
-        hasUnsavedChanges = false;
-        lastRemoteSaveAt = json?.savedAt ? Date.parse(json.savedAt) || Date.now() : Date.now();
-        lastVersionId = json?.version || null;
-        lastSnapshotPath = json?.snapshotPath || null;
-
-        persistRemoteMeta();
-        saveDraftToLocal();
-        invalidateHistoryCache();
-        updateSaveUI();
-        setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
-        refreshDiffSoon();
-      } catch (err) {
-        console.error(err);
-        setStatus("Save failed: " + (err.message || "Unknown error"), true);
-      } finally {
-        isSaving = false;
-        updateSaveUI();
-      }
-    }
-
-    function discardLocalDraft() {
-      if (!confirm("Discard your local Backrooms draft and reload the latest saved graph?")) return;
-      clearTimeout(localAutosaveTimer);
-      clearTimeout(githubAutosaveTimer);
-      clearLocalDraft();
-      hasUnsavedChanges = false;
-      lastLocalSaveAt = null;
-      loadRemoteGraph(true);
-    }
-
-    async function loadRemoteGraph(force = false) {
-      try {
-        if (hasUnsavedChanges && !force) {
-          setStatus("Reload skipped because you have unsaved changes.");
-          return;
-        }
-
-        showLoading("Loading Backrooms graph...");
-        setStatus("Loading latest graph...");
-
-        const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), { cache: "no-store" });
-        const json = await res.json();
-
-        if (!res.ok) throw new Error(json?.error || "Could not load live graph");
-
-        graphData = normalizeGraphData(json?.data ? json.data : json);
-        rebuildMaps();
-
-        if (selectedNodeId && !getNodeById(selectedNodeId)) selectedNodeId = null;
-
-        hideLoading();
-        clearLocalDraft();
-        markClean("Loaded latest graph.");
-        renderAll();
-      } catch (err) {
-        console.error(err);
-        hideLoading();
-        setStatus("Failed to load graph.", true);
-      }
-    }
-
-    function attachGraphInteractions() {
-      const svg = document.getElementById("graphSvg");
-
-      svg.addEventListener("wheel", (event) => {
-        event.preventDefault();
-        if (event.deltaY < 0) zoomIn();
-        else zoomOut();
-      }, { passive: false });
-
-      svg.addEventListener("mousedown", (event) => {
-        const nodeGroup = event.target.closest(".graph-node");
-        const svgPoint = getSvgPoint(event.clientX, event.clientY);
-
-        if (nodeGroup) {
-          const nodeId = Number(nodeGroup.getAttribute("data-node-id"));
-          const node = getNodeById(nodeId);
-          if (!node) return;
-
-          selectedNodeId = nodeId;
-          dragState.mode = "node";
-          dragState.nodeId = nodeId;
-          dragState.startX = svgPoint.x;
-          dragState.startY = svgPoint.y;
-          dragState.nodeStartX = node.x;
-          dragState.nodeStartY = node.y;
-          renderAll();
-          return;
-        }
-
-        dragState.mode = "pan";
-        dragState.startX = svgPoint.x;
-        dragState.startY = svgPoint.y;
-        dragState.originOffsetX = viewState.offsetX;
-        dragState.originOffsetY = viewState.offsetY;
-        svg.classList.add("panning");
-      });
-
-      window.addEventListener("mousemove", (event) => {
-        if (!dragState.mode) return;
-        const svgPoint = getSvgPoint(event.clientX, event.clientY);
-
-        if (dragState.mode === "pan") {
-          viewState.offsetX = dragState.originOffsetX + (svgPoint.x - dragState.startX);
-          viewState.offsetY = dragState.originOffsetY + (svgPoint.y - dragState.startY);
-          renderGraph();
-          return;
-        }
-
-        if (dragState.mode === "node") {
-          const node = getNodeById(dragState.nodeId);
-          if (!node) return;
-
-          node.x = Math.round(dragState.nodeStartX + ((svgPoint.x - dragState.startX) / viewState.scale));
-          node.y = Math.round(dragState.nodeStartY + ((svgPoint.y - dragState.startY) / viewState.scale));
-
-          renderGraph();
-          renderInspector();
-          updateStats();
-        }
-      });
-
-      window.addEventListener("mouseup", () => {
-        const svgEl = document.getElementById("graphSvg");
-        if (dragState.mode === "node") {
-          saveDragPosition();
-        }
-        dragState.mode = null;
-        dragState.nodeId = null;
-        svgEl.classList.remove("panning");
-      });
-
-      svg.addEventListener("click", (event) => {
-        const nodeGroup = event.target.closest(".graph-node");
-        if (!nodeGroup) return;
-        const nodeId = Number(nodeGroup.getAttribute("data-node-id"));
-        if (Number.isFinite(nodeId)) {
-          selectedNodeId = nodeId;
-          renderAll();
-        }
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      restoreRemoteMeta();
-      updateSaveUI();
-
-      document.getElementById("searchInput").addEventListener("input", (event) => {
-        currentSearch = (event.target.value || "").trim().toLowerCase();
-        renderGraph();
-      });
-
-      [
-        "nodeLabelInput",
-        "nodeSubtitleInput",
-        "nodeTypeInput",
-        "nodeStatusInput",
-        "nodeXInput",
-        "nodeYInput",
-        "nodeTagsInput",
-        "nodeDescriptionInput",
-        "nodeNotesInput"
-      ].forEach(id => {
-        const el = document.getElementById(id);
-        el.addEventListener("input", () => {
-          if (el.tagName === "TEXTAREA") {
-            el.style.height = "auto";
-            el.style.height = Math.max(el.scrollHeight, 90) + "px";
-          }
-        });
-      });
-
-      attachGraphInteractions();
+    empty.style.display = "none";
+    editor.style.display = "block";
+
+    document.getElementById("nodeLabelInput").value = selected.label || "";
+    document.getElementById("nodeSubtitleInput").value = selected.subtitle || "";
+    document.getElementById("nodeTypeInput").value = selected.type || "progression";
+    document.getElementById("nodeStatusInput").value = selected.status || "draft";
+    document.getElementById("nodeXInput").value = Math.round(selected.x || 0);
+    document.getElementById("nodeYInput").value = Math.round(selected.y || 0);
+    document.getElementById("nodeTagsInput").value = Array.isArray(selected.tags) ? selected.tags.join(", ") : "";
+    document.getElementById("nodeDescriptionInput").value = selected.description || "";
+    document.getElementById("nodeNotesInput").value = selected.notes || "";
+
+    const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
+    const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
+
+    document.getElementById("outgoingList").innerHTML = outgoing.length
+      ? outgoing.map(edge => {
+          const target = getNodeById(edge.to);
+          return `
+            <div class="edgeRow">
+              <div>
+                <div><strong>${escapeHtml(target?.label || String(edge.to))}</strong></div>
+                <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
+              </div>
+              <button class="dangerBtn" onclick="deleteEdge(${selected.id}, ${edge.to}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
+            </div>
+          `;
+        }).join("")
+      : `<div class="empty">No outgoing links.</div>`;
+
+    document.getElementById("incomingList").innerHTML = incoming.length
+      ? incoming.map(edge => {
+          const source = getNodeById(edge.from);
+          return `
+            <div class="edgeRow">
+              <div>
+                <div><strong>${escapeHtml(source?.label || String(edge.from))}</strong></div>
+                <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
+              </div>
+              <button class="dangerBtn" onclick="deleteEdge(${edge.from}, ${selected.id}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
+            </div>
+          `;
+        }).join("")
+      : `<div class="empty">No incoming links.</div>`;
+
+    populateEdgeTargetSelect();
+  }
+
+  function renderAll() {
+    rebuildMaps();
+    updateStats();
+    renderGraph();
+    renderInspector();
+    refreshDiffSoon();
+  }
+
+  function addNodeAtCenter() {
+    const { width, height } = getSvgSize();
+    const center = screenToWorld(width / 2, height / 2);
+
+    const nextId = graphData.nodes.length
+      ? Math.max(...graphData.nodes.map(n => Number(n.id))) + 1
+      : 0;
+
+    graphData.nodes.push({
+      id: nextId,
+      label: "New Level",
+      subtitle: "",
+      description: "",
+      notes: "",
+      type: "progression",
+      status: "draft",
+      tags: [],
+      x: Math.round(center.x),
+      y: Math.round(center.y)
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        saveDraftToLocal();
-        return;
-      }
-      if (hasUnsavedChanges) {
-        setStatus("Returned to editor. Local draft preserved.");
-      }
+    selectedNodeId = nextId;
+    markDirty("Added new level.");
+    renderAll();
+  }
+
+  function applySelectedNodeEdits() {
+    const node = getNodeById(selectedNodeId);
+    if (!node) return;
+
+    node.label = document.getElementById("nodeLabelInput").value.trim() || "Unnamed";
+    node.subtitle = document.getElementById("nodeSubtitleInput").value.trim();
+    node.type = document.getElementById("nodeTypeInput").value;
+    node.status = document.getElementById("nodeStatusInput").value;
+    node.x = Number(document.getElementById("nodeXInput").value) || 0;
+    node.y = Number(document.getElementById("nodeYInput").value) || 0;
+    node.tags = document.getElementById("nodeTagsInput").value
+      .split(",")
+      .map(x => x.trim())
+      .filter(Boolean);
+    node.description = document.getElementById("nodeDescriptionInput").value;
+    node.notes = document.getElementById("nodeNotesInput").value;
+
+    markDirty("Updated level.");
+    renderAll();
+  }
+
+  function deleteSelectedNode() {
+    const node = getNodeById(selectedNodeId);
+    if (!node) return;
+    if (!confirm(`Delete "${node.label}" and all links connected to it?`)) return;
+
+    graphData.nodes = graphData.nodes.filter(n => Number(n.id) !== Number(node.id));
+    graphData.edges = graphData.edges.filter(
+      e => Number(e.from) !== Number(node.id) && Number(e.to) !== Number(node.id)
+    );
+
+    selectedNodeId = null;
+    markDirty("Deleted level.");
+    renderAll();
+  }
+
+  function addEdgeFromSelected() {
+    const source = getNodeById(selectedNodeId);
+    if (!source) return;
+
+    const targetId = Number(document.getElementById("edgeTargetSelect").value);
+    const label = document.getElementById("edgeLabelInput").value.trim();
+    const oneWay = document.getElementById("edgeOneWayInput").checked;
+
+    if (!Number.isFinite(targetId)) return;
+
+    const alreadyExists = graphData.edges.some(edge =>
+      Number(edge.from) === Number(source.id) &&
+      Number(edge.to) === Number(targetId) &&
+      (edge.label || "") === label
+    );
+
+    if (alreadyExists) {
+      setStatus("That exact link already exists.");
+      return;
+    }
+
+    graphData.edges.push({
+      from: Number(source.id),
+      to: Number(targetId),
+      label,
+      oneWay
     });
 
-    window.addEventListener("beforeunload", (event) => {
-      if (!hasUnsavedChanges) return;
+    document.getElementById("edgeLabelInput").value = "";
+    document.getElementById("edgeOneWayInput").checked = false;
+
+    markDirty("Added link.");
+    renderAll();
+  }
+
+  function deleteEdge(from, to, encodedLabel) {
+    const label = decodeURIComponent(encodedLabel || "");
+    graphData.edges = graphData.edges.filter(edge => !(
+      Number(edge.from) === Number(from) &&
+      Number(edge.to) === Number(to) &&
+      (edge.label || "") === label
+    ));
+    markDirty("Deleted link.");
+    renderAll();
+  }
+
+  function zoomIn() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1.15);
+  }
+
+  function zoomOut() {
+    const { width, height } = getSvgSize();
+    zoomAt(width / 2, height / 2, 1 / 1.15);
+  }
+
+  function resetView() {
+    fitGraphToView();
+    renderGraph();
+  }
+
+  function zoomAt(screenX, screenY, factor) {
+    const oldScale = viewState.scale;
+    const newScale = Math.max(0.25, Math.min(3.5, oldScale * factor));
+    if (newScale === oldScale) return;
+
+    const worldX = (screenX - viewState.offsetX) / oldScale;
+    const worldY = (screenY - viewState.offsetY) / oldScale;
+
+    viewState.scale = newScale;
+    viewState.offsetX = screenX - worldX * newScale;
+    viewState.offsetY = screenY - worldY * newScale;
+
+    renderGraph();
+  }
+
+  async function saveGraph(isAuto = false) {
+    try {
+      if (isSaving) return;
+
+      isSaving = true;
+      updateSaveUI();
+      setStatus(isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
+
+      const payload = getSerializableGraphData();
+
+      const res = await fetch(SAVE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project: PROJECT_NAME,
+          data: payload
+        })
+      });
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(json?.error || "Save failed");
+      }
+
+      hasUnsavedChanges = false;
+      lastRemoteSaveAt = json?.savedAt ? Date.parse(json.savedAt) || Date.now() : Date.now();
+      lastVersionId = json?.version || null;
+      lastSnapshotPath = json?.snapshotPath || null;
+
+      persistRemoteMeta();
       saveDraftToLocal();
-      event.preventDefault();
-      event.returnValue = "";
-    });
+      invalidateHistoryCache();
+      updateSaveUI();
+      setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
+      refreshDiffSoon();
+    } catch (err) {
+      console.error(err);
+      setStatus("Save failed: " + (err.message || "Unknown error"), true);
+    } finally {
+      isSaving = false;
+      updateSaveUI();
+    }
+  }
 
-    window.zoomIn = zoomIn;
-    window.zoomOut = zoomOut;
-    window.resetView = resetView;
-    window.addNodeAtCenter = addNodeAtCenter;
-    window.applySelectedNodeEdits = applySelectedNodeEdits;
-    window.deleteSelectedNode = deleteSelectedNode;
-    window.addEdgeFromSelected = addEdgeFromSelected;
-    window.deleteEdge = deleteEdge;
-    window.saveGraph = saveGraph;
-    window.discardLocalDraft = discardLocalDraft;
-    window.refreshDiff = refreshDiff;
-    window.copySummary = copySummary;
-    window.copyDiscordLog = copyDiscordLog;
+  function discardLocalDraft() {
+    if (!confirm("Discard your local draft and reload the latest saved Backrooms graph?")) return;
+    clearTimeout(localAutosaveTimer);
+    clearTimeout(githubAutosaveTimer);
+    clearLocalDraft();
+    hasUnsavedChanges = false;
+    lastLocalSaveAt = null;
+    loadRemoteGraph(true);
+  }
 
-    (async function init() {
-      showLoading("Loading Backrooms graph...");
+  async function fetchHistoryIndex() {
+    if (historyIndexCache) return historyIndexCache;
 
-      const localDraft = loadDraftFromLocal();
-      if (localDraft?.data) {
-        graphData = localDraft.data;
-        lastLocalSaveAt = localDraft.savedAt || null;
-        rebuildMaps();
-        hasUnsavedChanges = true;
-        setStatus("Recovered unsaved local draft.");
-        updateSaveUI();
-        hideLoading();
-        renderAll();
+    const res = await fetch(
+      SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=history",
+      { method: "GET" }
+    );
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
+    historyIndexCache = json;
+    return json;
+  }
+
+  async function fetchSnapshotByPath(path) {
+    if (snapshotCache.has(path)) return snapshotCache.get(path);
+
+    const res = await fetch(
+      SAVE_URL + "?project=" + encodeURIComponent(PROJECT_NAME) + "&action=snapshot&path=" + encodeURIComponent(path),
+      { method: "GET" }
+    );
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
+
+    const data = normalizeGraphData(json?.data ? json.data : json);
+    snapshotCache.set(path, data);
+    return data;
+  }
+
+  function computeDiff(previousData, currentData) {
+    const prevNodes = new Map(previousData.nodes.map(n => [Number(n.id), n]));
+    const currNodes = new Map(currentData.nodes.map(n => [Number(n.id), n]));
+
+    const prevEdges = new Map(previousData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
+    const currEdges = new Map(currentData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
+
+    const addedNodes = [];
+    const deletedNodes = [];
+    const movedNodes = [];
+    const updatedNodes = [];
+    const addedEdges = [];
+    const deletedEdges = [];
+
+    for (const [id, node] of currNodes.entries()) {
+      const prev = prevNodes.get(id);
+
+      if (!prev) {
+        addedNodes.push(node.label);
+        continue;
+      }
+
+      if ((prev.x !== node.x) || (prev.y !== node.y)) {
+        movedNodes.push(node.label);
+      }
+
+      if (
+        (prev.label || "") !== (node.label || "") ||
+        (prev.subtitle || "") !== (node.subtitle || "") ||
+        (prev.description || "") !== (node.description || "") ||
+        (prev.notes || "") !== (node.notes || "") ||
+        (prev.type || "") !== (node.type || "") ||
+        (prev.status || "") !== (node.status || "") ||
+        JSON.stringify(prev.tags || []) !== JSON.stringify(node.tags || [])
+      ) {
+        updatedNodes.push(node.label);
+      }
+    }
+
+    for (const [id, node] of prevNodes.entries()) {
+      if (!currNodes.has(id)) deletedNodes.push(node.label);
+    }
+
+    for (const [key, edge] of currEdges.entries()) {
+      if (!prevEdges.has(key)) {
+        const from = currNodes.get(Number(edge.from))?.label || edge.from;
+        const to = currNodes.get(Number(edge.to))?.label || edge.to;
+        addedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
+      }
+    }
+
+    for (const [key, edge] of prevEdges.entries()) {
+      if (!currEdges.has(key)) {
+        const from = prevNodes.get(Number(edge.from))?.label || edge.from;
+        const to = prevNodes.get(Number(edge.to))?.label || edge.to;
+        deletedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
+      }
+    }
+
+    return {
+      addedNodes,
+      deletedNodes,
+      movedNodes,
+      updatedNodes,
+      addedEdges,
+      deletedEdges
+    };
+  }
+
+  function hasDiff(diff) {
+    return !!(
+      diff.addedNodes.length ||
+      diff.deletedNodes.length ||
+      diff.movedNodes.length ||
+      diff.updatedNodes.length ||
+      diff.addedEdges.length ||
+      diff.deletedEdges.length
+    );
+  }
+
+  function formatSummary(diff, context) {
+    const lines = ["Backrooms Update Log"];
+    if (context) lines.push(context);
+    lines.push("");
+
+    if (!hasDiff(diff)) {
+      lines.push("- No changes detected");
+      return lines.join("\n");
+    }
+
+    diff.addedNodes.forEach(x => lines.push(`- Added node: ${x}`));
+    diff.deletedNodes.forEach(x => lines.push(`- Deleted node: ${x}`));
+    diff.movedNodes.forEach(x => lines.push(`- Moved node: ${x}`));
+    diff.updatedNodes.forEach(x => lines.push(`- Updated node: ${x}`));
+    diff.addedEdges.forEach(x => lines.push(`- Added link: ${x}`));
+    diff.deletedEdges.forEach(x => lines.push(`- Deleted link: ${x}`));
+
+    return lines.join("\n");
+  }
+
+  function formatDiscordLog(diff, context) {
+    const lines = ["Backrooms Graph Update"];
+    if (context) lines.push(context);
+    lines.push("");
+
+    if (!hasDiff(diff)) {
+      lines.push("- No major changes");
+      return lines.join("\n");
+    }
+
+    if (diff.addedNodes.length) lines.push("- Added levels: " + diff.addedNodes.join(", "));
+    if (diff.deletedNodes.length) lines.push("- Deleted levels: " + diff.deletedNodes.join(", "));
+    if (diff.movedNodes.length) lines.push("- Repositioned levels: " + diff.movedNodes.join(", "));
+    if (diff.updatedNodes.length) lines.push("- Updated levels: " + diff.updatedNodes.join(", "));
+    if (diff.addedEdges.length) lines.push("- Added links: " + diff.addedEdges.join("; "));
+    if (diff.deletedEdges.length) lines.push("- Deleted links: " + diff.deletedEdges.join("; "));
+
+    return lines.join("\n");
+  }
+
+  function renderDiff(diff, context) {
+    document.getElementById("diffContextText").textContent = context || "No saved history found yet.";
+
+    const grid = document.getElementById("changeGrid");
+    const bucket = (title, items) => `
+      <div class="changeBucket">
+        <h4>${title}</h4>
+        ${
+          items.length
+            ? `<ul class="list">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+            : `<div class="empty">No changes in this section.</div>`
+        }
+      </div>
+    `;
+
+    grid.innerHTML =
+      bucket("Added Nodes", diff.addedNodes) +
+      bucket("Deleted Nodes", diff.deletedNodes) +
+      bucket("Moved Nodes", diff.movedNodes) +
+      bucket("Updated Nodes", diff.updatedNodes) +
+      bucket("Added Links", diff.addedEdges) +
+      bucket("Deleted Links", diff.deletedEdges);
+
+    document.getElementById("changeText").value = formatSummary(diff, context);
+  }
+
+  async function refreshDiff() {
+    try {
+      const history = await fetchHistoryIndex();
+      const versions = Array.isArray(history?.versions) ? history.versions : [];
+      const currentData = normalizeGraphData(getSerializableGraphData());
+
+      if (!versions.length) {
+        latestDiffContext = {
+          diff: {
+            addedNodes: [],
+            deletedNodes: [],
+            movedNodes: [],
+            updatedNodes: [],
+            addedEdges: [],
+            deletedEdges: []
+          },
+          label: "No saved history found yet."
+        };
+        renderDiff(latestDiffContext.diff, latestDiffContext.label);
         return;
       }
 
-      await loadRemoteGraph(true);
-    })();
-  </script>
+      let baselineData;
+      let label;
+
+      if (hasUnsavedChanges || !lastSnapshotPath) {
+        baselineData = await fetchSnapshotByPath(versions[0].path);
+        label = "Comparing current draft to latest saved snapshot.";
+        latestDiffContext = {
+          diff: computeDiff(baselineData, currentData),
+          label
+        };
+      } else if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
+        const previous = await fetchSnapshotByPath(versions[1].path);
+        const latest = await fetchSnapshotByPath(versions[0].path);
+        label = "Comparing latest saved snapshot to previous saved snapshot.";
+        latestDiffContext = {
+          diff: computeDiff(previous, latest),
+          label
+        };
+      } else {
+        baselineData = await fetchSnapshotByPath(versions[0].path);
+        label = "Comparing current draft to latest saved snapshot.";
+        latestDiffContext = {
+          diff: computeDiff(baselineData, currentData),
+          label
+        };
+      }
+
+      renderDiff(latestDiffContext.diff, latestDiffContext.label);
+    } catch (err) {
+      console.error(err);
+      document.getElementById("diffContextText").textContent = err.message || "Could not build diff.";
+      document.getElementById("changeGrid").innerHTML = "";
+      document.getElementById("changeText").value = "";
+    }
+  }
+
+  function refreshDiffSoon() {
+    clearTimeout(diffRefreshTimer);
+    diffRefreshTimer = setTimeout(refreshDiff, 250);
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("Copied to clipboard.");
+    } catch {
+      setStatus("Copy failed.", true);
+    }
+  }
+
+  function copySummary() {
+    if (!latestDiffContext) return;
+    copyText(formatSummary(latestDiffContext.diff, latestDiffContext.label));
+  }
+
+  function copyDiscordLog() {
+    if (!latestDiffContext) return;
+    copyText(formatDiscordLog(latestDiffContext.diff, latestDiffContext.label));
+  }
+
+  async function loadRemoteGraph(force = false) {
+    try {
+      if (hasUnsavedChanges && !force) {
+        setStatus("Reload skipped because you have unsaved changes.");
+        return;
+      }
+
+      showLoading("Loading latest graph...");
+      setStatus("Loading latest graph...");
+
+      const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), { cache: "no-store" });
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json?.error || "Could not load live graph");
+
+      graphData = normalizeGraphData(json?.data ? json.data : json);
+      rebuildMaps();
+
+      if (selectedNodeId && !getNodeById(selectedNodeId)) selectedNodeId = null;
+
+      fitGraphToView();
+      hideLoading();
+      clearLocalDraft();
+      markClean("Loaded latest graph.");
+      renderAll();
+    } catch (err) {
+      console.error(err);
+      hideLoading();
+      setStatus("Failed to load graph.", true);
+    }
+  }
+
+  function attachGraphInteractions() {
+    const svg = getSvg();
+
+    svg.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const pt = getSvgPoint(event.clientX, event.clientY);
+      zoomAt(pt.x, pt.y, event.deltaY < 0 ? 1.12 : 1 / 1.12);
+    }, { passive: false });
+
+    svg.addEventListener("mousedown", (event) => {
+      const pt = getSvgPoint(event.clientX, event.clientY);
+      const nodeGroup = event.target.closest(".graph-node");
+
+      dragState.moved = false;
+      dragState.startScreenX = pt.x;
+      dragState.startScreenY = pt.y;
+
+      if (nodeGroup) {
+        const nodeId = Number(nodeGroup.getAttribute("data-node-id"));
+        const node = getNodeById(nodeId);
+        if (!node) return;
+
+        selectedNodeId = nodeId;
+        renderAll();
+
+        dragState.mode = "node";
+        dragState.nodeId = nodeId;
+        dragState.nodeStartX = node.x;
+        dragState.nodeStartY = node.y;
+        return;
+      }
+
+      dragState.mode = "pan";
+      dragState.originOffsetX = viewState.offsetX;
+      dragState.originOffsetY = viewState.offsetY;
+      svg.classList.add("panning");
+    });
+
+    window.addEventListener("mousemove", (event) => {
+      if (!dragState.mode) return;
+
+      const pt = getSvgPoint(event.clientX, event.clientY);
+
+      if (dragState.mode === "pan") {
+        const dx = pt.x - dragState.startScreenX;
+        const dy = pt.y - dragState.startScreenY;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) dragState.moved = true;
+        viewState.offsetX = dragState.originOffsetX + dx;
+        viewState.offsetY = dragState.originOffsetY + dy;
+        renderGraph();
+        return;
+      }
+
+      if (dragState.mode === "node") {
+        const node = getNodeById(dragState.nodeId);
+        if (!node) return;
+
+        const dx = (pt.x - dragState.startScreenX) / viewState.scale;
+        const dy = (pt.y - dragState.startScreenY) / viewState.scale;
+
+        if (Math.abs(dx) > 0.2 || Math.abs(dy) > 0.2) dragState.moved = true;
+
+        node.x = Math.round(dragState.nodeStartX + dx);
+        node.y = Math.round(dragState.nodeStartY + dy);
+
+        renderGraph();
+        renderInspector();
+        updateStats();
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      const svgEl = getSvg();
+
+      if (dragState.mode === "node" && dragState.nodeId != null && dragState.moved) {
+        markDirty("Moved level.");
+      }
+
+      dragState.mode = null;
+      dragState.nodeId = null;
+      svgEl.classList.remove("panning");
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    restoreRemoteMeta();
+    updateSaveUI();
+
+    document.getElementById("searchInput").addEventListener("input", (event) => {
+      currentSearch = (event.target.value || "").trim().toLowerCase();
+      renderGraph();
+    });
+
+    attachGraphInteractions();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      saveDraftToLocal();
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      setStatus("Returned to editor. Local draft preserved.");
+    }
+  });
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!hasUnsavedChanges) return;
+    saveDraftToLocal();
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  window.zoomIn = zoomIn;
+  window.zoomOut = zoomOut;
+  window.resetView = resetView;
+  window.addNodeAtCenter = addNodeAtCenter;
+  window.applySelectedNodeEdits = applySelectedNodeEdits;
+  window.deleteSelectedNode = deleteSelectedNode;
+  window.addEdgeFromSelected = addEdgeFromSelected;
+  window.deleteEdge = deleteEdge;
+  window.saveGraph = saveGraph;
+  window.discardLocalDraft = discardLocalDraft;
+  window.refreshDiff = refreshDiff;
+  window.copySummary = copySummary;
+  window.copyDiscordLog = copyDiscordLog;
+
+  (async function init() {
+    showLoading("Loading Backrooms graph...");
+
+    const localDraft = loadDraftFromLocal();
+    if (localDraft?.data) {
+      graphData = localDraft.data;
+      lastLocalSaveAt = localDraft.savedAt || null;
+      rebuildMaps();
+      hasUnsavedChanges = true;
+      fitGraphToView();
+      hideLoading();
+      setStatus("Recovered unsaved local draft.");
+      updateSaveUI();
+      renderAll();
+      return;
+    }
+
+    await loadRemoteGraph(true);
+  })();
+</script>
 </body>
 </html>
