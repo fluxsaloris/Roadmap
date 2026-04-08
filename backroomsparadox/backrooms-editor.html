@@ -27,8 +27,6 @@
       --radius-lg: 18px;
       --radius-md: 14px;
       --radius-sm: 12px;
-      --header-h: 164px;
-      --panel-gap: 14px;
     }
 
     * { box-sizing: border-box; }
@@ -47,7 +45,8 @@
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 26%),
         radial-gradient(circle at 85% 8%, rgba(255,255,255,0.035), transparent 16%),
         linear-gradient(180deg, #090a0f 0%, #050608 100%);
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     body::before {
@@ -79,9 +78,9 @@
     #app {
       position: relative;
       z-index: 2;
-      height: 100vh;
+      min-height: 100vh;
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto auto;
       gap: 12px;
       padding: 14px;
     }
@@ -94,6 +93,8 @@
       box-shadow: var(--shadow-md);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      position: sticky;
+      top: 12px;
     }
 
     .heroTop {
@@ -248,11 +249,6 @@
       color: #ffcccc;
     }
 
-    .subtle {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
     #statusLine {
       margin-top: 8px;
       color: var(--muted);
@@ -260,17 +256,16 @@
     }
 
     .workspace {
-      min-height: 0;
       display: grid;
-      grid-template-columns: 1fr 360px;
+      grid-template-columns: minmax(0, 1fr) 340px;
       gap: 14px;
+      align-items: start;
     }
 
     .mainColumn {
       min-width: 0;
-      min-height: 0;
       display: grid;
-      grid-template-rows: auto minmax(380px, 1fr) auto;
+      grid-template-rows: auto auto auto;
       gap: 14px;
     }
 
@@ -305,7 +300,8 @@
     }
 
     .graphShell {
-      min-height: 0;
+      min-height: 620px;
+      height: 70vh;
       overflow: hidden;
       position: relative;
       background:
@@ -353,6 +349,25 @@
 
     .changeSummary {
       padding: 14px;
+    }
+
+    .changeSummary details {
+      width: 100%;
+    }
+
+    .changeSummary summary {
+      cursor: pointer;
+      list-style: none;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .changeSummary summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .changeSummaryBody {
+      margin-top: 12px;
     }
 
     .changeSummaryHeader {
@@ -431,10 +446,12 @@
     }
 
     .sideColumn {
-      min-height: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      align-self: start;
+      position: sticky;
+      top: 14px;
     }
 
     .sideCard {
@@ -576,19 +593,11 @@
       .sideColumn {
         display: grid;
         grid-template-columns: repeat(2, minmax(280px, 1fr));
+        position: static;
       }
     }
 
     @media (max-width: 860px) {
-      body {
-        overflow: auto;
-      }
-
-      #app {
-        height: auto;
-        min-height: 100vh;
-      }
-
       .heroControls {
         grid-template-columns: 1fr;
       }
@@ -597,12 +606,14 @@
         justify-content: flex-start;
       }
 
-      .mainColumn {
-        grid-template-rows: auto 500px auto;
+      .graphShell {
+        min-height: 460px;
+        height: 62vh;
       }
 
       .sideColumn {
         grid-template-columns: 1fr;
+        position: static;
       }
 
       .changeGrid,
@@ -673,20 +684,25 @@
         </div>
 
         <div class="changeSummary">
-          <div class="changeSummaryHeader">
-            <div>
-              <h2>Change Summary</h2>
-              <p id="diffContextText">Checking saved history...</p>
+          <details open>
+            <summary>Change Summary</summary>
+            <div class="changeSummaryBody">
+              <div class="changeSummaryHeader">
+                <div>
+                  <h2 style="margin:0;">Change Summary</h2>
+                  <p id="diffContextText">Checking saved history...</p>
+                </div>
+              </div>
+
+              <div class="changeToolbar">
+                <button onclick="copySummary()">Copy Summary</button>
+                <button onclick="copyDiscordLog()">Copy Discord Log</button>
+              </div>
+
+              <div id="changeGrid" class="changeGrid"></div>
+              <textarea id="changeText" readonly></textarea>
             </div>
-          </div>
-
-          <div class="changeToolbar">
-            <button onclick="copySummary()">Copy Summary</button>
-            <button onclick="copyDiscordLog()">Copy Discord Log</button>
-          </div>
-
-          <div id="changeGrid" class="changeGrid"></div>
-          <textarea id="changeText" readonly></textarea>
+          </details>
         </div>
       </div>
 
@@ -822,9 +838,9 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const LIVE_URL = `${SAVE_URL}?project=${PROJECT_NAME}&action=live`;
 
-    const LOCAL_DRAFT_KEY = "backrooms-node-editor-draft-v5";
-    const LAST_REMOTE_SAVE_KEY = "backrooms-node-editor-remote-v5";
-    const LAST_SNAPSHOT_META_KEY = "backrooms-node-editor-snapshot-v5";
+    const LOCAL_DRAFT_KEY = "backrooms-node-editor-draft-v6";
+    const LAST_REMOTE_SAVE_KEY = "backrooms-node-editor-remote-v6";
+    const LAST_SNAPSHOT_META_KEY = "backrooms-node-editor-snapshot-v6";
     const LOCAL_AUTOSAVE_DELAY = 700;
     const GITHUB_AUTOSAVE_DELAY = 2500;
 
@@ -855,7 +871,7 @@
     };
 
     const interaction = {
-      mode: null, // pan | drag-node | connect
+      mode: null,
       moved: false,
       nodeId: null,
       sourceNodeId: null,
