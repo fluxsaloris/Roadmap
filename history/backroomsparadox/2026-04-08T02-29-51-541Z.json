@@ -1,0 +1,39 @@
+{
+  "version": "2026-04-08T02:29:51.541Z",
+  "savedAt": "2026-04-08T02:29:51.541Z",
+  "source": "editor",
+  "project": "backroomsparadox",
+  "stats": {
+    "nodeCount": 2,
+    "edgeCount": 0
+  },
+  "data": {
+    "nodes": [
+      {
+        "id": 0,
+        "label": "New Level",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 576,
+        "y": 226
+      },
+      {
+        "id": 1,
+        "label": "New Level",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 636,
+        "y": 195
+      }
+    ],
+    "edges": []
+  }
+}
