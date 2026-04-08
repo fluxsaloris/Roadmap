@@ -11,6 +11,18 @@
       "tags": [],
       "x": 576,
       "y": 226
+    },
+    {
+      "id": 1,
+      "label": "New Level",
+      "subtitle": "",
+      "type": "progression",
+      "status": "draft",
+      "description": "",
+      "notes": "",
+      "tags": [],
+      "x": 636,
+      "y": 195
     }
   ],
   "edges": []
