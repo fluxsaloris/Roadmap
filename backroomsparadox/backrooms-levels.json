@@ -2,7 +2,7 @@
   "nodes": [
     {
       "id": 0,
-      "label": "New Level",
+      "label": "Start",
       "subtitle": "",
       "type": "progression",
       "status": "draft",
