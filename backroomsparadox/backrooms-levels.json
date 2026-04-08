@@ -1,4 +1,17 @@
 {
-  "nodes": [],
+  "nodes": [
+    {
+      "id": 0,
+      "label": "New Level",
+      "subtitle": "",
+      "type": "progression",
+      "status": "draft",
+      "description": "",
+      "notes": "",
+      "tags": [],
+      "x": 574,
+      "y": 226
+    }
+  ],
   "edges": []
 }
