@@ -3,23 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Backrooms Level Graph</title>
+  <title>Backrooms Paradox Viewer</title>
   <style>
     :root {
       --bg: #070709;
-      --surface: rgba(20, 20, 26, 0.94);
-      --surface-soft: rgba(255,255,255,0.03);
-      --border: rgba(255,255,255,0.08);
+      --surface: rgba(20, 20, 26, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.025);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255,255,255,0.12);
       --text: #f4f4f7;
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --shadow-lg: 0 18px 40px rgba(0,0,0,0.30);
-      --shadow-md: 0 10px 24px rgba(0,0,0,0.18);
-      --node-start: #d8b85c;
-      --node-progression: #6e9cff;
-      --node-danger: #ff7e7e;
-      --node-weird: #9f7cff;
+      --accent-soft: rgba(190, 26, 72, 0.18);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
+      --radius: 18px;
+      --sidebar-width: 360px;
+      --canvas-height: 78vh;
+      --canvas-min-height: 620px;
     }
 
     * { box-sizing: border-box; }
@@ -31,22 +33,24 @@
       background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
+      overflow-x: hidden;
     }
 
     body {
+      position: relative;
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.09), transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.02), transparent 18%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
-      overflow: hidden;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
+      z-index: 0;
       pointer-events: none;
-      opacity: 0.08;
+      opacity: 0.10;
       background-image:
         radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
         radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
@@ -54,31 +58,67 @@
         radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
 
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      margin: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(190, 26, 72, 0.10);
+      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
+      pointer-events: none;
+      z-index: 1;
+    }
+
     #app {
       position: relative;
       z-index: 2;
-      height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 12px;
-      padding: 14px;
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .hero,
+    .panel,
+    .sidebarCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .hero {
-      background: rgba(13,13,18,0.72);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      position: sticky;
+      top: 8px;
+      z-index: 30;
       padding: 14px 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow-md);
+      margin-bottom: 14px;
+      background: rgba(13, 13, 18, 0.88);
     }
 
     .heroTop {
       display: flex;
-      justify-content: space-between;
       gap: 14px;
-      flex-wrap: wrap;
+      justify-content: space-between;
       align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .heroTitle {
+      min-width: 280px;
+      flex: 1;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d98aa0;
+      margin-bottom: 8px;
+      font-weight: 700;
     }
 
     .heroTitle h1 {
@@ -93,25 +133,58 @@
       color: var(--muted);
       font-size: 13px;
       line-height: 1.5;
-      max-width: 860px;
+      max-width: 900px;
+    }
+
+    .heroMeta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .infoBadge,
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .infoBadge {
+      padding: 7px 11px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: #cfd0db;
     }
 
     .heroControls {
       margin-top: 12px;
       display: grid;
-      grid-template-columns: minmax(240px, 1fr) auto;
+      grid-template-columns: minmax(260px, 1fr) auto;
       gap: 10px;
+      align-items: start;
     }
 
     #searchInput {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: rgba(22, 22, 30, 0.96);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 13px;
       padding: 12px 13px;
       font-size: 14px;
       outline: none;
+      transition: 0.18s ease;
+    }
+
+    #searchInput:focus {
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
+      background: rgba(26, 26, 34, 0.98);
     }
 
     .toolbar {
@@ -132,128 +205,25 @@
       font-weight: 600;
       cursor: pointer;
       transition: 0.18s ease;
+      box-shadow: none;
+      font-family: inherit;
     }
 
     button:hover {
       background: rgba(255,255,255,0.07);
       border-color: rgba(255,255,255,0.14);
+      transform: translateY(-1px);
     }
 
     .primaryBtn {
-      background: linear-gradient(180deg, rgba(190,26,72,0.9), rgba(148,16,53,0.95));
+      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
       border-color: rgba(255,255,255,0.05);
       color: #fff;
       box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
     }
 
-    .main {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr 330px;
-      gap: 12px;
-    }
-
-    .graphWrap {
-      min-height: 0;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 12px;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      box-shadow: var(--shadow-md);
-    }
-
-    .panelPad {
-      padding: 14px;
-    }
-
-    .chipRow {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 5px 8px;
-      font-size: 11px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: #d7d8e2;
-    }
-
-    .canvasPanel {
-      min-height: 0;
-      overflow: hidden;
-      position: relative;
-    }
-
-    #graphSvg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: grab;
-      background:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
-      background-position: center center;
-    }
-
-    #graphSvg.panning {
-      cursor: grabbing;
-    }
-
-    .side {
-      min-height: 0;
-      overflow: auto;
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      box-shadow: var(--shadow-md);
-      padding: 14px;
-    }
-
-    .card h2, .card h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .list {
-      margin: 8px 0 0;
-      padding-left: 18px;
-      color: #d7d8e2;
-      font-size: 12.5px;
-      line-height: 1.5;
-    }
-
-    .list li + li {
-      margin-top: 4px;
-    }
-
-    .empty {
-      color: var(--muted-2);
-      font-size: 12px;
+    .primaryBtn:hover {
+      background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
     }
 
     .statusLine {
@@ -262,7 +232,323 @@
       color: var(--muted);
     }
 
-    .loadingOverlay {
+    .workspaceRow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .leftColumn {
+      min-width: 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    .rightColumn {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      top: 132px;
+      align-self: start;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .panel,
+    .sidebarCard {
+      padding: 14px;
+    }
+
+    .statsBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .metaChip {
+      padding: 6px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #c1c2ce;
+    }
+
+    .canvasPanel {
+      padding: 10px;
+    }
+
+    .canvasToolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .canvasHint {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      border-radius: 999px;
+    }
+
+    .graphViewport {
+      position: relative;
+      width: 100%;
+      height: var(--canvas-height);
+      min-height: var(--canvas-min-height);
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
+        linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
+      background-size: 48px 48px, 48px 48px, auto, auto;
+      user-select: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .graphViewport.panning {
+      cursor: grabbing;
+    }
+
+    .graphScene {
+      position: absolute;
+      inset: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .graphSvg {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .line-base {
+      fill: none;
+      stroke: rgba(255,255,255,0.17);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+    }
+
+    .line-related {
+      fill: none;
+      stroke: rgba(190, 26, 72, 0.95);
+      stroke-width: 3.3;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 8px rgba(190,26,72,0.40));
+    }
+
+    .line-dimmed {
+      fill: none;
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .edgeLabel {
+      fill: rgba(220,220,230,0.92);
+      font-size: 12px;
+      font-weight: 600;
+      paint-order: stroke;
+      stroke: rgba(0,0,0,0.65);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .graphNodes {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+    }
+
+    .node {
+      position: absolute;
+      min-width: 170px;
+      max-width: 260px;
+      padding: 12px 12px 10px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow:
+        0 10px 22px rgba(0,0,0,0.42),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      transform: translate(-50%, -50%);
+      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+    }
+
+    .node:hover {
+      transform: translate(-50%, -50%) scale(1.02);
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    .node.selected {
+      border-color: rgba(190,26,72,0.72);
+      box-shadow:
+        0 0 0 3px rgba(190,26,72,0.22),
+        0 18px 34px rgba(0,0,0,0.56);
+      z-index: 30;
+    }
+
+    .node.related {
+      border-color: rgba(255,255,255,0.16);
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.05),
+        0 14px 28px rgba(0,0,0,0.45);
+    }
+
+    .node.dimmed {
+      opacity: 0.42;
+    }
+
+    .node.start {
+      background: linear-gradient(180deg, rgba(50,42,24,0.98), rgba(26,22,15,0.98));
+    }
+
+    .node.progression {
+      background: linear-gradient(180deg, rgba(26,35,60,0.98), rgba(17,21,34,0.98));
+    }
+
+    .node.danger {
+      background: linear-gradient(180deg, rgba(60,26,32,0.98), rgba(32,16,20,0.98));
+    }
+
+    .node.weird {
+      background: linear-gradient(180deg, rgba(47,29,70,0.98), rgba(24,16,36,0.98));
+    }
+
+    .nodeHeader {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nodeDot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .node.start .nodeDot { background: #d7b45a; }
+    .node.progression .nodeDot { background: #7aa2ff; }
+    .node.danger .nodeDot { background: #ff7f7f; }
+    .node.weird .nodeDot { background: #a77cff; }
+
+    .nodeTitle {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #f5f5f7;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .nodeSubtitle {
+      margin-top: 4px;
+      font-size: 11px;
+      line-height: 1.35;
+      color: #9ea3b7;
+      word-break: break-word;
+    }
+
+    .nodeStatusRow {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .nodeBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: #cbd0df;
+    }
+
+    .sidebarTitle {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebarSub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .infoList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .infoBlock {
+      display: grid;
+      gap: 5px;
+    }
+
+    .infoLabel {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-2);
+      font-weight: 700;
+    }
+
+    .infoValue {
+      color: #ececf4;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .linkList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d7dae5;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .linkList li + li {
+      margin-top: 4px;
+    }
+
+    .legendList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d7dae5;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .legendList li + li {
+      margin-top: 4px;
+    }
+
+    #loadingOverlay {
       position: fixed;
       inset: 0;
       background: rgba(4,4,8,0.82);
@@ -273,14 +559,19 @@
       justify-content: center;
     }
 
-    .loadingCard {
+    #loadingCard {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding: 24px 28px;
-      box-shadow: var(--shadow-lg);
-      min-width: 240px;
+      padding: 26px 30px;
       text-align: center;
+      box-shadow: var(--shadow-lg);
+      min-width: 260px;
+    }
+
+    #loadingText {
+      font-size: 14px;
+      color: #e2e2ea;
     }
 
     .spinner {
@@ -293,17 +584,59 @@
       margin: 0 auto 14px;
     }
 
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 50;
+      width: min(420px, calc(100vw - 40px));
+      background: rgba(36, 13, 18, 0.96);
+      border: 1px solid rgba(255, 138, 138, 0.28);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffced6;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #f6d9df;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 1100px) {
-      .main {
+    @media (max-width: 1420px) {
+      .workspaceRow {
         grid-template-columns: 1fr;
       }
 
-      .side {
-        max-height: 40vh;
+      .rightColumn {
+        position: relative;
+        top: 0;
+        max-height: none;
+        overflow: visible;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .hero {
+        position: relative;
+        top: 0;
       }
 
       .heroControls {
@@ -313,537 +646,604 @@
       .toolbar {
         justify-content: flex-start;
       }
+
+      .heroMeta {
+        justify-content: flex-start;
+      }
+
+      :root {
+        --canvas-height: 72vh;
+        --canvas-min-height: 520px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      #app {
+        padding: 12px;
+      }
+
+      .hero,
+      .panel,
+      .sidebarCard {
+        padding: 12px;
+      }
+
+      .heroTitle h1 {
+        font-size: 24px;
+      }
+
+      :root {
+        --canvas-height: 68vh;
+        --canvas-min-height: 460px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="loadingOverlay" class="loadingOverlay">
-    <div class="loadingCard">
+  <div id="loadingOverlay">
+    <div id="loadingCard">
       <div class="spinner"></div>
-      <div id="loadingText">Loading Backrooms graph...</div>
+      <div id="loadingText">Loading graph...</div>
     </div>
+  </div>
+
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t load viewer</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
   <div id="app">
     <section class="hero">
       <div class="heroTop">
         <div class="heroTitle">
-          <h1>Backrooms Level Graph</h1>
-          <p>Explore level links, loops, dead ends, and weird transitions. Click a level to highlight all direct connections.</p>
+          <div class="eyebrow">Backrooms progression map</div>
+          <h1>Backrooms Paradox Viewer</h1>
+          <p>Explore level flow, branching routes, unstable paths, and loops in a full graph viewer. Click a node to highlight connected paths and inspect its details.</p>
+        </div>
+
+        <div class="heroMeta">
+          <div class="infoBadge" id="statNodes">0 nodes</div>
+          <div class="infoBadge" id="statEdges">0 links</div>
+          <div class="infoBadge" id="statSelected">No level selected</div>
         </div>
       </div>
 
       <div class="heroControls">
-        <input id="searchInput" type="text" placeholder="Search level name, tag, or description..." />
+        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." autocomplete="off" />
         <div class="toolbar">
-          <button onclick="zoomOut()">Zoom Out</button>
-          <button onclick="zoomIn()">Zoom In</button>
+          <button onclick="zoomBy(1.12)">Zoom In</button>
+          <button onclick="zoomBy(1 / 1.12)">Zoom Out</button>
           <button onclick="resetView()">Reset View</button>
-          <button class="primaryBtn" onclick="clearSelection()">Clear Selection</button>
+          <button onclick="fitToGraph()">Fit Graph</button>
+          <button onclick="clearSelection()">Clear Selection</button>
+          <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
         </div>
       </div>
 
-      <div id="statusLine" class="statusLine">Loading graph...</div>
+      <div class="statusLine" id="statusLine">Loading graph...</div>
     </section>
 
-    <section class="main">
-      <div class="graphWrap">
-        <div class="panel panelPad">
-          <div class="chipRow">
-            <span class="chip" id="statNodes">0 nodes</span>
-            <span class="chip" id="statEdges">0 links</span>
-            <span class="chip" id="statSelected">No level selected</span>
+    <div class="workspaceRow">
+      <div class="leftColumn">
+        <section class="panel canvasPanel">
+          <div class="canvasToolbar">
+            <div class="canvasHint">Pan: drag empty space • Zoom: mouse wheel</div>
+            <div class="canvasHint">Select: click a node to highlight related links</div>
           </div>
-        </div>
 
-        <div class="panel canvasPanel">
-          <svg id="graphSvg" viewBox="0 0 1600 900"></svg>
-        </div>
+          <div id="graphViewport" class="graphViewport">
+            <div id="graphScene" class="graphScene">
+              <svg id="graphSvg" class="graphSvg"></svg>
+              <div id="graphNodes" class="graphNodes"></div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <aside class="side">
-        <div class="card">
-          <h3>Viewer Status</h3>
-          <div class="muted" id="viewerStatusText">No level selected.</div>
-        </div>
+      <div class="rightColumn">
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Selected Level</h2>
+          <div class="sidebarSub" id="selectedHint">Click a node in the graph to inspect it.</div>
 
-        <div class="card">
-          <h2>Selected Level</h2>
-          <div id="selectedPanel">
-            <div class="empty">Click a node in the graph.</div>
+          <div class="infoList">
+            <div class="infoBlock">
+              <div class="infoLabel">Label</div>
+              <div class="infoValue" id="infoLabel">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Subtitle</div>
+              <div class="infoValue" id="infoSubtitle">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Type</div>
+              <div class="infoValue" id="infoType">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Status</div>
+              <div class="infoValue" id="infoStatus">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Tags</div>
+              <div class="infoValue" id="infoTags">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Description</div>
+              <div class="infoValue" id="infoDescription">—</div>
+            </div>
+
+            <div class="infoBlock">
+              <div class="infoLabel">Notes</div>
+              <div class="infoValue" id="infoNotes">—</div>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="card">
-          <h3>Outgoing links</h3>
-          <div id="outgoingList" class="empty">No node selected.</div>
-        </div>
-
-        <div class="card">
-          <h3>Incoming links</h3>
-          <div id="incomingList" class="empty">No node selected.</div>
-        </div>
-
-        <div class="card">
-          <h3>Legend</h3>
-          <ul class="list" style="padding-left:18px; margin-top:0;">
-            <li><span style="color:#d8b85c;">●</span> Start / standard</li>
-            <li><span style="color:#6e9cff;">●</span> Stable / progression</li>
-            <li><span style="color:#ff7e7e;">●</span> Dangerous / hostile</li>
-            <li><span style="color:#9f7cff;">●</span> Rare / weird / unstable</li>
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Outgoing Links</h2>
+          <div class="sidebarSub">Where this level can send the player next.</div>
+          <ul id="outgoingList" class="linkList">
+            <li>No level selected.</li>
           </ul>
-          <div class="muted" style="margin-top:10px;">Phase 1 viewer: pan, zoom, click, inspect.</div>
-        </div>
-      </aside>
-    </section>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Incoming Links</h2>
+          <div class="sidebarSub">Which levels can lead into this one.</div>
+          <ul id="incomingList" class="linkList">
+            <li>No level selected.</li>
+          </ul>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Legend</h2>
+          <ul class="legendList">
+            <li><span style="color:#d7b45a;">●</span> Start / base entry</li>
+            <li><span style="color:#7aa2ff;">●</span> Progression / stable route</li>
+            <li><span style="color:#ff7f7f;">●</span> Dangerous / hostile route</li>
+            <li><span style="color:#a77cff;">●</span> Weird / unstable / rare route</li>
+          </ul>
+        </section>
+      </div>
+    </div>
   </div>
 
   <script>
-  const RAW_JSON_URL = "https://roadmap.flux-saloris.workers.dev?project=backroomsparadox&action=live";
+    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-  let graphData = { nodes: [], edges: [] };
-  let nodeMap = new Map();
-  let selectedNodeId = null;
-  let currentSearch = "";
+    let graphData = { nodes: [], edges: [] };
+    let selectedNodeId = null;
+    let currentSearch = "";
 
-  const viewState = {
-    scale: 1,
-    offsetX: 0,
-    offsetY: 0
-  };
-
-  const dragState = {
-    mode: null,
-    nodeId: null,
-    moved: false,
-    startScreenX: 0,
-    startScreenY: 0,
-    startWorldX: 0,
-    startWorldY: 0,
-    originOffsetX: 0,
-    originOffsetY: 0,
-    nodeStartX: 0,
-    nodeStartY: 0
-  };
-
-  function showLoading(text = "Loading graph...") {
-    const el = document.getElementById("loadingText");
-    if (el) el.textContent = text;
-    document.getElementById("loadingOverlay").style.display = "flex";
-  }
-
-  function hideLoading() {
-    document.getElementById("loadingOverlay").style.display = "none";
-  }
-
-  function setStatus(text, isError = false) {
-    const el = document.getElementById("statusLine");
-    if (!el) return;
-    el.textContent = text;
-    el.style.color = isError ? "#ff8a8a" : "#999";
-  }
-
-  function normalizeGraphData(raw) {
-    const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
-    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-
-    return {
-      nodes: rawNodes.map(n => ({
-        id: Number(n.id),
-        label: typeof n.label === "string" ? n.label : "Unnamed",
-        subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-        description: typeof n.description === "string" ? n.description : "",
-        notes: typeof n.notes === "string" ? n.notes : "",
-        type: typeof n.type === "string" ? n.type : "progression",
-        status: typeof n.status === "string" ? n.status : "draft",
-        tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
-        x: typeof n.x === "number" ? n.x : 0,
-        y: typeof n.y === "number" ? n.y : 0
-      })),
-      edges: rawEdges.map(e => ({
-        from: Number(e.from),
-        to: Number(e.to),
-        label: typeof e.label === "string" ? e.label : "",
-        oneWay: !!e.oneWay
-      }))
+    let viewportState = {
+      x: 0,
+      y: 0,
+      scale: 1
     };
-  }
 
-  function rebuildMaps() {
-    nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
-  }
-
-  function getNodeById(id) {
-    return nodeMap.get(Number(id)) || null;
-  }
-
-  function getNodeColor(type) {
-    if (type === "start") return "#d8b85c";
-    if (type === "danger") return "#ff7e7e";
-    if (type === "weird") return "#9f7cff";
-    return "#6e9cff";
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function matchesSearch(node) {
-    if (!currentSearch) return true;
-    const hay = [
-      node.label,
-      node.subtitle,
-      node.description,
-      node.notes,
-      ...(Array.isArray(node.tags) ? node.tags : [])
-    ].join(" ").toLowerCase();
-    return hay.includes(currentSearch);
-  }
-
-  function updateStats() {
-    document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-    document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-
-    const selected = getNodeById(selectedNodeId);
-    document.getElementById("statSelected").textContent = selected
-      ? `Selected: ${selected.label}`
-      : "No level selected";
-  }
-
-  function getSvg() {
-    return document.getElementById("graphSvg");
-  }
-
-  function getSvgSize() {
-    const svg = getSvg();
-    const rect = svg.getBoundingClientRect();
-    return {
-      width: rect.width || 1600,
-      height: rect.height || 900
+    let interaction = {
+      isPanning: false,
+      panStartMouseX: 0,
+      panStartMouseY: 0,
+      panStartX: 0,
+      panStartY: 0
     };
-  }
 
-  function getSvgPoint(clientX, clientY) {
-    const rect = getSvg().getBoundingClientRect();
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
-  }
+    const graphViewport = () => document.getElementById("graphViewport");
+    const graphScene = () => document.getElementById("graphScene");
+    const graphSvg = () => document.getElementById("graphSvg");
+    const graphNodesEl = () => document.getElementById("graphNodes");
 
-  function worldToScreen(x, y) {
-    return {
-      x: x * viewState.scale + viewState.offsetX,
-      y: y * viewState.scale + viewState.offsetY
-    };
-  }
-
-  function screenToWorld(x, y) {
-    return {
-      x: (x - viewState.offsetX) / viewState.scale,
-      y: (y - viewState.offsetY) / viewState.scale
-    };
-  }
-
-  function fitGraphToView() {
-    if (!graphData.nodes.length) return;
-
-    const { width: svgWidth, height: svgHeight } = getSvgSize();
-    const padding = 120;
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const node of graphData.nodes) {
-      if (node.x < minX) minX = node.x;
-      if (node.y < minY) minY = node.y;
-      if (node.x > maxX) maxX = node.x;
-      if (node.y > maxY) maxY = node.y;
+    function showLoading(text = "Loading graph...") {
+      document.getElementById("loadingText").textContent = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
     }
 
-    const graphWidth = Math.max(1, maxX - minX);
-    const graphHeight = Math.max(1, maxY - minY);
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
 
-    const scaleX = (svgWidth - padding * 2) / graphWidth;
-    const scaleY = (svgHeight - padding * 2) / graphHeight;
-    viewState.scale = Math.max(0.35, Math.min(2.2, Math.min(scaleX, scaleY)));
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("statusLine");
+      el.textContent = text;
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+    }
 
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
 
-    viewState.offsetX = svgWidth / 2 - centerX * viewState.scale;
-    viewState.offsetY = svgHeight / 2 - centerY * viewState.scale;
-  }
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
+    }
 
-  function zoomAt(screenX, screenY, factor) {
-    const oldScale = viewState.scale;
-    const newScale = Math.max(0.25, Math.min(3.5, oldScale * factor));
-    if (newScale === oldScale) return;
+    function normalizeData(raw) {
+      return {
+        nodes: Array.isArray(raw?.nodes)
+          ? raw.nodes.map((n) => ({
+              id: String(n.id ?? ""),
+              label: typeof n.label === "string" ? n.label : "Unnamed",
+              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+              description: typeof n.description === "string" ? n.description : "",
+              notes: typeof n.notes === "string" ? n.notes : "",
+              x: typeof n.x === "number" ? n.x : 0,
+              y: typeof n.y === "number" ? n.y : 0,
+              type: typeof n.type === "string" ? n.type : "progression",
+              status: typeof n.status === "string" ? n.status : "draft",
+              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+            }))
+          : [],
+        edges: Array.isArray(raw?.edges)
+          ? raw.edges.map((e) => ({
+              from: String(e.from ?? ""),
+              to: String(e.to ?? ""),
+              label: typeof e.label === "string" ? e.label : "",
+              oneWay: e.oneWay === false ? false : true
+            }))
+          : []
+      };
+    }
 
-    const worldX = (screenX - viewState.offsetX) / oldScale;
-    const worldY = (screenY - viewState.offsetY) / oldScale;
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-    viewState.scale = newScale;
-    viewState.offsetX = screenX - worldX * newScale;
-    viewState.offsetY = screenY - worldY * newScale;
+    function getNodeById(id) {
+      return graphData.nodes.find(n => n.id === String(id)) || null;
+    }
 
-    renderGraph();
-  }
+    function getSelectedNode() {
+      return selectedNodeId ? getNodeById(selectedNodeId) : null;
+    }
 
-  function zoomIn() {
-    const { width, height } = getSvgSize();
-    zoomAt(width / 2, height / 2, 1.15);
-  }
+    function getOutgoingEdges(id) {
+      return graphData.edges.filter(edge => edge.from === String(id));
+    }
 
-  function zoomOut() {
-    const { width, height } = getSvgSize();
-    zoomAt(width / 2, height / 2, 1 / 1.15);
-  }
+    function getIncomingEdges(id) {
+      return graphData.edges.filter(edge => edge.to === String(id));
+    }
 
-  function resetView() {
-    fitGraphToView();
-    renderGraph();
-  }
+    function nodeMatchesSearch(node, search) {
+      if (!search) return true;
+      const hay = [
+        node.id,
+        node.label,
+        node.subtitle,
+        node.description,
+        node.notes,
+        ...(Array.isArray(node.tags) ? node.tags : [])
+      ].join(" ").toLowerCase();
+      return hay.includes(search);
+    }
 
-  function clearSelection() {
-    selectedNodeId = null;
-    renderAll();
-  }
+    function getVisibleNodeIds() {
+      const search = currentSearch.trim().toLowerCase();
+      if (!search) return new Set(graphData.nodes.map(n => n.id));
+      return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
+    }
 
-  function renderGraph() {
-    const svg = getSvg();
-    const selected = getNodeById(selectedNodeId);
-
-    const outgoing = new Set();
-    const incoming = new Set();
-
-    if (selected) {
+    function getRelatedNodeIds(nodeId) {
+      const related = new Set([String(nodeId)]);
       for (const edge of graphData.edges) {
-        if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
-        if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
+        if (edge.from === String(nodeId)) related.add(edge.to);
+        if (edge.to === String(nodeId)) related.add(edge.from);
+      }
+      return related;
+    }
+
+    function scenePointFromClient(clientX, clientY) {
+      const rect = graphViewport().getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
+        y: (clientY - rect.top - viewportState.y) / viewportState.scale
+      };
+    }
+
+    function applyViewportTransform() {
+      graphScene().style.transform =
+        `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+    }
+
+    function getGraphBounds(nodes) {
+      if (!nodes.length) {
+        return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
+      }
+
+      const minX = Math.min(...nodes.map(n => n.x));
+      const maxX = Math.max(...nodes.map(n => n.x));
+      const minY = Math.min(...nodes.map(n => n.y));
+      const maxY = Math.max(...nodes.map(n => n.y));
+
+      return { minX, maxX, minY, maxY };
+    }
+
+    function fitToGraph() {
+      const visibleNodeIds = getVisibleNodeIds();
+      const visibleNodes = graphData.nodes.filter(node => visibleNodeIds.has(node.id));
+      const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
+      const bounds = getGraphBounds(nodesToFit);
+
+      const width = Math.max(500, bounds.maxX - bounds.minX + 340);
+      const height = Math.max(320, bounds.maxY - bounds.minY + 240);
+
+      const rect = graphViewport().getBoundingClientRect();
+      const fitScale = Math.min(
+        1.2,
+        Math.max(0.22, Math.min(rect.width / width, rect.height / height))
+      );
+
+      viewportState.scale = fitScale;
+      viewportState.x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * fitScale;
+      viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
+
+      applyViewportTransform();
+      setStatus("Fitted graph to view.");
+    }
+
+    function resetView() {
+      viewportState = { x: 80, y: 80, scale: 1 };
+      applyViewportTransform();
+      setStatus("View reset.");
+    }
+
+    function zoomBy(factor, clientX = null, clientY = null) {
+      const rect = graphViewport().getBoundingClientRect();
+      const px = clientX ?? (rect.left + rect.width / 2);
+      const py = clientY ?? (rect.top + rect.height / 2);
+
+      const before = scenePointFromClient(px, py);
+      viewportState.scale = Math.max(0.22, Math.min(2.4, viewportState.scale * factor));
+      viewportState.x = px - rect.left - before.x * viewportState.scale;
+      viewportState.y = py - rect.top - before.y * viewportState.scale;
+      applyViewportTransform();
+    }
+
+    function createCurvePath(x1, y1, x2, y2) {
+      const dx = Math.max(80, Math.abs(x2 - x1) * 0.45);
+      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    }
+
+    function getNodePortPosition(nodeId, side) {
+      const node = getNodeById(nodeId);
+      if (!node) return null;
+      const width = 170;
+      return {
+        x: node.x + (side === "output" ? width / 2 : -width / 2),
+        y: node.y
+      };
+    }
+
+    function updateStats() {
+      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+
+      const selected = getSelectedNode();
+      document.getElementById("statSelected").textContent =
+        selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
+    }
+
+    function updateSidebar() {
+      const node = getSelectedNode();
+
+      document.getElementById("selectedHint").textContent =
+        node ? `Inspecting ${node.label || node.id}` : "Click a node in the graph to inspect it.";
+
+      document.getElementById("infoLabel").textContent = node?.label || "—";
+      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
+      document.getElementById("infoType").textContent = node?.type || "—";
+      document.getElementById("infoStatus").textContent = node?.status || "—";
+      document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
+      document.getElementById("infoDescription").textContent = node?.description || "—";
+      document.getElementById("infoNotes").textContent = node?.notes || "—";
+
+      const outgoingList = document.getElementById("outgoingList");
+      const incomingList = document.getElementById("incomingList");
+
+      if (!node) {
+        outgoingList.innerHTML = "<li>No level selected.</li>";
+        incomingList.innerHTML = "<li>No level selected.</li>";
+        return;
+      }
+
+      const outgoing = getOutgoingEdges(node.id);
+      const incoming = getIncomingEdges(node.id);
+
+      outgoingList.innerHTML = outgoing.length
+        ? outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No outgoing links.</li>";
+
+      incomingList.innerHTML = incoming.length
+        ? incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No incoming links.</li>";
+    }
+
+    function refreshGraph() {
+      const visibleNodeIds = getVisibleNodeIds();
+      const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
+
+      graphNodesEl().innerHTML = graphData.nodes
+        .filter(node => visibleNodeIds.has(node.id))
+        .map(node => {
+          const isSelected = node.id === selectedNodeId;
+          const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
+          const isDimmed = relatedNodeIds ? !isRelated : false;
+
+          return `
+            <div
+              class="node ${escapeHtml(node.type || "progression")} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+              data-node-id="${escapeHtml(node.id)}"
+              style="left:${node.x}px; top:${node.y}px;"
+            >
+              <div class="nodeHeader">
+                <div class="nodeDot"></div>
+                <div class="nodeTitle">${escapeHtml(node.label)}</div>
+              </div>
+
+              ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+
+              <div class="nodeStatusRow">
+                <span class="nodeBadge">${escapeHtml(node.type || "progression")}</span>
+                <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+      const svgParts = [];
+      const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
+
+      for (const edge of visibleEdges) {
+        const fromPort = getNodePortPosition(edge.from, "output");
+        const toPort = getNodePortPosition(edge.to, "input");
+        if (!fromPort || !toPort) continue;
+
+        const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+        const dimmed = selectedNodeId && !related;
+        const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
+
+        svgParts.push(`<path d="${path}" class="${related ? "line-related" : dimmed ? "line-dimmed" : "line-base"}"></path>`);
+
+        if (edge.label) {
+          const midX = (fromPort.x + toPort.x) / 2;
+          const midY = (fromPort.y + toPort.y) / 2 - 10;
+          svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
+        }
+      }
+
+      graphSvg().innerHTML = svgParts.join("");
+      bindNodeEvents();
+      updateStats();
+      updateSidebar();
+    }
+
+    function bindNodeEvents() {
+      graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
+        const nodeId = nodeEl.dataset.nodeId;
+        nodeEl.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectedNodeId = nodeId;
+          refreshGraph();
+          setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
+        });
+      });
+    }
+
+    function clearSelection() {
+      selectedNodeId = null;
+      refreshGraph();
+      setStatus("Selection cleared.");
+    }
+
+    async function fetchRemoteGraph() {
+      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
+      return normalizeData(await res.json());
+    }
+
+    async function reloadGraph() {
+      try {
+        showLoading("Loading graph...");
+        setStatus("Loading latest graph...");
+
+        graphData = await fetchRemoteGraph();
+        hideErrorPanel();
+        hideLoading();
+
+        refreshGraph();
+        fitToGraph();
+        setStatus("Loaded latest graph.");
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        setStatus("Failed to load graph.", true);
+        showErrorPanel(err.message || "Failed to load graph.");
       }
     }
 
-    const visibleNodes = graphData.nodes.filter(matchesSearch);
-    const visibleIds = new Set(visibleNodes.map(n => Number(n.id)));
+    function bindViewportEvents() {
+      const viewport = graphViewport();
 
-    const edgeMarkup = graphData.edges
-      .filter(edge => visibleIds.has(Number(edge.from)) && visibleIds.has(Number(edge.to)))
-      .map(edge => {
-        const fromNode = getNodeById(edge.from);
-        const toNode = getNodeById(edge.to);
-        if (!fromNode || !toNode) return "";
+      viewport.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
+        zoomBy(factor, event.clientX, event.clientY);
+      }, { passive: false });
 
-        const a = worldToScreen(fromNode.x, fromNode.y);
-        const b = worldToScreen(toNode.x, toNode.y);
+      viewport.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".node")) return;
 
-        const isSelectedEdge = selected && (
-          Number(edge.from) === Number(selected.id) ||
-          Number(edge.to) === Number(selected.id)
-        );
+        interaction.isPanning = true;
+        interaction.panStartMouseX = event.clientX;
+        interaction.panStartMouseY = event.clientY;
+        interaction.panStartX = viewportState.x;
+        interaction.panStartY = viewportState.y;
 
-        const stroke = isSelectedEdge ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.18)";
-        const strokeWidth = isSelectedEdge ? 2.2 : 1.4;
-        const midX = (a.x + b.x) / 2;
-        const midY = (a.y + b.y) / 2;
-
-        return `
-          <g>
-            <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeWidth}" />
-            ${edge.label ? `
-              <text x="${midX}" y="${midY - 8}" fill="rgba(210,210,220,0.72)" font-size="11" text-anchor="middle">
-                ${escapeHtml(edge.label)}
-              </text>
-            ` : ""}
-          </g>
-        `;
-      }).join("");
-
-    const nodeMarkup = visibleNodes.map(node => {
-      const p = worldToScreen(node.x, node.y);
-      const isSelected = selected && Number(selected.id) === Number(node.id);
-      const isOutgoing = outgoing.has(Number(node.id));
-      const isIncoming = incoming.has(Number(node.id));
-
-      const radius = isSelected ? 17 : 15;
-      const fill = getNodeColor(node.type);
-      const stroke = isSelected
-        ? "rgba(255,255,255,0.95)"
-        : (isOutgoing || isIncoming)
-          ? "rgba(255,255,255,0.65)"
-          : "rgba(255,255,255,0.16)";
-      const strokeWidth = isSelected ? 3 : 1.5;
-
-      return `
-        <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
-          <circle r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"></circle>
-          <text x="0" y="30" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="700">${escapeHtml(node.label)}</text>
-          ${node.subtitle ? `<text x="0" y="46" fill="rgba(220,220,230,0.75)" font-size="11" text-anchor="middle">${escapeHtml(node.subtitle)}</text>` : ""}
-        </g>
-      `;
-    }).join("");
-
-    svg.innerHTML = edgeMarkup + nodeMarkup;
-  }
-
-  function renderInspector() {
-    const selected = getNodeById(selectedNodeId);
-
-    document.getElementById("viewerStatusText").textContent = selected
-      ? `Selected ${selected.label}. Highlighting direct links.`
-      : "No level selected.";
-
-    if (!selected) {
-      document.getElementById("selectedPanel").innerHTML = `
-        <div class="empty">Click a node in the graph.</div>
-      `;
-      document.getElementById("outgoingList").innerHTML = `<div class="empty">No node selected.</div>`;
-      document.getElementById("incomingList").innerHTML = `<div class="empty">No node selected.</div>`;
-      return;
-    }
-
-    document.getElementById("selectedPanel").innerHTML = `
-      <h2 style="margin:0 0 6px;">${escapeHtml(selected.label)}</h2>
-      ${selected.subtitle ? `<div class="muted" style="margin-bottom:8px;">${escapeHtml(selected.subtitle)}</div>` : ""}
-      ${selected.description ? `<div class="muted" style="font-size:13px; line-height:1.55; margin-bottom:10px;">${escapeHtml(selected.description)}</div>` : ""}
-      ${
-        selected.tags?.length
-          ? `<div class="chipRow">${selected.tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>`
-          : `<div class="empty">No tags.</div>`
-      }
-    `;
-
-    const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
-    const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
-
-    document.getElementById("outgoingList").innerHTML = outgoing.length
-      ? `<ul class="list">${outgoing.map(edge => {
-          const target = getNodeById(edge.to);
-          return `<li>${escapeHtml(target?.label || String(edge.to))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-        }).join("")}</ul>`
-      : `<div class="empty">No outgoing links.</div>`;
-
-    document.getElementById("incomingList").innerHTML = incoming.length
-      ? `<ul class="list">${incoming.map(edge => {
-          const source = getNodeById(edge.from);
-          return `<li>${escapeHtml(source?.label || String(edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-        }).join("")}</ul>`
-      : `<div class="empty">No incoming links.</div>`;
-  }
-
-  function renderAll() {
-    updateStats();
-    renderGraph();
-    renderInspector();
-  }
-
-  async function reloadGraph() {
-    try {
-      showLoading("Loading latest graph...");
-      setStatus("Loading latest graph...");
-
-      const res = await fetch(RAW_JSON_URL + "&v=" + Date.now(), {
-        cache: "no-store"
+        viewport.classList.add("panning");
+        viewport.setPointerCapture(event.pointerId);
       });
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.error || "Could not load graph");
-      }
+      viewport.addEventListener("pointermove", (event) => {
+        if (!interaction.isPanning) return;
 
-      graphData = normalizeGraphData(json?.data ? json.data : json);
-      rebuildMaps();
+        viewportState.x = interaction.panStartX + (event.clientX - interaction.panStartMouseX);
+        viewportState.y = interaction.panStartY + (event.clientY - interaction.panStartMouseY);
+        applyViewportTransform();
+      });
 
-      if (selectedNodeId && !getNodeById(selectedNodeId)) {
-        selectedNodeId = null;
-      }
+      viewport.addEventListener("pointerup", () => {
+        interaction.isPanning = false;
+        viewport.classList.remove("panning");
+      });
 
-      fitGraphToView();
-      renderAll();
-      setStatus("Loaded latest graph.");
-      hideLoading();
-    } catch (err) {
-      console.error(err);
-      hideLoading();
-      setStatus("Failed to load graph.", true);
+      viewport.addEventListener("pointercancel", () => {
+        interaction.isPanning = false;
+        viewport.classList.remove("panning");
+      });
+
+      viewport.addEventListener("click", (event) => {
+        if (!event.target.closest(".node")) {
+          clearSelection();
+        }
+      });
     }
-  }
 
-  function attachGraphInteractions() {
-    const svg = getSvg();
+    document.addEventListener("DOMContentLoaded", () => {
+      bindViewportEvents();
 
-    svg.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      const pt = getSvgPoint(event.clientX, event.clientY);
-      zoomAt(pt.x, pt.y, event.deltaY < 0 ? 1.12 : 1 / 1.12);
-    }, { passive: false });
-
-    svg.addEventListener("mousedown", (event) => {
-      const pt = getSvgPoint(event.clientX, event.clientY);
-      const nodeGroup = event.target.closest(".graph-node");
-
-      dragState.moved = false;
-      dragState.startScreenX = pt.x;
-      dragState.startScreenY = pt.y;
-
-      if (nodeGroup) {
-        selectedNodeId = Number(nodeGroup.getAttribute("data-node-id"));
-        renderAll();
-        dragState.mode = "node";
-        return;
-      }
-
-      dragState.mode = "pan";
-      dragState.originOffsetX = viewState.offsetX;
-      dragState.originOffsetY = viewState.offsetY;
-      svg.classList.add("panning");
+      document.getElementById("searchInput").addEventListener("input", (event) => {
+        currentSearch = event.target.value || "";
+        refreshGraph();
+      });
     });
 
-    window.addEventListener("mousemove", (event) => {
-      if (!dragState.mode) return;
-
-      const pt = getSvgPoint(event.clientX, event.clientY);
-
-      if (dragState.mode === "pan") {
-        const dx = pt.x - dragState.startScreenX;
-        const dy = pt.y - dragState.startScreenY;
-        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) dragState.moved = true;
-        viewState.offsetX = dragState.originOffsetX + dx;
-        viewState.offsetY = dragState.originOffsetY + dy;
-        renderGraph();
-        return;
-      }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reloadGraph();
     });
 
-    window.addEventListener("mouseup", () => {
-      dragState.mode = null;
-      svg.classList.remove("panning");
-    });
-  }
+    window.zoomBy = zoomBy;
+    window.resetView = resetView;
+    window.fitToGraph = fitToGraph;
+    window.clearSelection = clearSelection;
+    window.reloadGraph = reloadGraph;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("searchInput").addEventListener("input", (event) => {
-      currentSearch = (event.target.value || "").trim().toLowerCase();
-      renderGraph();
-    });
-
-    attachGraphInteractions();
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) reloadGraph();
-  });
-
-  window.zoomIn = zoomIn;
-  window.zoomOut = zoomOut;
-  window.resetView = resetView;
-  window.clearSelection = clearSelection;
-  window.reloadGraph = reloadGraph;
-
-  reloadGraph();
-</script>
+    reloadGraph();
+  </script>
 </body>
 </html>
