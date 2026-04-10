@@ -1,0 +1,46 @@
+{
+  "version": "2026-04-10T22:35:34.909Z",
+  "savedAt": "2026-04-10T22:35:34.909Z",
+  "source": "editor",
+  "project": "backroomsparadox",
+  "stats": {
+    "nodeCount": 2,
+    "edgeCount": 1
+  },
+  "data": {
+    "nodes": [
+      {
+        "id": 0,
+        "label": "Start",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 573,
+        "y": 226
+      },
+      {
+        "id": 1,
+        "label": "Test",
+        "subtitle": "",
+        "type": "progression",
+        "status": "draft",
+        "description": "",
+        "notes": "",
+        "tags": [],
+        "x": 895,
+        "y": 77
+      }
+    ],
+    "edges": [
+      {
+        "from": 0,
+        "to": 1,
+        "label": "",
+        "oneWay": false
+      }
+    ]
+  }
+}
