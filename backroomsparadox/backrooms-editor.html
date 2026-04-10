@@ -6,27 +6,32 @@
   <title>Backrooms Graph Editor</title>
   <style>
     :root {
-      --bg: #050608;
-      --bg-2: #0b0d12;
-      --surface: rgba(15, 17, 23, 0.94);
-      --surface-2: rgba(20, 23, 31, 0.96);
-      --surface-3: rgba(27, 31, 42, 0.98);
-      --border: rgba(255,255,255,0.08);
-      --border-2: rgba(255,255,255,0.12);
-      --text: #f3f4f7;
-      --muted: #a8acb8;
-      --muted-2: #7e8595;
+      --bg: #05060a;
+      --bg-2: #0a0c12;
+      --surface: rgba(14, 16, 22, 0.97);
+      --surface-2: rgba(18, 21, 29, 0.98);
+      --surface-3: rgba(23, 27, 36, 0.98);
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #f4f4f7;
+      --muted: #a7a7b5;
+      --muted-2: #7f8091;
       --accent: #be1a48;
-      --accent-2: #ff4f86;
-      --ok: #78ef98;
-      --warn: #ffd37c;
-      --danger: #ff8f8f;
-      --shadow-lg: 0 20px 50px rgba(0,0,0,0.34);
-      --shadow-md: 0 12px 28px rgba(0,0,0,0.24);
+      --accent-soft: rgba(190, 26, 72, 0.16);
+      --ok-soft: rgba(110, 240, 138, 0.13);
+      --warn-soft: rgba(255, 210, 122, 0.14);
+      --error-soft: rgba(255, 138, 138, 0.14);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.32);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.2);
       --radius-xl: 22px;
       --radius-lg: 18px;
       --radius-md: 14px;
       --radius-sm: 12px;
+      --node-start: #d7b45a;
+      --node-progression: #7aa2ff;
+      --node-danger: #ff7f7f;
+      --node-weird: #a77cff;
     }
 
     * { box-sizing: border-box; }
@@ -41,26 +46,26 @@
     }
 
     body {
+      position: relative;
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 26%),
-        radial-gradient(circle at 85% 8%, rgba(255,255,255,0.035), transparent 16%),
-        linear-gradient(180deg, #090a0f 0%, #050608 100%);
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(255,255,255,0.025), transparent 18%),
+        linear-gradient(180deg, #090b10 0%, #05060a 100%);
       overflow-x: hidden;
-      overflow-y: auto;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      pointer-events: none;
-      opacity: 0.08;
-      background-image:
-        radial-gradient(1px 1px at 10% 18%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 32% 68%, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.2px 1.2px at 56% 38%, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 78% 60%, rgba(255,255,255,0.7), transparent);
       z-index: 0;
+      pointer-events: none;
+      opacity: 0.1;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.35));
     }
 
     body::after {
@@ -69,8 +74,8 @@
       inset: 0;
       margin: 8px;
       border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.10);
-      box-shadow: 0 0 24px rgba(190, 26, 72, 0.05);
+      border: 1px solid rgba(190, 26, 72, 0.12);
+      box-shadow: 0 0 24px rgba(190, 26, 72, 0.04);
       pointer-events: none;
       z-index: 1;
     }
@@ -81,43 +86,54 @@
       min-height: 100vh;
       display: grid;
       grid-template-rows: auto auto;
-      gap: 12px;
+      gap: 16px;
       padding: 14px;
     }
 
     .hero {
-      background: rgba(12, 14, 19, 0.82);
+      position: sticky;
+      top: 12px;
+      z-index: 40;
+      background: rgba(10, 12, 17, 0.96);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 14px 16px;
       box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      position: sticky;
-      top: 12px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(8, 10, 14, 0.94), rgba(10, 12, 17, 0.98));
+      z-index: -1;
     }
 
     .heroTop {
       display: flex;
-      gap: 16px;
-      justify-content: space-between;
+      gap: 14px;
       align-items: flex-start;
+      justify-content: space-between;
       flex-wrap: wrap;
     }
 
     .heroTitle {
-      flex: 1;
       min-width: 320px;
+      flex: 1;
     }
 
     .eyebrow {
       display: inline-block;
-      margin-bottom: 8px;
       font-size: 10px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #de97ad;
-      font-weight: 800;
+      color: #d98aa0;
+      margin-bottom: 8px;
+      font-weight: 700;
     }
 
     .heroTitle h1 {
@@ -129,13 +145,13 @@
 
     .heroTitle p {
       margin: 8px 0 0;
-      max-width: 880px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
+      max-width: 900px;
     }
 
-    .badgeRow {
+    .topRightMeta {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -143,42 +159,57 @@
       align-items: flex-start;
     }
 
-    .badge {
+    .statusBadge,
+    .saveBadge,
+    .infoBadge,
+    .metaChip {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
       border-radius: 999px;
+      padding: 7px 11px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 700;
       white-space: nowrap;
       border: 1px solid transparent;
+    }
+
+    .statusBadge,
+    .infoBadge,
+    .metaChip {
       background: rgba(255,255,255,0.04);
-      color: #e5e7ef;
+      border-color: rgba(255,255,255,0.08);
+      color: #d4d6df;
     }
 
-    .badge-clean {
-      background: rgba(120,239,152,0.12);
-      border-color: rgba(120,239,152,0.32);
-      color: #caffd6;
+    .save-clean {
+      background: var(--ok-soft);
+      border-color: rgba(110, 240, 138, 0.28);
+      color: #cbffd6;
     }
 
-    .badge-dirty {
-      background: rgba(255,211,124,0.12);
-      border-color: rgba(255,211,124,0.32);
-      color: #ffe7af;
+    .save-dirty {
+      background: var(--warn-soft);
+      border-color: rgba(255, 210, 122, 0.28);
+      color: #ffe6b2;
     }
 
-    .badge-saving {
-      background: rgba(190,26,72,0.14);
-      border-color: rgba(190,26,72,0.38);
-      color: #ffc3d2;
+    .save-saving {
+      background: rgba(190, 26, 72, 0.12);
+      border-color: rgba(190, 26, 72, 0.30);
+      color: #ffc0d1;
+    }
+
+    .save-error {
+      background: var(--error-soft);
+      border-color: rgba(255, 138, 138, 0.34);
+      color: #ffd0d0;
     }
 
     .heroControls {
-      margin-top: 12px;
+      margin-top: 14px;
       display: grid;
-      grid-template-columns: minmax(240px, 1fr) auto;
+      grid-template-columns: minmax(260px, 1fr) auto;
       gap: 10px;
       align-items: start;
     }
@@ -188,17 +219,20 @@
       background: rgba(255,255,255,0.04);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 14px;
+      border-radius: 13px;
+      padding: 12px 13px;
       font-size: 14px;
       outline: none;
       transition: 0.18s ease;
     }
 
-    #searchInput:focus {
-      border-color: rgba(190,26,72,0.42);
-      box-shadow: 0 0 0 4px rgba(190,26,72,0.10);
-      background: rgba(255,255,255,0.055);
+    #searchInput:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.1);
+      background: rgba(255,255,255,0.05);
     }
 
     .toolbar {
@@ -208,26 +242,23 @@
       justify-content: flex-end;
     }
 
-    button, select, input, textarea {
-      font-family: inherit;
-    }
-
     button {
       appearance: none;
-      border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.04);
-      color: #e8e9f2;
+      color: #e5e5ec;
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 9px 12px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       transition: 0.18s ease;
+      box-shadow: none;
     }
 
     button:hover {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14);
       transform: translateY(-1px);
     }
 
@@ -240,173 +271,249 @@
     .primaryBtn {
       background: linear-gradient(180deg, rgba(190, 26, 72, 0.92), rgba(148, 16, 53, 0.96));
       border-color: rgba(255,255,255,0.06);
-      box-shadow: 0 10px 22px rgba(190, 26, 72, 0.24);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
     }
 
     .dangerBtn {
-      background: rgba(255, 138, 138, 0.06);
-      border-color: rgba(255, 138, 138, 0.22);
-      color: #ffcccc;
+      border-color: rgba(255, 138, 138, 0.26);
+      color: #ffcbcb;
+      background: rgba(255, 138, 138, 0.05);
     }
 
-    #statusLine {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
+    .statsBar,
+    .graphShell,
+    .changeSummary,
+    .sideCard {
+      background: rgba(15, 17, 23, 0.97);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
     }
 
     .workspace {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 340px;
-      gap: 14px;
+      gap: 16px;
       align-items: start;
+      margin-top: 2px;
     }
 
     .mainColumn {
       min-width: 0;
       display: grid;
       grid-template-rows: auto auto auto;
-      gap: 14px;
+      gap: 16px;
     }
 
-    .statsBar,
-    .changeSummary,
-    .sideCard,
-    .graphShell {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
+    .sideColumn {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-self: start;
+      position: sticky;
+      top: 120px;
     }
 
     .statsBar {
-      padding: 10px;
+      padding: 14px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #d4d7e2;
-    }
-
     .graphShell {
-      min-height: 620px;
-      height: 70vh;
+      padding: 14px;
       overflow: hidden;
-      position: relative;
-      background:
-        radial-gradient(circle at 18% 10%, rgba(190,26,72,0.06), transparent 24%),
-        linear-gradient(180deg, #0b0d13 0%, #090b10 100%);
     }
 
-    .graphTopBar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      z-index: 5;
+    .graphTopMeta {
       display: flex;
       justify-content: space-between;
       gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .graphHint {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .graphViewport {
+      position: relative;
+      height: 520px;
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(190,26,72,0.06), transparent 24%),
+        linear-gradient(180deg, rgba(8,10,14,0.98), rgba(5,7,11,0.98));
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: grab;
+      user-select: none;
+    }
+
+    .graphViewport.panning {
+      cursor: grabbing;
+    }
+
+    .graphWorld {
+      position: absolute;
+      inset: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .graphGrid {
+      position: absolute;
+      inset: -4000px;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.45;
+    }
+
+    svg.graphLines {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
       pointer-events: none;
     }
 
-    .graphHint,
-    .graphMode {
-      pointer-events: auto;
-      background: rgba(12,14,19,0.82);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-size: 12px;
-      color: #d7d9e2;
-      backdrop-filter: blur(10px);
-    }
-
-    #graphSvg {
-      width: 100%;
-      height: 100%;
-      display: block;
+    .node {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin-left: -14px;
+      margin-top: -14px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.75);
+      box-shadow:
+        0 0 0 4px rgba(255,255,255,0.05),
+        0 8px 18px rgba(0,0,0,0.3);
       cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
+      transition: box-shadow 0.15s ease, transform 0.12s ease;
+      z-index: 2;
     }
 
-    #graphSvg.panning {
+    .node:hover {
+      transform: scale(1.05);
+    }
+
+    .node.dragging {
       cursor: grabbing;
+      box-shadow:
+        0 0 0 5px rgba(255,255,255,0.08),
+        0 14px 28px rgba(0,0,0,0.36);
+    }
+
+    .node.selected {
+      box-shadow:
+        0 0 0 4px rgba(190,26,72,0.18),
+        0 0 0 8px rgba(190,26,72,0.1),
+        0 14px 28px rgba(0,0,0,0.36);
+    }
+
+    .node.start { background: var(--node-start); }
+    .node.progression { background: var(--node-progression); }
+    .node.danger { background: var(--node-danger); }
+    .node.weird { background: var(--node-weird); }
+
+    .nodeLabel {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 70px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .nodeLabelTitle {
+      font-size: 12px;
+      font-weight: 800;
+      color: #f4f4f7;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.45);
+      white-space: nowrap;
+    }
+
+    .nodeLabelSub {
+      margin-top: 2px;
+      font-size: 10px;
+      color: #c2c4cf;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.45);
+      white-space: nowrap;
+    }
+
+    .line-base {
+      stroke: rgba(255,255,255,0.22);
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .line-selected {
+      stroke: rgba(190,26,72,0.82);
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .line-oneway {
+      stroke-dasharray: 8 6;
+    }
+
+    .edgeLabel {
+      fill: #d6d8e1;
+      font-size: 11px;
+      font-weight: 600;
+      paint-order: stroke;
+      stroke: rgba(5,7,11,0.98);
+      stroke-width: 4px;
+      stroke-linejoin: round;
     }
 
     .changeSummary {
       padding: 14px;
     }
 
-    .changeSummary details {
-      width: 100%;
+    .changeSummary h2,
+    .sideCard h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
     }
 
-    .changeSummary summary {
-      cursor: pointer;
-      list-style: none;
-      font-weight: 800;
-      font-size: 18px;
-    }
-
-    .changeSummary summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .changeSummaryBody {
-      margin-top: 12px;
-    }
-
-    .changeSummaryHeader {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .changeSummaryHeader h2 {
-      margin: 0;
-      font-size: 18px;
-      letter-spacing: -0.02em;
-    }
-
-    .changeSummaryHeader p {
-      margin: 6px 0 0;
-      color: var(--muted);
+    .miniText {
       font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
     }
 
     .changeToolbar {
-      margin-top: 10px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      margin-top: 12px;
+      margin-bottom: 12px;
     }
 
     .changeGrid {
-      margin-top: 12px;
       display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
       gap: 10px;
+      margin-top: 10px;
     }
 
     .changeBucket {
       background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.05);
       border-radius: 14px;
       padding: 12px;
     }
@@ -416,52 +523,52 @@
       font-size: 13px;
     }
 
-    .list {
+    .changeList {
       margin: 0;
       padding-left: 18px;
-      color: #d9dbe5;
       font-size: 12.5px;
-      line-height: 1.5;
+      color: #d8d9e2;
+      line-height: 1.55;
     }
 
-    .empty {
+    .changeList li + li {
+      margin-top: 4px;
+    }
+
+    .changeEmpty {
       color: var(--muted-2);
       font-size: 12px;
-      line-height: 1.5;
     }
 
-    #changeText {
+    .changeTextarea,
+    input,
+    textarea,
+    select {
       width: 100%;
-      margin-top: 12px;
-      min-height: 130px;
+      background: rgba(255,255,255,0.04);
+      color: #ededf4;
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: #eceef5;
-      padding: 12px;
-      font-size: 12.5px;
-      line-height: 1.55;
-      resize: vertical;
+      padding: 10px 12px;
+      font-size: 13px;
       outline: none;
+      font-family: inherit;
+      transition: 0.18s ease;
     }
 
-    .sideColumn {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-self: start;
-      position: sticky;
-      top: 14px;
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .changeTextarea {
+      min-height: 140px;
+      margin-top: 12px;
     }
 
     .sideCard {
       padding: 14px;
-    }
-
-    .sideCard h2 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      letter-spacing: -0.02em;
     }
 
     .fieldGrid {
@@ -469,51 +576,20 @@
       gap: 10px;
     }
 
-    .twoCol {
+    .fieldRow2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .field {
-      display: grid;
-      gap: 5px;
-    }
-
-    .field label {
+    .fieldLabel {
+      display: block;
+      margin-bottom: 5px;
       font-size: 10px;
-      letter-spacing: 0.08em;
       text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--muted-2);
-      font-weight: 800;
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: #edf0f8;
-      padding: 10px 11px;
-      font-size: 13px;
-      outline: none;
-      transition: 0.18s ease;
-    }
-
-    .field textarea {
-      min-height: 84px;
-      resize: vertical;
-      line-height: 1.45;
-    }
-
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: rgba(190,26,72,0.42);
-      box-shadow: 0 0 0 4px rgba(190,26,72,0.08);
-      background: rgba(255,255,255,0.055);
+      font-weight: 700;
     }
 
     .sideActions {
@@ -523,102 +599,153 @@
       margin-top: 10px;
     }
 
-    .edgeRow {
+    .connectionsList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d8d9e2;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .connectionsList li + li {
+      margin-top: 4px;
+    }
+
+    .connectionsToolbar {
       display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding-top: 8px;
-      margin-top: 8px;
-    }
-
-    .edgeRow:first-child {
-      border-top: 0;
-      padding-top: 0;
-      margin-top: 0;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
     }
 
     #loadingOverlay {
       position: fixed;
       inset: 0;
-      z-index: 100;
-      background: rgba(4, 5, 8, 0.84);
+      background: rgba(4,4,8,0.82);
       backdrop-filter: blur(8px);
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     #loadingCard {
-      min-width: 260px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(15,17,23,0.96);
-      box-shadow: var(--shadow-lg);
-      padding: 24px 28px;
+      padding: 26px 30px;
       text-align: center;
+      box-shadow: var(--shadow-lg);
+      min-width: 260px;
+    }
+
+    #loadingText {
+      font-size: 14px;
+      color: #e2e2ea;
     }
 
     .spinner {
       width: 34px;
       height: 34px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid #be1a48;
       border-radius: 50%;
-      border: 3px solid rgba(255,255,255,0.10);
-      border-top-color: var(--accent);
       animation: spin 0.95s linear infinite;
       margin: 0 auto 14px;
     }
 
-    #loadingText {
-      color: #e8eaf1;
+    #errorPanel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 50;
+      width: min(380px, calc(100vw - 40px));
+      background: rgba(36, 13, 18, 0.96);
+      border: 1px solid rgba(255, 138, 138, 0.28);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
       font-size: 14px;
+      font-weight: 800;
+      color: #ffced6;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #f6d9df;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1300px) {
       .workspace {
         grid-template-columns: 1fr;
       }
 
       .sideColumn {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(280px, 1fr));
         position: static;
+        top: auto;
       }
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 1100px) {
+      .hero {
+        position: relative;
+        top: 0;
+      }
+
       .heroControls {
         grid-template-columns: 1fr;
       }
 
-      .toolbar {
+      .toolbar,
+      .topRightMeta {
         justify-content: flex-start;
       }
 
-      .graphShell {
-        min-height: 460px;
-        height: 62vh;
+      .changeGrid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .fieldRow2 {
+        grid-template-columns: 1fr;
       }
 
-      .sideColumn {
-        grid-template-columns: 1fr;
-        position: static;
+      .graphViewport {
+        height: 440px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #app {
+        padding: 12px;
       }
 
-      .changeGrid,
-      .twoCol {
-        grid-template-columns: 1fr;
+      .hero,
+      .statsBar,
+      .graphShell,
+      .changeSummary,
+      .sideCard {
+        padding: 12px;
+      }
+
+      .heroTitle h1 {
+        font-size: 24px;
       }
     }
   </style>
@@ -627,8 +754,13 @@
   <div id="loadingOverlay">
     <div id="loadingCard">
       <div class="spinner"></div>
-      <div id="loadingText">Loading Backrooms graph...</div>
+      <div id="loadingText">Loading graph...</div>
     </div>
+  </div>
+
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t load graph</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
   <div id="app">
@@ -637,95 +769,74 @@
         <div class="heroTitle">
           <div class="eyebrow">Backrooms planning workspace</div>
           <h1>Backrooms Graph Editor</h1>
-          <p>
-            Real node-editor style workflow for planning levels, branches, loops, dead ends, and weird routes.
-            Drag nodes smoothly, pan the canvas, zoom toward the mouse, and hold <strong>Shift</strong> then drag from one node to another to create a link.
-          </p>
+          <p>Real node-editor style workflow for planning levels, branches, loops, dead ends, and weird routes. Drag nodes smoothly, pan the canvas, zoom toward the mouse, and hold Shift then drag from one node to another to create a link.</p>
         </div>
 
-        <div class="badgeRow">
-          <div id="saveBadge" class="badge badge-clean">All changes saved locally</div>
-          <div id="remoteBadge" class="badge">GitHub: not saved yet</div>
-          <div id="snapshotBadge" class="badge">No snapshot yet</div>
+        <div class="topRightMeta">
+          <div id="saveStateBadge" class="saveBadge save-clean">All changes saved locally</div>
+          <div id="lastRemoteSaveBadge" class="infoBadge">GitHub: not saved yet</div>
+          <div id="lastSnapshotBadge" class="infoBadge">No snapshot yet</div>
         </div>
       </div>
 
       <div class="heroControls">
-        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." />
+        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." autocomplete="off" />
         <div class="toolbar">
           <button onclick="zoomIn()">Zoom In</button>
           <button onclick="zoomOut()">Zoom Out</button>
           <button onclick="resetView()">Reset View</button>
-          <button onclick="addNodeAtCenter()">Add Level</button>
-          <button onclick="refreshDiff()">Refresh Diff</button>
+          <button onclick="addNode()">Add Level</button>
+          <button onclick="refreshChangeSummary()">Refresh Diff</button>
           <button class="primaryBtn" onclick="saveGraph()">Save to GitHub</button>
           <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
         </div>
       </div>
 
-      <div id="statusLine">Loading graph...</div>
+      <div id="statusLine" class="miniText" style="margin-top:10px;">Loading graph...</div>
     </section>
 
     <section class="workspace">
       <div class="mainColumn">
-        <div class="statsBar">
-          <div id="statNodes" class="chip">0 nodes</div>
-          <div id="statEdges" class="chip">0 links</div>
-          <div id="statSelected" class="chip">No level selected</div>
-          <div id="statLocal" class="chip">Local draft: never</div>
-        </div>
+        <section class="statsBar" id="statsBar"></section>
 
-        <div class="graphShell">
-          <div class="graphTopBar">
+        <section class="graphShell">
+          <div class="graphTopMeta">
             <div class="graphHint">Pan: drag empty space • Zoom: mouse wheel • Select: click node</div>
-            <div class="graphMode">Connect mode: hold Shift and drag from node to node</div>
+            <div class="graphHint">Connect mode: hold Shift and drag from node to node</div>
           </div>
-          <svg id="graphSvg"></svg>
-        </div>
 
-        <div class="changeSummary">
-          <details open>
-            <summary>Change Summary</summary>
-            <div class="changeSummaryBody">
-              <div class="changeSummaryHeader">
-                <div>
-                  <h2 style="margin:0;">Change Summary</h2>
-                  <p id="diffContextText">Checking saved history...</p>
-                </div>
-              </div>
-
-              <div class="changeToolbar">
-                <button onclick="copySummary()">Copy Summary</button>
-                <button onclick="copyDiscordLog()">Copy Discord Log</button>
-              </div>
-
-              <div id="changeGrid" class="changeGrid"></div>
-              <textarea id="changeText" readonly></textarea>
+          <div id="graphViewport" class="graphViewport">
+            <div id="graphWorld" class="graphWorld">
+              <div class="graphGrid"></div>
+              <svg id="graphLines" class="graphLines"></svg>
+              <div id="graphNodes"></div>
             </div>
-          </details>
-        </div>
+          </div>
+        </section>
+
+        <section class="changeSummary" id="changeSummaryPanel"></section>
       </div>
 
       <aside class="sideColumn">
-        <div class="sideCard">
+        <section class="sideCard">
           <h2>Selected Level</h2>
-          <div id="selectedEmpty" class="empty">Click a node in the graph to edit it.</div>
+          <div id="selectedNodeEmpty" class="miniText">Click a node in the graph to edit it.</div>
 
-          <div id="selectedEditor" style="display:none;">
+          <div id="selectedNodeFields" style="display:none;">
             <div class="fieldGrid">
-              <div class="field">
-                <label>Label</label>
+              <div>
+                <label class="fieldLabel" for="nodeLabelInput">Label</label>
                 <input id="nodeLabelInput" type="text" />
               </div>
 
-              <div class="field">
-                <label>Subtitle</label>
+              <div>
+                <label class="fieldLabel" for="nodeSubtitleInput">Subtitle</label>
                 <input id="nodeSubtitleInput" type="text" />
               </div>
 
-              <div class="twoCol">
-                <div class="field">
-                  <label>Type</label>
+              <div class="fieldRow2">
+                <div>
+                  <label class="fieldLabel" for="nodeTypeInput">Type</label>
                   <select id="nodeTypeInput">
                     <option value="start">Start</option>
                     <option value="progression">Progression</option>
@@ -734,40 +845,40 @@
                   </select>
                 </div>
 
-                <div class="field">
-                  <label>Status</label>
+                <div>
+                  <label class="fieldLabel" for="nodeStatusInput">Status</label>
                   <select id="nodeStatusInput">
                     <option value="draft">Draft</option>
                     <option value="planned">Planned</option>
-                    <option value="blocked">Blocked</option>
-                    <option value="done">Done</option>
+                    <option value="active">Active</option>
+                    <option value="cut">Cut</option>
                   </select>
                 </div>
               </div>
 
-              <div class="twoCol">
-                <div class="field">
-                  <label>X</label>
+              <div class="fieldRow2">
+                <div>
+                  <label class="fieldLabel" for="nodeXInput">X</label>
                   <input id="nodeXInput" type="number" />
                 </div>
-                <div class="field">
-                  <label>Y</label>
+                <div>
+                  <label class="fieldLabel" for="nodeYInput">Y</label>
                   <input id="nodeYInput" type="number" />
                 </div>
               </div>
 
-              <div class="field">
-                <label>Tags (comma separated)</label>
+              <div>
+                <label class="fieldLabel" for="nodeTagsInput">Tags (comma separated)</label>
                 <input id="nodeTagsInput" type="text" />
               </div>
 
-              <div class="field">
-                <label>Description</label>
+              <div>
+                <label class="fieldLabel" for="nodeDescriptionInput">Description</label>
                 <textarea id="nodeDescriptionInput"></textarea>
               </div>
 
-              <div class="field">
-                <label>Notes</label>
+              <div>
+                <label class="fieldLabel" for="nodeNotesInput">Notes</label>
                 <textarea id="nodeNotesInput"></textarea>
               </div>
             </div>
@@ -777,115 +888,107 @@
               <button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="sideCard">
+        <section class="sideCard">
           <h2>Connections</h2>
 
           <div class="fieldGrid">
-            <div class="field">
-              <label>Target Level</label>
-              <select id="edgeTargetSelect"></select>
+            <div>
+              <label class="fieldLabel" for="linkTargetSelect">Target Level</label>
+              <select id="linkTargetSelect"></select>
             </div>
 
-            <div class="field">
-              <label>Link Label</label>
-              <input id="edgeLabelInput" type="text" />
+            <div>
+              <label class="fieldLabel" for="linkLabelInput">Link Label</label>
+              <input id="linkLabelInput" type="text" />
             </div>
 
-            <div class="field">
-              <label>One Way</label>
-              <select id="edgeOneWayInput">
+            <div>
+              <label class="fieldLabel" for="linkOneWaySelect">One Way</label>
+              <select id="linkOneWaySelect">
                 <option value="false">No</option>
                 <option value="true">Yes</option>
               </select>
             </div>
           </div>
 
-          <div class="sideActions">
-            <button onclick="addEdgeFromSelected()">Add Link</button>
+          <div class="connectionsToolbar">
+            <button onclick="addLinkFromSidebar()">Add Link</button>
           </div>
 
           <div style="margin-top:14px;">
-            <h2 style="font-size:15px; margin-bottom:8px;">Outgoing</h2>
-            <div id="outgoingList" class="empty">No level selected.</div>
+            <div class="fieldLabel" style="margin-bottom:8px;">Outgoing</div>
+            <ul id="outgoingLinksList" class="connectionsList"></ul>
           </div>
 
           <div style="margin-top:14px;">
-            <h2 style="font-size:15px; margin-bottom:8px;">Incoming</h2>
-            <div id="incomingList" class="empty">No level selected.</div>
+            <div class="fieldLabel" style="margin-bottom:8px;">Incoming</div>
+            <ul id="incomingLinksList" class="connectionsList"></ul>
           </div>
-        </div>
+        </section>
 
-        <div class="sideCard">
+        <section class="sideCard">
           <h2>Legend</h2>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
-            <span class="chip">Start</span>
-            <span class="chip">Progression</span>
-            <span class="chip">Danger</span>
-            <span class="chip">Weird</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="metaChip">Start</span>
+            <span class="metaChip">Progression</span>
+            <span class="metaChip">Danger</span>
+            <span class="metaChip">Weird</span>
           </div>
-          <div class="muted">
-            Smooth canvas controls, exact position saving, Shift-drag linking, inspector editing, and Discord-ready change logs.
+          <div class="miniText" style="margin-top:10px;">
+            Drag nodes to reposition. Background drag pans the graph. Mouse wheel zooms. Save writes exact node coordinates to GitHub.
           </div>
-        </div>
+        </section>
       </aside>
     </section>
   </div>
 
   <script>
-    const PROJECT_NAME = "backroomsparadox";
+    const PROJECT = "backroomsparadox";
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
-    const LIVE_URL = `${SAVE_URL}?project=${PROJECT_NAME}&action=live`;
+    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-    const LOCAL_DRAFT_KEY = "backrooms-node-editor-draft-v6";
-    const LAST_REMOTE_SAVE_KEY = "backrooms-node-editor-remote-v6";
-    const LAST_SNAPSHOT_META_KEY = "backrooms-node-editor-snapshot-v6";
-    const LOCAL_AUTOSAVE_DELAY = 700;
-    const GITHUB_AUTOSAVE_DELAY = 2500;
+    const LOCAL_DRAFT_KEY = "backrooms-graph-editor-draft-v3";
+    const LAST_REMOTE_SAVE_KEY = "backrooms-graph-editor-last-remote-save-v1";
+    const LAST_SNAPSHOT_META_KEY = "backrooms-graph-editor-last-snapshot-meta-v1";
 
     let graphData = { nodes: [], edges: [] };
-    let nodeMap = new Map();
     let selectedNodeId = null;
     let currentSearch = "";
-
     let hasUnsavedChanges = false;
     let isSaving = false;
+
     let lastLocalSaveAt = null;
     let lastRemoteSaveAt = null;
     let lastVersionId = null;
     let lastSnapshotPath = null;
 
-    let localAutosaveTimer = null;
-    let githubAutosaveTimer = null;
-    let diffRefreshTimer = null;
-
     let historyIndexCache = null;
     let snapshotCache = new Map();
     let latestDiffContext = null;
 
-    const viewState = {
+    const view = {
       scale: 1,
       offsetX: 0,
       offsetY: 0
     };
 
     const interaction = {
-      mode: null,
-      moved: false,
-      nodeId: null,
-      sourceNodeId: null,
-      startScreenX: 0,
-      startScreenY: 0,
-      startWorldX: 0,
-      startWorldY: 0,
-      originOffsetX: 0,
-      originOffsetY: 0,
-      nodeStartX: 0,
-      nodeStartY: 0,
-      hoverNodeId: null,
-      connectPreviewX: 0,
-      connectPreviewY: 0
+      isPanning: false,
+      panStartX: 0,
+      panStartY: 0,
+      panOriginX: 0,
+      panOriginY: 0,
+
+      draggedNodeId: null,
+      dragPointerId: null,
+      dragOffsetX: 0,
+      dragOffsetY: 0,
+
+      connectFromId: null,
+      connectPointerX: 0,
+      connectPointerY: 0
     };
 
     function showLoading(text = "Loading graph...") {
@@ -900,7 +1003,22 @@
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
       el.textContent = text;
-      el.style.color = isError ? "#ff8a8a" : "#a8acb8";
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+    }
+
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
+    }
+
+    function setSaveBadge(mode, text) {
+      const el = document.getElementById("saveStateBadge");
+      el.className = `saveBadge ${mode}`;
+      el.textContent = text;
     }
 
     function formatTimestamp(ts) {
@@ -918,124 +1036,131 @@
       }
     }
 
-    function updateSaveUI() {
-      const saveBadge = document.getElementById("saveBadge");
-      const remoteBadge = document.getElementById("remoteBadge");
-      const snapshotBadge = document.getElementById("snapshotBadge");
-      const statLocal = document.getElementById("statLocal");
-
-      if (isSaving) {
-        saveBadge.className = "badge badge-saving";
-        saveBadge.textContent = "Saving to GitHub...";
-      } else if (hasUnsavedChanges) {
-        saveBadge.className = "badge badge-dirty";
-        saveBadge.textContent = "Unsaved changes";
-      } else {
-        saveBadge.className = "badge badge-clean";
-        saveBadge.textContent = "All changes saved locally";
-      }
-
-      remoteBadge.textContent = lastRemoteSaveAt
-        ? "GitHub: " + formatTimestamp(lastRemoteSaveAt)
+    function updateMetaBadges() {
+      document.getElementById("lastRemoteSaveBadge").textContent = lastRemoteSaveAt
+        ? `GitHub: ${formatTimestamp(lastRemoteSaveAt)}`
         : "GitHub: not saved yet";
 
-      snapshotBadge.textContent = lastVersionId
-        ? "Snapshot: " + lastVersionId
+      document.getElementById("lastSnapshotBadge").textContent = lastVersionId
+        ? `Snapshot: ${lastVersionId}`
         : "No snapshot yet";
-
-      statLocal.textContent = "Local draft: " + formatTimestamp(lastLocalSaveAt);
-    }
-
-    function persistRemoteMeta() {
-      localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt || ""));
-      localStorage.setItem(LAST_SNAPSHOT_META_KEY, JSON.stringify({
-        version: lastVersionId,
-        snapshotPath: lastSnapshotPath
-      }));
-    }
-
-    function restoreRemoteMeta() {
-      const ts = Number(localStorage.getItem(LAST_REMOTE_SAVE_KEY));
-      if (!Number.isNaN(ts) && ts > 0) lastRemoteSaveAt = ts;
-
-      try {
-        const raw = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          lastVersionId = parsed?.version || null;
-          lastSnapshotPath = parsed?.snapshotPath || null;
-        }
-      } catch {}
     }
 
     function normalizeGraphData(raw) {
-      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
-      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-
       return {
-        nodes: rawNodes.map(n => ({
-          id: Number(n.id),
-          label: typeof n.label === "string" ? n.label : "Unnamed",
-          subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-          description: typeof n.description === "string" ? n.description : "",
-          notes: typeof n.notes === "string" ? n.notes : "",
-          type: typeof n.type === "string" ? n.type : "progression",
-          status: typeof n.status === "string" ? n.status : "draft",
-          tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
-          x: typeof n.x === "number" ? n.x : 0,
-          y: typeof n.y === "number" ? n.y : 0
-        })),
-        edges: rawEdges.map(e => ({
-          from: Number(e.from),
-          to: Number(e.to),
-          label: typeof e.label === "string" ? e.label : "",
-          oneWay: !!e.oneWay
-        }))
+        nodes: Array.isArray(raw?.nodes)
+          ? raw.nodes.map((n, index) => ({
+              id: typeof n.id === "string" ? n.id : String(n.id ?? `node-${index + 1}`),
+              label: typeof n.label === "string" ? n.label : "Unnamed",
+              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+              description: typeof n.description === "string" ? n.description : "",
+              notes: typeof n.notes === "string" ? n.notes : "",
+              x: typeof n.x === "number" ? n.x : 0,
+              y: typeof n.y === "number" ? n.y : 0,
+              type: typeof n.type === "string" ? n.type : inferTypeFromColor(n.color),
+              status: typeof n.status === "string" ? n.status : "draft",
+              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+            }))
+          : [],
+        edges: Array.isArray(raw?.edges)
+          ? raw.edges.map((e, index) => ({
+              id: `${String(e.from)}->${String(e.to)}-${index}`,
+              from: typeof e.from === "string" ? e.from : String(e.from ?? ""),
+              to: typeof e.to === "string" ? e.to : String(e.to ?? ""),
+              label: typeof e.label === "string" ? e.label : "",
+              oneWay: !!e.oneWay
+            }))
+          : []
       };
     }
 
-    function rebuildMaps() {
-      nodeMap = new Map(graphData.nodes.map(node => [Number(node.id), node]));
+    function inferTypeFromColor(color) {
+      const hex = String(color || "").toLowerCase();
+      if (hex === "#d7b45a") return "start";
+      if (hex === "#ff7f7f") return "danger";
+      if (hex === "#a77cff") return "weird";
+      return "progression";
     }
 
-    function getNodeById(id) {
-      return nodeMap.get(Number(id)) || null;
+    function getNodeColor(type) {
+      if (type === "start") return "var(--node-start)";
+      if (type === "danger") return "var(--node-danger)";
+      if (type === "weird") return "var(--node-weird)";
+      return "var(--node-progression)";
     }
 
     function getSerializableGraphData() {
       return {
         nodes: graphData.nodes.map(node => ({
-          id: Number(node.id),
-          label: node.label || "Unnamed",
+          id: node.id,
+          label: node.label,
           subtitle: node.subtitle || "",
           description: node.description || "",
           notes: node.notes || "",
+          x: Math.round(node.x),
+          y: Math.round(node.y),
           type: node.type || "progression",
           status: node.status || "draft",
-          tags: Array.isArray(node.tags) ? node.tags : [],
-          x: typeof node.x === "number" ? Math.round(node.x) : 0,
-          y: typeof node.y === "number" ? Math.round(node.y) : 0
+          color: typeToHex(node.type),
+          tags: Array.isArray(node.tags) ? node.tags : []
         })),
         edges: graphData.edges.map(edge => ({
-          from: Number(edge.from),
-          to: Number(edge.to),
+          from: edge.from,
+          to: edge.to,
           label: edge.label || "",
           oneWay: !!edge.oneWay
         }))
       };
     }
 
+    function typeToHex(type) {
+      if (type === "start") return "#d7b45a";
+      if (type === "danger") return "#ff7f7f";
+      if (type === "weird") return "#a77cff";
+      return "#7aa2ff";
+    }
+
+    function getNodeById(id) {
+      return graphData.nodes.find(node => node.id === id) || null;
+    }
+
+    function getOutgoingEdges(id) {
+      return graphData.edges.filter(edge => edge.from === id);
+    }
+
+    function getIncomingEdges(id) {
+      return graphData.edges.filter(edge => edge.to === id);
+    }
+
+    function markDirty(reason = "Unsaved changes") {
+      hasUnsavedChanges = true;
+      setSaveBadge("save-dirty", "Unsaved changes");
+      setStatus(reason);
+      saveDraftToLocal();
+      refreshStatsBar();
+      refreshChangeSummary();
+    }
+
+    function markClean(message = "All changes saved locally") {
+      hasUnsavedChanges = false;
+      setSaveBadge("save-clean", message);
+      setStatus(message);
+      refreshStatsBar();
+      refreshChangeSummary();
+    }
+
     function saveDraftToLocal() {
       try {
         const payload = {
           savedAt: Date.now(),
-          data: getSerializableGraphData()
+          data: getSerializableGraphData(),
+          view
         };
         localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
         lastLocalSaveAt = payload.savedAt;
-        updateSaveUI();
+        refreshStatsBar();
       } catch (err) {
-        console.error(err);
+        console.error("Local draft save failed:", err);
       }
     }
 
@@ -1044,12 +1169,13 @@
         const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        if (!parsed?.data) return null;
         return {
           savedAt: parsed.savedAt || null,
-          data: normalizeGraphData(parsed.data)
+          data: normalizeGraphData(parsed.data || {}),
+          view: parsed.view || null
         };
-      } catch {
+      } catch (err) {
+        console.error("Local draft load failed:", err);
         return null;
       }
     }
@@ -1057,144 +1183,423 @@
     function clearLocalDraft() {
       try {
         localStorage.removeItem(LOCAL_DRAFT_KEY);
-      } catch {}
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    function markDirty(message = "Unsaved changes.") {
-      hasUnsavedChanges = true;
-      updateSaveUI();
-      setStatus(message);
-      queueLocalAutosave();
-      queueGitHubAutosave();
-      refreshDiffSoon();
+    function restoreRemoteMeta() {
+      const savedRemote = localStorage.getItem(LAST_REMOTE_SAVE_KEY);
+      const savedSnapshot = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
+
+      if (savedRemote) {
+        const numeric = Number(savedRemote);
+        if (!Number.isNaN(numeric) && numeric > 0) lastRemoteSaveAt = numeric;
+      }
+
+      if (savedSnapshot) {
+        try {
+          const parsed = JSON.parse(savedSnapshot);
+          lastVersionId = parsed.version || null;
+          lastSnapshotPath = parsed.snapshotPath || null;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      updateMetaBadges();
     }
 
-    function markClean(message = "Loaded latest graph.") {
-      hasUnsavedChanges = false;
-      updateSaveUI();
-      setStatus(message);
-      refreshDiffSoon();
+    function persistRemoteMeta() {
+      if (lastRemoteSaveAt) {
+        localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt));
+      }
+
+      localStorage.setItem(
+        LAST_SNAPSHOT_META_KEY,
+        JSON.stringify({
+          version: lastVersionId,
+          snapshotPath: lastSnapshotPath
+        })
+      );
+
+      updateMetaBadges();
     }
 
-    function queueLocalAutosave() {
-      clearTimeout(localAutosaveTimer);
-      localAutosaveTimer = setTimeout(() => {
-        saveDraftToLocal();
-      }, LOCAL_AUTOSAVE_DELAY);
+    function refreshStatsBar() {
+      const selected = getNodeById(selectedNodeId);
+      document.getElementById("statsBar").innerHTML = `
+        <span class="metaChip">${graphData.nodes.length} nodes</span>
+        <span class="metaChip">${graphData.edges.length} links</span>
+        <span class="metaChip">${selected ? "Selected: " + escapeHtml(selected.label) : "No level selected"}</span>
+        <span class="metaChip">${lastLocalSaveAt ? "Local draft: " + formatTimestamp(lastLocalSaveAt) : "Local draft: never"}</span>
+      `;
     }
 
-    function queueGitHubAutosave() {
-      clearTimeout(githubAutosaveTimer);
-      githubAutosaveTimer = setTimeout(() => {
-        if (!hasUnsavedChanges || isSaving) return;
-        saveGraph(true);
-      }, GITHUB_AUTOSAVE_DELAY);
+    function refreshSidebar() {
+      const emptyEl = document.getElementById("selectedNodeEmpty");
+      const fieldsEl = document.getElementById("selectedNodeFields");
+      const selected = getNodeById(selectedNodeId);
+
+      if (!selected) {
+        emptyEl.style.display = "block";
+        fieldsEl.style.display = "none";
+        populateLinkTargetSelect();
+        document.getElementById("outgoingLinksList").innerHTML = `<li class="changeEmpty">No level selected.</li>`;
+        document.getElementById("incomingLinksList").innerHTML = `<li class="changeEmpty">No level selected.</li>`;
+        return;
+      }
+
+      emptyEl.style.display = "none";
+      fieldsEl.style.display = "block";
+
+      document.getElementById("nodeLabelInput").value = selected.label || "";
+      document.getElementById("nodeSubtitleInput").value = selected.subtitle || "";
+      document.getElementById("nodeTypeInput").value = selected.type || "progression";
+      document.getElementById("nodeStatusInput").value = selected.status || "draft";
+      document.getElementById("nodeXInput").value = Math.round(selected.x);
+      document.getElementById("nodeYInput").value = Math.round(selected.y);
+      document.getElementById("nodeTagsInput").value = Array.isArray(selected.tags) ? selected.tags.join(", ") : "";
+      document.getElementById("nodeDescriptionInput").value = selected.description || "";
+      document.getElementById("nodeNotesInput").value = selected.notes || "";
+
+      populateLinkTargetSelect();
+
+      const outgoing = getOutgoingEdges(selected.id);
+      const incoming = getIncomingEdges(selected.id);
+
+      document.getElementById("outgoingLinksList").innerHTML = outgoing.length
+        ? outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` <span class="miniText">(${escapeHtml(edge.label)})</span>` : ""} <button style="margin-left:6px;padding:3px 7px;font-size:11px;" onclick="deleteEdge('${escapeJs(edge.id)}')">Remove</button></li>`;
+          }).join("")
+        : `<li class="changeEmpty">No outgoing links.</li>`;
+
+      document.getElementById("incomingLinksList").innerHTML = incoming.length
+        ? incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` <span class="miniText">(${escapeHtml(edge.label)})</span>` : ""} <button style="margin-left:6px;padding:3px 7px;font-size:11px;" onclick="deleteEdge('${escapeJs(edge.id)}')">Remove</button></li>`;
+          }).join("")
+        : `<li class="changeEmpty">No incoming links.</li>`;
     }
 
-    function invalidateHistoryCache() {
-      historyIndexCache = null;
-      snapshotCache = new Map();
-      latestDiffContext = null;
+    function populateLinkTargetSelect() {
+      const select = document.getElementById("linkTargetSelect");
+      const selected = getNodeById(selectedNodeId);
+
+      const options = graphData.nodes
+        .filter(node => !selected || node.id !== selected.id)
+        .map(node => `<option value="${escapeHtml(node.id)}">${escapeHtml(node.label)}</option>`)
+        .join("");
+
+      select.innerHTML = options || `<option value="">No target available</option>`;
     }
 
-    function getNodeColor(type) {
-      if (type === "start") return "#d7b65f";
-      if (type === "danger") return "#ff7e7e";
-      if (type === "weird") return "#9b75ff";
-      return "#76a2ff";
+    function refreshGraph() {
+      const graphNodesEl = document.getElementById("graphNodes");
+      const graphLinesEl = document.getElementById("graphLines");
+
+      const search = currentSearch.trim().toLowerCase();
+      const visibleNodeIds = new Set(
+        graphData.nodes
+          .filter(node => {
+            if (!search) return true;
+            const hay = [
+              node.label,
+              node.subtitle,
+              node.description,
+              node.notes,
+              ...(Array.isArray(node.tags) ? node.tags : [])
+            ].join(" ").toLowerCase();
+            return hay.includes(search);
+          })
+          .map(node => node.id)
+      );
+
+      graphNodesEl.innerHTML = graphData.nodes
+        .filter(node => visibleNodeIds.has(node.id))
+        .map(node => {
+          const isSelected = node.id === selectedNodeId;
+          return `
+            <div
+              class="node ${escapeHtml(node.type || "progression")}${isSelected ? " selected" : ""}"
+              data-node-id="${escapeHtml(node.id)}"
+              style="left:${node.x}px; top:${node.y}px;"
+            >
+              <div class="nodeLabel">
+                <div class="nodeLabelTitle">${escapeHtml(node.label)}</div>
+                ${node.subtitle ? `<div class="nodeLabelSub">${escapeHtml(node.subtitle)}</div>` : ""}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      let svgParts = [];
+      const selectedEdges = new Set();
+
+      if (selectedNodeId) {
+        graphData.edges.forEach(edge => {
+          if (edge.from === selectedNodeId || edge.to === selectedNodeId) {
+            selectedEdges.add(edge.id);
+          }
+        });
+      }
+
+      graphData.edges.forEach(edge => {
+        if (!visibleNodeIds.has(edge.from) || !visibleNodeIds.has(edge.to)) return;
+
+        const fromNode = getNodeById(edge.from);
+        const toNode = getNodeById(edge.to);
+        if (!fromNode || !toNode) return;
+
+        const isSelected = selectedEdges.has(edge.id);
+        const midX = (fromNode.x + toNode.x) / 2;
+        const midY = (fromNode.y + toNode.y) / 2;
+
+        svgParts.push(`
+          <line
+            class="${isSelected ? "line-selected" : "line-base"}${edge.oneWay ? " line-oneway" : ""}"
+            x1="${fromNode.x}"
+            y1="${fromNode.y}"
+            x2="${toNode.x}"
+            y2="${toNode.y}"
+          ></line>
+        `);
+
+        if (edge.label) {
+          svgParts.push(`
+            <text class="edgeLabel" x="${midX}" y="${midY - 8}" text-anchor="middle">${escapeHtml(edge.label)}</text>
+          `);
+        }
+      });
+
+      if (interaction.connectFromId) {
+        const sourceNode = getNodeById(interaction.connectFromId);
+        if (sourceNode) {
+          svgParts.push(`
+            <line
+              class="line-selected line-oneway"
+              x1="${sourceNode.x}"
+              y1="${sourceNode.y}"
+              x2="${interaction.connectPointerX}"
+              y2="${interaction.connectPointerY}"
+            ></line>
+          `);
+        }
+      }
+
+      graphLinesEl.innerHTML = svgParts.join("");
+
+      graphNodesEl.querySelectorAll(".node").forEach(el => {
+        el.addEventListener("pointerdown", onNodePointerDown);
+        el.addEventListener("click", onNodeClick);
+      });
+
+      refreshStatsBar();
+      refreshSidebar();
+      applyViewTransform();
     }
 
-    function getSvg() {
-      return document.getElementById("graphSvg");
-    }
-
-    function getSvgSize() {
-      const rect = getSvg().getBoundingClientRect();
-      return {
-        width: rect.width || 1200,
-        height: rect.height || 700
-      };
-    }
-
-    function getSvgPoint(clientX, clientY) {
-      const rect = getSvg().getBoundingClientRect();
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
+    function applyViewTransform() {
+      const world = document.getElementById("graphWorld");
+      world.style.transform = `translate(${view.offsetX}px, ${view.offsetY}px) scale(${view.scale})`;
     }
 
     function worldToScreen(x, y) {
       return {
-        x: x * viewState.scale + viewState.offsetX,
-        y: y * viewState.scale + viewState.offsetY
+        x: x * view.scale + view.offsetX,
+        y: y * view.scale + view.offsetY
       };
     }
 
     function screenToWorld(x, y) {
       return {
-        x: (x - viewState.offsetX) / viewState.scale,
-        y: (y - viewState.offsetY) / viewState.scale
+        x: (x - view.offsetX) / view.scale,
+        y: (y - view.offsetY) / view.scale
       };
     }
 
-    function fitGraphToView() {
-      if (!graphData.nodes.length) return;
+    function clampScale(scale) {
+      return Math.max(0.3, Math.min(2.4, scale));
+    }
 
-      const { width, height } = getSvgSize();
-      const padding = 140;
+    function zoomAt(clientX, clientY, factor) {
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      const localX = clientX - rect.left;
+      const localY = clientY - rect.top;
+
+      const before = screenToWorld(localX, localY);
+      view.scale = clampScale(view.scale * factor);
+      view.offsetX = localX - before.x * view.scale;
+      view.offsetY = localY - before.y * view.scale;
+      applyViewTransform();
+    }
+
+    function zoomIn() {
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, 1.12);
+    }
+
+    function zoomOut() {
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, 1 / 1.12);
+    }
+
+    function centerGraph() {
+      if (!graphData.nodes.length) {
+        view.scale = 1;
+        view.offsetX = 120;
+        view.offsetY = 120;
+        applyViewTransform();
+        return;
+      }
+
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
 
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const node of graphData.nodes) {
+      graphData.nodes.forEach(node => {
         minX = Math.min(minX, node.x);
         minY = Math.min(minY, node.y);
         maxX = Math.max(maxX, node.x);
         maxY = Math.max(maxY, node.y);
-      }
+      });
 
-      const graphWidth = Math.max(1, maxX - minX);
-      const graphHeight = Math.max(1, maxY - minY);
+      const graphWidth = Math.max(200, maxX - minX + 160);
+      const graphHeight = Math.max(200, maxY - minY + 160);
 
-      const scaleX = (width - padding * 2) / graphWidth;
-      const scaleY = (height - padding * 2) / graphHeight;
+      const scaleX = rect.width / graphWidth;
+      const scaleY = rect.height / graphHeight;
+      view.scale = clampScale(Math.min(scaleX, scaleY, 1));
 
-      viewState.scale = Math.max(0.35, Math.min(2.5, Math.min(scaleX, scaleY)));
+      const centeredWidth = (maxX - minX) * view.scale;
+      const centeredHeight = (maxY - minY) * view.scale;
 
-      const centerX = (minX + maxX) / 2;
-      const centerY = (minY + maxY) / 2;
+      view.offsetX = rect.width / 2 - ((minX + maxX) / 2) * view.scale;
+      view.offsetY = rect.height / 2 - ((minY + maxY) / 2) * view.scale;
 
-      viewState.offsetX = width / 2 - centerX * viewState.scale;
-      viewState.offsetY = height / 2 - centerY * viewState.scale;
-    }
-
-    function zoomAt(screenX, screenY, factor) {
-      const oldScale = viewState.scale;
-      const newScale = Math.max(0.2, Math.min(4, oldScale * factor));
-      if (newScale === oldScale) return;
-
-      const worldX = (screenX - viewState.offsetX) / oldScale;
-      const worldY = (screenY - viewState.offsetY) / oldScale;
-
-      viewState.scale = newScale;
-      viewState.offsetX = screenX - worldX * newScale;
-      viewState.offsetY = screenY - worldY * newScale;
-
-      renderGraph();
-    }
-
-    function zoomIn() {
-      const { width, height } = getSvgSize();
-      zoomAt(width / 2, height / 2, 1.15);
-    }
-
-    function zoomOut() {
-      const { width, height } = getSvgSize();
-      zoomAt(width / 2, height / 2, 1 / 1.15);
+      applyViewTransform();
     }
 
     function resetView() {
-      fitGraphToView();
-      renderGraph();
+      centerGraph();
+    }
+
+    function onViewportPointerDown(event) {
+      if (event.target.closest(".node")) return;
+
+      const viewport = document.getElementById("graphViewport");
+      interaction.isPanning = true;
+      interaction.panStartX = event.clientX;
+      interaction.panStartY = event.clientY;
+      interaction.panOriginX = view.offsetX;
+      interaction.panOriginY = view.offsetY;
+      viewport.classList.add("panning");
+      viewport.setPointerCapture(event.pointerId);
+    }
+
+    function onViewportPointerMove(event) {
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+
+      if (interaction.isPanning) {
+        view.offsetX = interaction.panOriginX + (event.clientX - interaction.panStartX);
+        view.offsetY = interaction.panOriginY + (event.clientY - interaction.panStartY);
+        applyViewTransform();
+      }
+
+      if (interaction.draggedNodeId) {
+        const worldPos = screenToWorld(localX, localY);
+        const node = getNodeById(interaction.draggedNodeId);
+        if (node) {
+          node.x = Math.round(worldPos.x - interaction.dragOffsetX);
+          node.y = Math.round(worldPos.y - interaction.dragOffsetY);
+          refreshGraph();
+        }
+      }
+
+      if (interaction.connectFromId) {
+        const worldPos = screenToWorld(localX, localY);
+        interaction.connectPointerX = worldPos.x;
+        interaction.connectPointerY = worldPos.y;
+        refreshGraph();
+      }
+    }
+
+    function onViewportPointerUp(event) {
+      const viewport = document.getElementById("graphViewport");
+      viewport.classList.remove("panning");
+      interaction.isPanning = false;
+
+      if (interaction.draggedNodeId) {
+        const node = getNodeById(interaction.draggedNodeId);
+        if (node && node.id === selectedNodeId) {
+          refreshSidebar();
+        }
+        interaction.draggedNodeId = null;
+        markDirty("Moved node.");
+      }
+
+      if (interaction.connectFromId) {
+        const targetEl = document.elementFromPoint(event.clientX, event.clientY);
+        const targetNodeEl = targetEl && targetEl.closest(".node");
+        const toId = targetNodeEl ? targetNodeEl.dataset.nodeId : null;
+
+        if (toId && toId !== interaction.connectFromId) {
+          createEdge(interaction.connectFromId, toId, "", false);
+          markDirty("Created link.");
+        }
+
+        interaction.connectFromId = null;
+        refreshGraph();
+      }
+    }
+
+    function onViewportWheel(event) {
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+      zoomAt(event.clientX, event.clientY, factor);
+    }
+
+    function onNodePointerDown(event) {
+      event.stopPropagation();
+      const nodeId = event.currentTarget.dataset.nodeId;
+      const node = getNodeById(nodeId);
+      if (!node) return;
+
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      const worldPos = screenToWorld(localX, localY);
+
+      if (event.shiftKey) {
+        interaction.connectFromId = nodeId;
+        interaction.connectPointerX = node.x;
+        interaction.connectPointerY = node.y;
+        refreshGraph();
+        return;
+      }
+
+      interaction.draggedNodeId = nodeId;
+      interaction.dragPointerId = event.pointerId;
+      interaction.dragOffsetX = worldPos.x - node.x;
+      interaction.dragOffsetY = worldPos.y - node.y;
+      event.currentTarget.classList.add("dragging");
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
+    function onNodeClick(event) {
+      event.stopPropagation();
+      const nodeId = event.currentTarget.dataset.nodeId;
+      selectedNodeId = nodeId;
+      refreshGraph();
     }
 
     function escapeHtml(value) {
@@ -1206,252 +1611,40 @@
         .replaceAll("'", "&#039;");
     }
 
-    function matchesSearch(node) {
-      if (!currentSearch) return true;
-      const hay = [
-        node.label,
-        node.subtitle,
-        node.description,
-        node.notes,
-        ...(Array.isArray(node.tags) ? node.tags : [])
-      ].join(" ").toLowerCase();
-      return hay.includes(currentSearch);
+    function escapeJs(value) {
+      return String(value).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
-    function updateStats() {
-      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-
-      const selected = getNodeById(selectedNodeId);
-      document.getElementById("statSelected").textContent = selected
-        ? `Selected: ${selected.label}`
-        : "No level selected";
-
-      updateSaveUI();
-    }
-
-    function renderGraph() {
-      const svg = getSvg();
-      const selected = getNodeById(selectedNodeId);
-
-      const outgoing = new Set();
-      const incoming = new Set();
-
-      if (selected) {
-        for (const edge of graphData.edges) {
-          if (Number(edge.from) === Number(selected.id)) outgoing.add(Number(edge.to));
-          if (Number(edge.to) === Number(selected.id)) incoming.add(Number(edge.from));
-        }
+    function addNode() {
+      const baseName = "New Level";
+      let suffix = 1;
+      let label = baseName;
+      while (graphData.nodes.some(n => n.label === label)) {
+        suffix += 1;
+        label = `${baseName} ${suffix}`;
       }
 
-      const visibleNodes = graphData.nodes.filter(matchesSearch);
-      const visibleIds = new Set(visibleNodes.map(n => Number(n.id)));
+      const viewport = document.getElementById("graphViewport");
+      const rect = viewport.getBoundingClientRect();
+      const centerWorld = screenToWorld(rect.width / 2, rect.height / 2);
 
-      const edgeMarkup = graphData.edges
-        .filter(edge => visibleIds.has(Number(edge.from)) && visibleIds.has(Number(edge.to)))
-        .map(edge => {
-          const fromNode = getNodeById(edge.from);
-          const toNode = getNodeById(edge.to);
-          if (!fromNode || !toNode) return "";
-
-          const a = worldToScreen(fromNode.x, fromNode.y);
-          const b = worldToScreen(toNode.x, toNode.y);
-
-          const isSelectedEdge = selected && (
-            Number(edge.from) === Number(selected.id) ||
-            Number(edge.to) === Number(selected.id)
-          );
-
-          return `
-            <g>
-              <line
-                x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
-                stroke="${isSelectedEdge ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.18)"}"
-                stroke-width="${isSelectedEdge ? 2.4 : 1.4}"
-                stroke-linecap="round"
-              />
-              ${edge.label ? `
-                <text
-                  x="${(a.x + b.x) / 2}"
-                  y="${(a.y + b.y) / 2 - 8}"
-                  fill="rgba(210,212,220,0.72)"
-                  font-size="11"
-                  text-anchor="middle"
-                >${escapeHtml(edge.label)}</text>
-              ` : ""}
-            </g>
-          `;
-        }).join("");
-
-      const previewMarkup = interaction.mode === "connect" && interaction.sourceNodeId != null
-        ? (() => {
-            const sourceNode = getNodeById(interaction.sourceNodeId);
-            if (!sourceNode) return "";
-            const a = worldToScreen(sourceNode.x, sourceNode.y);
-            return `
-              <line
-                x1="${a.x}" y1="${a.y}"
-                x2="${interaction.connectPreviewX}" y2="${interaction.connectPreviewY}"
-                stroke="rgba(255,79,134,0.7)"
-                stroke-width="2"
-                stroke-dasharray="6 6"
-                stroke-linecap="round"
-              />
-            `;
-          })()
-        : "";
-
-      const nodeMarkup = visibleNodes.map(node => {
-        const p = worldToScreen(node.x, node.y);
-        const isSelected = selected && Number(selected.id) === Number(node.id);
-        const isOutgoing = outgoing.has(Number(node.id));
-        const isIncoming = incoming.has(Number(node.id));
-        const isConnectHover = interaction.mode === "connect" && Number(interaction.hoverNodeId) === Number(node.id);
-
-        return `
-          <g class="graph-node" data-node-id="${node.id}" transform="translate(${p.x}, ${p.y})" style="cursor:pointer;">
-            <circle
-              r="${isSelected ? 18 : 15}"
-              fill="${getNodeColor(node.type)}"
-              stroke="${
-                isSelected
-                  ? "rgba(255,255,255,0.95)"
-                  : isConnectHover
-                    ? "rgba(255,79,134,0.92)"
-                    : (isOutgoing || isIncoming)
-                      ? "rgba(255,255,255,0.68)"
-                      : "rgba(255,255,255,0.18)"
-              }"
-              stroke-width="${
-                isSelected ? 3 :
-                isConnectHover ? 3 :
-                1.5
-              }"
-            ></circle>
-
-            <text x="0" y="31" fill="#ffffff" font-size="13" text-anchor="middle" font-weight="800">
-              ${escapeHtml(node.label)}
-            </text>
-
-            ${node.subtitle ? `
-              <text x="0" y="47" fill="rgba(220,222,232,0.76)" font-size="11" text-anchor="middle">
-                ${escapeHtml(node.subtitle)}
-              </text>
-            ` : ""}
-          </g>
-        `;
-      }).join("");
-
-      svg.innerHTML = edgeMarkup + previewMarkup + nodeMarkup;
-    }
-
-    function populateEdgeTargetSelect() {
-      const select = document.getElementById("edgeTargetSelect");
-      const selected = getNodeById(selectedNodeId);
-
-      select.innerHTML = graphData.nodes
-        .filter(node => !selected || Number(node.id) !== Number(selected.id))
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .map(node => `<option value="${node.id}">${escapeHtml(node.label)}</option>`)
-        .join("");
-    }
-
-    function renderInspector() {
-      const selected = getNodeById(selectedNodeId);
-      const empty = document.getElementById("selectedEmpty");
-      const editor = document.getElementById("selectedEditor");
-
-      if (!selected) {
-        empty.style.display = "block";
-        editor.style.display = "none";
-        document.getElementById("outgoingList").innerHTML = `<div class="empty">No level selected.</div>`;
-        document.getElementById("incomingList").innerHTML = `<div class="empty">No level selected.</div>`;
-        populateEdgeTargetSelect();
-        return;
-      }
-
-      empty.style.display = "block";
-      empty.textContent = `Editing ${selected.label}`;
-      editor.style.display = "block";
-
-      document.getElementById("nodeLabelInput").value = selected.label || "";
-      document.getElementById("nodeSubtitleInput").value = selected.subtitle || "";
-      document.getElementById("nodeTypeInput").value = selected.type || "progression";
-      document.getElementById("nodeStatusInput").value = selected.status || "draft";
-      document.getElementById("nodeXInput").value = Math.round(selected.x || 0);
-      document.getElementById("nodeYInput").value = Math.round(selected.y || 0);
-      document.getElementById("nodeTagsInput").value = Array.isArray(selected.tags) ? selected.tags.join(", ") : "";
-      document.getElementById("nodeDescriptionInput").value = selected.description || "";
-      document.getElementById("nodeNotesInput").value = selected.notes || "";
-
-      const outgoing = graphData.edges.filter(edge => Number(edge.from) === Number(selected.id));
-      const incoming = graphData.edges.filter(edge => Number(edge.to) === Number(selected.id));
-
-      document.getElementById("outgoingList").innerHTML = outgoing.length
-        ? outgoing.map(edge => {
-            const target = getNodeById(edge.to);
-            return `
-              <div class="edgeRow">
-                <div>
-                  <div><strong>${escapeHtml(target?.label || String(edge.to))}</strong></div>
-                  <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
-                </div>
-                <button class="dangerBtn" onclick="deleteEdge(${selected.id}, ${edge.to}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
-              </div>
-            `;
-          }).join("")
-        : `<div class="empty">No outgoing links.</div>`;
-
-      document.getElementById("incomingList").innerHTML = incoming.length
-        ? incoming.map(edge => {
-            const source = getNodeById(edge.from);
-            return `
-              <div class="edgeRow">
-                <div>
-                  <div><strong>${escapeHtml(source?.label || String(edge.from))}</strong></div>
-                  <div class="muted">${escapeHtml(edge.label || "No label")}${edge.oneWay ? " • one way" : ""}</div>
-                </div>
-                <button class="dangerBtn" onclick="deleteEdge(${edge.from}, ${selected.id}, '${encodeURIComponent(edge.label || "")}')">Remove</button>
-              </div>
-            `;
-          }).join("")
-        : `<div class="empty">No incoming links.</div>`;
-
-      populateEdgeTargetSelect();
-    }
-
-    function renderAll() {
-      rebuildMaps();
-      updateStats();
-      renderGraph();
-      renderInspector();
-      refreshDiffSoon();
-    }
-
-    function addNodeAtCenter() {
-      const { width, height } = getSvgSize();
-      const center = screenToWorld(width / 2, height / 2);
-
-      const nextId = graphData.nodes.length
-        ? Math.max(...graphData.nodes.map(n => Number(n.id))) + 1
-        : 0;
-
-      graphData.nodes.push({
-        id: nextId,
-        label: "New Level",
+      const newNode = {
+        id: `level-${Date.now()}`,
+        label,
         subtitle: "",
         description: "",
         notes: "",
+        x: Math.round(centerWorld.x),
+        y: Math.round(centerWorld.y),
         type: "progression",
         status: "draft",
-        tags: [],
-        x: Math.round(center.x),
-        y: Math.round(center.y)
-      });
+        tags: []
+      };
 
-      selectedNodeId = nextId;
+      graphData.nodes.push(newNode);
+      selectedNodeId = newNode.id;
+      refreshGraph();
       markDirty("Added new level.");
-      renderAll();
     }
 
     function applySelectedNodeEdits() {
@@ -1466,156 +1659,82 @@
       node.y = Number(document.getElementById("nodeYInput").value) || 0;
       node.tags = document.getElementById("nodeTagsInput").value
         .split(",")
-        .map(x => x.trim())
+        .map(tag => tag.trim())
         .filter(Boolean);
       node.description = document.getElementById("nodeDescriptionInput").value;
       node.notes = document.getElementById("nodeNotesInput").value;
 
-      markDirty("Updated level.");
-      renderAll();
+      refreshGraph();
+      markDirty("Updated node details.");
     }
 
     function deleteSelectedNode() {
       const node = getNodeById(selectedNodeId);
       if (!node) return;
-      if (!confirm(`Delete "${node.label}" and all links connected to it?`)) return;
+      if (!confirm(`Delete ${node.label}?`)) return;
 
-      graphData.nodes = graphData.nodes.filter(n => Number(n.id) !== Number(node.id));
-      graphData.edges = graphData.edges.filter(
-        e => Number(e.from) !== Number(node.id) && Number(e.to) !== Number(node.id)
-      );
-
+      graphData.nodes = graphData.nodes.filter(n => n.id !== node.id);
+      graphData.edges = graphData.edges.filter(edge => edge.from !== node.id && edge.to !== node.id);
       selectedNodeId = null;
-      markDirty("Deleted level.");
-      renderAll();
+      refreshGraph();
+      markDirty("Deleted node.");
     }
 
-    function addEdgeFromSelected() {
-      const source = getNodeById(selectedNodeId);
-      if (!source) return;
+    function edgeExists(from, to) {
+      return graphData.edges.some(edge => edge.from === from && edge.to === to);
+    }
 
-      const targetId = Number(document.getElementById("edgeTargetSelect").value);
-      const label = document.getElementById("edgeLabelInput").value.trim();
-      const oneWay = document.getElementById("edgeOneWayInput").value === "true";
+    function createEdge(from, to, label = "", oneWay = false) {
+      if (!from || !to || from === to) return false;
+      if (edgeExists(from, to)) return false;
 
-      if (!Number.isFinite(targetId)) return;
-      if (Number(source.id) === Number(targetId)) return;
+      graphData.edges.push({
+        id: `${from}->${to}-${Date.now()}`,
+        from,
+        to,
+        label,
+        oneWay: !!oneWay
+      });
 
-      const exists = graphData.edges.some(edge =>
-        Number(edge.from) === Number(source.id) &&
-        Number(edge.to) === Number(targetId) &&
-        (edge.label || "") === label
-      );
+      refreshGraph();
+      return true;
+    }
 
-      if (exists) {
-        setStatus("That exact link already exists.");
+    function addLinkFromSidebar() {
+      const selected = getNodeById(selectedNodeId);
+      if (!selected) return;
+
+      const target = document.getElementById("linkTargetSelect").value;
+      const label = document.getElementById("linkLabelInput").value.trim();
+      const oneWay = document.getElementById("linkOneWaySelect").value === "true";
+
+      if (!target) return;
+      const created = createEdge(selected.id, target, label, oneWay);
+      if (!created) {
+        setStatus("Link already exists or is invalid.", true);
         return;
       }
 
-      graphData.edges.push({
-        from: Number(source.id),
-        to: Number(targetId),
-        label,
-        oneWay
-      });
-
-      document.getElementById("edgeLabelInput").value = "";
-      document.getElementById("edgeOneWayInput").value = "false";
-
+      document.getElementById("linkLabelInput").value = "";
+      document.getElementById("linkOneWaySelect").value = "false";
       markDirty("Added link.");
-      renderAll();
     }
 
-    function addEdgeBetweenNodes(sourceId, targetId) {
-      if (Number(sourceId) === Number(targetId)) return;
-
-      const exists = graphData.edges.some(edge =>
-        Number(edge.from) === Number(sourceId) &&
-        Number(edge.to) === Number(targetId)
-      );
-      if (exists) return;
-
-      graphData.edges.push({
-        from: Number(sourceId),
-        to: Number(targetId),
-        label: "",
-        oneWay: false
-      });
-
-      markDirty("Added link.");
-      renderAll();
+    function deleteEdge(edgeId) {
+      graphData.edges = graphData.edges.filter(edge => edge.id !== edgeId);
+      refreshGraph();
+      markDirty("Removed link.");
     }
 
-    function deleteEdge(from, to, encodedLabel) {
-      const label = decodeURIComponent(encodedLabel || "");
-      graphData.edges = graphData.edges.filter(edge => !(
-        Number(edge.from) === Number(from) &&
-        Number(edge.to) === Number(to) &&
-        (edge.label || "") === label
-      ));
-      markDirty("Deleted link.");
-      renderAll();
-    }
-
-    async function saveGraph(isAuto = false) {
-      try {
-        if (isSaving) return;
-
-        isSaving = true;
-        updateSaveUI();
-        setStatus(isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
-
-        const payload = getSerializableGraphData();
-
-        const res = await fetch(SAVE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            project: PROJECT_NAME,
-            data: payload
-          })
-        });
-
-        const json = await res.json().catch(() => null);
-        if (!res.ok) throw new Error(json?.error || "Save failed");
-
-        hasUnsavedChanges = false;
-        lastRemoteSaveAt = json?.savedAt ? Date.parse(json.savedAt) || Date.now() : Date.now();
-        lastVersionId = json?.version || null;
-        lastSnapshotPath = json?.snapshotPath || null;
-
-        persistRemoteMeta();
-        saveDraftToLocal();
-        invalidateHistoryCache();
-        updateSaveUI();
-        setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
-        refreshDiffSoon();
-      } catch (err) {
-        console.error(err);
-        setStatus("Save failed: " + (err.message || "Unknown error"), true);
-      } finally {
-        isSaving = false;
-        updateSaveUI();
-      }
-    }
-
-    function discardLocalDraft() {
-      if (!confirm("Discard your local draft and reload the latest saved Backrooms graph?")) return;
-      clearTimeout(localAutosaveTimer);
-      clearTimeout(githubAutosaveTimer);
-      clearLocalDraft();
-      hasUnsavedChanges = false;
-      lastLocalSaveAt = null;
-      loadRemoteGraph(true);
+    function invalidateHistoryCache() {
+      historyIndexCache = null;
+      snapshotCache = new Map();
+      latestDiffContext = null;
     }
 
     async function fetchHistoryIndex() {
       if (historyIndexCache) return historyIndexCache;
-
-      const res = await fetch(
-        `${SAVE_URL}?project=${encodeURIComponent(PROJECT_NAME)}&action=history`,
-        { method: "GET" }
-      );
+      const res = await fetch(`${SAVE_URL}?project=${PROJECT}&action=history`, { method: "GET" });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
       historyIndexCache = json;
@@ -1624,456 +1743,383 @@
 
     async function fetchSnapshotByPath(path) {
       if (snapshotCache.has(path)) return snapshotCache.get(path);
-
-      const res = await fetch(
-        `${SAVE_URL}?project=${encodeURIComponent(PROJECT_NAME)}&action=snapshot&path=${encodeURIComponent(path)}`,
-        { method: "GET" }
-      );
+      const res = await fetch(`${SAVE_URL}?project=${PROJECT}&action=snapshot&path=${encodeURIComponent(path)}`, { method: "GET" });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
-
-      const data = normalizeGraphData(json?.data ? json.data : json);
+      const data = normalizeGraphData(json?.data || json);
       snapshotCache.set(path, data);
       return data;
     }
 
-    function computeDiff(previousData, currentData) {
-      const prevNodes = new Map(previousData.nodes.map(n => [Number(n.id), n]));
-      const currNodes = new Map(currentData.nodes.map(n => [Number(n.id), n]));
+    function mapNodesById(data) {
+      return new Map(data.nodes.map(node => [node.id, node]));
+    }
 
-      const prevEdges = new Map(previousData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
-      const currEdges = new Map(currentData.edges.map(e => [`${e.from}->${e.to}|${e.label || ""}`, e]));
+    function mapEdgesByKey(data) {
+      return new Map(
+        data.edges.map(edge => [
+          `${edge.from}|${edge.to}|${edge.label || ""}|${!!edge.oneWay}`,
+          edge
+        ])
+      );
+    }
+
+    function computeDiff(previousData, currentData) {
+      const prevNodes = mapNodesById(previousData);
+      const currNodes = mapNodesById(currentData);
+      const prevEdges = mapEdgesByKey(previousData);
+      const currEdges = mapEdgesByKey(currentData);
 
       const addedNodes = [];
       const deletedNodes = [];
       const movedNodes = [];
       const updatedNodes = [];
-      const addedEdges = [];
-      const deletedEdges = [];
+      const addedLinks = [];
+      const deletedLinks = [];
 
-      for (const [id, node] of currNodes.entries()) {
+      for (const [id, curr] of currNodes.entries()) {
         const prev = prevNodes.get(id);
-
         if (!prev) {
-          addedNodes.push(node.label);
+          addedNodes.push(curr);
           continue;
         }
 
-        if (prev.x !== node.x || prev.y !== node.y) {
-          movedNodes.push(node.label);
+        if (prev.x !== curr.x || prev.y !== curr.y) {
+          movedNodes.push({
+            label: curr.label,
+            from: `${Math.round(prev.x)}, ${Math.round(prev.y)}`,
+            to: `${Math.round(curr.x)}, ${Math.round(curr.y)}`
+          });
         }
 
         if (
-          (prev.label || "") !== (node.label || "") ||
-          (prev.subtitle || "") !== (node.subtitle || "") ||
-          (prev.description || "") !== (node.description || "") ||
-          (prev.notes || "") !== (node.notes || "") ||
-          (prev.type || "") !== (node.type || "") ||
-          (prev.status || "") !== (node.status || "") ||
-          JSON.stringify(prev.tags || []) !== JSON.stringify(node.tags || [])
+          prev.label !== curr.label ||
+          (prev.subtitle || "") !== (curr.subtitle || "") ||
+          (prev.description || "") !== (curr.description || "") ||
+          (prev.notes || "") !== (curr.notes || "") ||
+          (prev.type || "") !== (curr.type || "") ||
+          (prev.status || "") !== (curr.status || "") ||
+          JSON.stringify(prev.tags || []) !== JSON.stringify(curr.tags || [])
         ) {
-          updatedNodes.push(node.label);
+          updatedNodes.push(curr);
         }
       }
 
-      for (const [id, node] of prevNodes.entries()) {
-        if (!currNodes.has(id)) deletedNodes.push(node.label);
+      for (const [id, prev] of prevNodes.entries()) {
+        if (!currNodes.has(id)) {
+          deletedNodes.push(prev);
+        }
       }
 
       for (const [key, edge] of currEdges.entries()) {
         if (!prevEdges.has(key)) {
-          const from = currNodes.get(Number(edge.from))?.label || edge.from;
-          const to = currNodes.get(Number(edge.to))?.label || edge.to;
-          addedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
+          addedLinks.push(edge);
         }
       }
 
       for (const [key, edge] of prevEdges.entries()) {
         if (!currEdges.has(key)) {
-          const from = prevNodes.get(Number(edge.from))?.label || edge.from;
-          const to = prevNodes.get(Number(edge.to))?.label || edge.to;
-          deletedEdges.push(edge.label ? `${from} → ${to} (${edge.label})` : `${from} → ${to}`);
+          deletedLinks.push(edge);
         }
       }
 
-      return { addedNodes, deletedNodes, movedNodes, updatedNodes, addedEdges, deletedEdges };
+      return {
+        addedNodes,
+        deletedNodes,
+        movedNodes,
+        updatedNodes,
+        addedLinks,
+        deletedLinks
+      };
     }
 
-    function hasDiff(diff) {
-      return !!(
+    function hasAnyDiff(diff) {
+      return (
         diff.addedNodes.length ||
         diff.deletedNodes.length ||
         diff.movedNodes.length ||
         diff.updatedNodes.length ||
-        diff.addedEdges.length ||
-        diff.deletedEdges.length
+        diff.addedLinks.length ||
+        diff.deletedLinks.length
       );
     }
 
-    function formatSummary(diff, context) {
+    function formatSummary(diff, contextLabel) {
       const lines = ["Backrooms Update Log"];
-      if (context) lines.push(context);
+      if (contextLabel) lines.push(contextLabel);
       lines.push("");
 
-      if (!hasDiff(diff)) {
+      if (!hasAnyDiff(diff)) {
         lines.push("- No changes detected");
         return lines.join("\n");
       }
 
-      diff.addedNodes.forEach(x => lines.push(`- Added node: ${x}`));
-      diff.deletedNodes.forEach(x => lines.push(`- Deleted node: ${x}`));
-      diff.movedNodes.forEach(x => lines.push(`- Moved node: ${x}`));
-      diff.updatedNodes.forEach(x => lines.push(`- Updated node: ${x}`));
-      diff.addedEdges.forEach(x => lines.push(`- Added link: ${x}`));
-      diff.deletedEdges.forEach(x => lines.push(`- Deleted link: ${x}`));
+      diff.addedNodes.forEach(node => lines.push(`- Added level: ${node.label}`));
+      diff.deletedNodes.forEach(node => lines.push(`- Deleted level: ${node.label}`));
+      diff.movedNodes.forEach(item => lines.push(`- Moved level: ${item.label} (${item.from} → ${item.to})`));
+      diff.updatedNodes.forEach(node => lines.push(`- Updated level: ${node.label}`));
+      diff.addedLinks.forEach(edge => lines.push(`- Added link: ${edge.from} → ${edge.to}${edge.label ? " (" + edge.label + ")" : ""}`));
+      diff.deletedLinks.forEach(edge => lines.push(`- Deleted link: ${edge.from} → ${edge.to}${edge.label ? " (" + edge.label + ")" : ""}`));
 
       return lines.join("\n");
     }
 
-    function formatDiscordLog(diff, context) {
-      const lines = ["Backrooms Graph Update"];
-      if (context) lines.push(context);
-      lines.push("");
+    async function buildDiffContext() {
+      const history = await fetchHistoryIndex();
+      const versions = Array.isArray(history?.versions) ? history.versions : [];
+      const currentData = normalizeGraphData(getSerializableGraphData());
 
-      if (!hasDiff(diff)) {
-        lines.push("- No major changes");
-        return lines.join("\n");
+      if (!versions.length) {
+        return {
+          label: "No saved history exists yet.",
+          diff: {
+            addedNodes: [],
+            deletedNodes: [],
+            movedNodes: [],
+            updatedNodes: [],
+            addedLinks: [],
+            deletedLinks: []
+          }
+        };
       }
 
-      if (diff.addedNodes.length) lines.push("- Added levels: " + diff.addedNodes.join(", "));
-      if (diff.deletedNodes.length) lines.push("- Deleted levels: " + diff.deletedNodes.join(", "));
-      if (diff.movedNodes.length) lines.push("- Repositioned levels: " + diff.movedNodes.join(", "));
-      if (diff.updatedNodes.length) lines.push("- Updated levels: " + diff.updatedNodes.join(", "));
-      if (diff.addedEdges.length) lines.push("- Added links: " + diff.addedEdges.join("; "));
-      if (diff.deletedEdges.length) lines.push("- Deleted links: " + diff.deletedEdges.join("; "));
+      if (hasUnsavedChanges || !lastSnapshotPath) {
+        const baseline = await fetchSnapshotByPath(versions[0].path);
+        return {
+          label: "Comparing current draft to latest saved snapshot.",
+          diff: computeDiff(baseline, currentData)
+        };
+      }
 
-      return lines.join("\n");
+      if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
+        const currentSnapshot = await fetchSnapshotByPath(versions[0].path);
+        const previousSnapshot = await fetchSnapshotByPath(versions[1].path);
+        return {
+          label: "Comparing latest saved snapshot to previous saved snapshot.",
+          diff: computeDiff(previousSnapshot, currentSnapshot)
+        };
+      }
+
+      const baseline = await fetchSnapshotByPath(versions[0].path);
+      return {
+        label: "Comparing current draft to latest saved snapshot.",
+        diff: computeDiff(baseline, currentData)
+      };
     }
 
-    function renderDiff(diff, context) {
-      document.getElementById("diffContextText").textContent = context || "No saved history found yet.";
-
-      const grid = document.getElementById("changeGrid");
-      const bucket = (title, items) => `
+    function renderChangeBucket(title, items, formatter) {
+      return `
         <div class="changeBucket">
-          <h3>${title}</h3>
+          <h3>${escapeHtml(title)}</h3>
           ${
             items.length
-              ? `<ul class="list">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-              : `<div class="empty">No changes in this section.</div>`
+              ? `<ul class="changeList">${items.map(item => `<li>${formatter(item)}</li>`).join("")}</ul>`
+              : `<div class="changeEmpty">No changes in this section.</div>`
           }
         </div>
       `;
-
-      grid.innerHTML =
-        bucket("Added Nodes", diff.addedNodes) +
-        bucket("Deleted Nodes", diff.deletedNodes) +
-        bucket("Moved Nodes", diff.movedNodes) +
-        bucket("Updated Nodes", diff.updatedNodes) +
-        bucket("Added Links", diff.addedEdges) +
-        bucket("Deleted Links", diff.deletedEdges);
-
-      document.getElementById("changeText").value = formatSummary(diff, context);
     }
 
-    async function refreshDiff() {
+    async function refreshChangeSummary() {
+      const panel = document.getElementById("changeSummaryPanel");
+      panel.innerHTML = `
+        <h2>Change Summary</h2>
+        <div class="miniText">Checking saved history and current draft changes...</div>
+      `;
+
       try {
-        const history = await fetchHistoryIndex();
-        const versions = Array.isArray(history?.versions) ? history.versions : [];
-        const currentData = normalizeGraphData(getSerializableGraphData());
+        latestDiffContext = await buildDiffContext();
+        const diff = latestDiffContext.diff;
 
-        if (!versions.length) {
-          latestDiffContext = {
-            diff: {
-              addedNodes: [], deletedNodes: [], movedNodes: [],
-              updatedNodes: [], addedEdges: [], deletedEdges: []
-            },
-            label: "No saved history found yet."
-          };
-          renderDiff(latestDiffContext.diff, latestDiffContext.label);
-          return;
-        }
+        panel.innerHTML = `
+          <h2>Change Summary</h2>
+          <div class="miniText">${escapeHtml(latestDiffContext.label)}</div>
 
-        let baselineData;
-        let label;
+          <div class="changeToolbar">
+            <button onclick="copyChangeSummary()">Copy Summary</button>
+            <button onclick="copyDiscordLog()">Copy Discord Log</button>
+          </div>
 
-        if (hasUnsavedChanges || !lastSnapshotPath) {
-          baselineData = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing current draft to latest saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(baselineData, currentData),
-            label
-          };
-        } else if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
-          const previous = await fetchSnapshotByPath(versions[1].path);
-          const latest = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing latest saved snapshot to previous saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(previous, latest),
-            label
-          };
-        } else {
-          baselineData = await fetchSnapshotByPath(versions[0].path);
-          label = "Comparing current draft to latest saved snapshot.";
-          latestDiffContext = {
-            diff: computeDiff(baselineData, currentData),
-            label
-          };
-        }
+          <div class="changeGrid">
+            ${renderChangeBucket("Added Nodes", diff.addedNodes, item => escapeHtml(item.label))}
+            ${renderChangeBucket("Deleted Nodes", diff.deletedNodes, item => escapeHtml(item.label))}
+            ${renderChangeBucket("Moved Nodes", diff.movedNodes, item => `${escapeHtml(item.label)} <span class="miniText">(${escapeHtml(item.from)} → ${escapeHtml(item.to)})</span>`)}
+            ${renderChangeBucket("Updated Nodes", diff.updatedNodes, item => escapeHtml(item.label))}
+            ${renderChangeBucket("Added Links", diff.addedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span class="miniText">(${escapeHtml(item.label)})</span>` : ""}`)}
+            ${renderChangeBucket("Deleted Links", diff.deletedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span class="miniText">(${escapeHtml(item.label)})</span>` : ""}`)}
+          </div>
 
-        renderDiff(latestDiffContext.diff, latestDiffContext.label);
+          <textarea class="changeTextarea" readonly>${formatSummary(diff, latestDiffContext.label)}</textarea>
+        `;
       } catch (err) {
         console.error(err);
-        document.getElementById("diffContextText").textContent = err.message || "Could not build diff.";
-        document.getElementById("changeGrid").innerHTML = "";
-        document.getElementById("changeText").value = "";
+        panel.innerHTML = `
+          <h2>Change Summary</h2>
+          <div class="changeEmpty">${escapeHtml(err.message || "Could not build diff.")}</div>
+        `;
       }
-    }
-
-    function refreshDiffSoon() {
-      clearTimeout(diffRefreshTimer);
-      diffRefreshTimer = setTimeout(refreshDiff, 250);
     }
 
     async function copyText(text) {
       try {
         await navigator.clipboard.writeText(text);
         setStatus("Copied to clipboard.");
-      } catch {
+      } catch (err) {
+        console.error(err);
         setStatus("Copy failed.", true);
       }
     }
 
-    function copySummary() {
+    function copyChangeSummary() {
       if (!latestDiffContext) return;
       copyText(formatSummary(latestDiffContext.diff, latestDiffContext.label));
     }
 
     function copyDiscordLog() {
       if (!latestDiffContext) return;
-      copyText(formatDiscordLog(latestDiffContext.diff, latestDiffContext.label));
+      copyText(formatSummary(latestDiffContext.diff, latestDiffContext.label));
     }
 
-    async function loadRemoteGraph(force = false) {
+    async function fetchRemoteGraph() {
+      const res = await fetch(`${RAW_JSON_URL}?v=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
+      return normalizeGraphData(await res.json());
+    }
+
+    async function saveGraph(isAuto = false) {
       try {
-        if (hasUnsavedChanges && !force) {
-          setStatus("Reload skipped because you have unsaved changes.");
+        if (isSaving) return;
+        isSaving = true;
+        setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
+        setStatus(isAuto ? "Auto-saving to GitHub..." : "Saving to GitHub...");
+
+        const payload = getSerializableGraphData();
+
+        const res = await fetch(SAVE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project: PROJECT,
+            data: payload
+          })
+        });
+
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(json?.error || "Save failed");
+        }
+
+        hasUnsavedChanges = false;
+        clearLocalDraft();
+        lastRemoteSaveAt = json?.savedAt ? (Date.parse(json.savedAt) || Date.now()) : Date.now();
+        lastVersionId = json?.version || null;
+        lastSnapshotPath = json?.snapshotPath || null;
+        persistRemoteMeta();
+        invalidateHistoryCache();
+        saveDraftToLocal();
+        setSaveBadge("save-clean", "Saved to GitHub");
+        setStatus("Saved to GitHub successfully.");
+        refreshChangeSummary();
+      } catch (err) {
+        console.error(err);
+        setSaveBadge("save-error", "Save failed");
+        setStatus("Save failed.", true);
+        showErrorPanel(err.message || "Save failed.");
+      } finally {
+        isSaving = false;
+      }
+    }
+
+    function discardLocalDraft() {
+      if (!confirm("Discard local draft and reload from GitHub?")) return;
+      clearLocalDraft();
+      hasUnsavedChanges = false;
+      lastLocalSaveAt = null;
+      location.reload();
+    }
+
+    function wireGraphInteractions() {
+      const viewport = document.getElementById("graphViewport");
+
+      viewport.addEventListener("pointerdown", onViewportPointerDown);
+      viewport.addEventListener("pointermove", onViewportPointerMove);
+      viewport.addEventListener("pointerup", onViewportPointerUp);
+      viewport.addEventListener("pointercancel", onViewportPointerUp);
+      viewport.addEventListener("wheel", onViewportWheel, { passive: false });
+
+      viewport.addEventListener("click", (event) => {
+        if (event.target === viewport || event.target.classList.contains("graphGrid") || event.target.id === "graphWorld") {
+          selectedNodeId = null;
+          refreshGraph();
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      restoreRemoteMeta();
+      wireGraphInteractions();
+
+      document.getElementById("searchInput").addEventListener("input", (event) => {
+        currentSearch = event.target.value || "";
+        refreshGraph();
+      });
+
+      const draft = loadDraftFromLocal();
+
+      try {
+        showLoading("Loading graph...");
+
+        if (draft?.data?.nodes?.length) {
+          graphData = draft.data;
+          lastLocalSaveAt = draft.savedAt || null;
+          if (draft.view) {
+            view.scale = clampScale(draft.view.scale || 1);
+            view.offsetX = Number(draft.view.offsetX || 0);
+            view.offsetY = Number(draft.view.offsetY || 0);
+          }
+          selectedNodeId = graphData.nodes[0]?.id || null;
+          refreshGraph();
+          hideLoading();
+          hasUnsavedChanges = true;
+          setSaveBadge("save-dirty", "Recovered local draft");
+          setStatus("Recovered unsaved local draft.");
+          refreshChangeSummary();
           return;
         }
 
-        showLoading("Loading latest graph...");
-        setStatus("Loading latest graph...");
-
-        const res = await fetch(LIVE_URL + "&v=" + Date.now(), { cache: "no-store" });
-        const json = await res.json();
-
-        if (!res.ok) throw new Error(json?.error || "Could not load live graph");
-
-        graphData = normalizeGraphData(json?.data ? json.data : json);
-        rebuildMaps();
-
-        if (selectedNodeId && !getNodeById(selectedNodeId)) {
-          selectedNodeId = null;
-        }
-
-        fitGraphToView();
+        graphData = await fetchRemoteGraph();
+        selectedNodeId = graphData.nodes[0]?.id || null;
+        refreshGraph();
         hideLoading();
-        clearLocalDraft();
+        centerGraph();
         markClean("Loaded latest graph.");
-        renderAll();
       } catch (err) {
         console.error(err);
         hideLoading();
-        setStatus("Failed to load graph: " + (err.message || "Unknown error"), true);
+        setStatus("Failed to load graph.", true);
+        showErrorPanel(err.message || "Load failed.");
       }
-    }
 
-    function attachGraphInteractions() {
-      const svg = getSvg();
-
-      svg.addEventListener("wheel", (event) => {
-        event.preventDefault();
-        const pt = getSvgPoint(event.clientX, event.clientY);
-        zoomAt(pt.x, pt.y, event.deltaY < 0 ? 1.12 : 1 / 1.12);
-      }, { passive: false });
-
-      svg.addEventListener("mousedown", (event) => {
-        const pt = getSvgPoint(event.clientX, event.clientY);
-        const world = screenToWorld(pt.x, pt.y);
-        const nodeGroup = event.target.closest(".graph-node");
-
-        interaction.moved = false;
-        interaction.startScreenX = pt.x;
-        interaction.startScreenY = pt.y;
-        interaction.startWorldX = world.x;
-        interaction.startWorldY = world.y;
-
-        if (nodeGroup) {
-          const nodeId = Number(nodeGroup.getAttribute("data-node-id"));
-          const node = getNodeById(nodeId);
-          if (!node) return;
-
-          selectedNodeId = nodeId;
-          renderAll();
-
-          if (event.shiftKey) {
-            interaction.mode = "connect";
-            interaction.sourceNodeId = nodeId;
-            interaction.connectPreviewX = pt.x;
-            interaction.connectPreviewY = pt.y;
-            return;
-          }
-
-          interaction.mode = "drag-node";
-          interaction.nodeId = nodeId;
-          interaction.nodeStartX = node.x;
-          interaction.nodeStartY = node.y;
-          return;
-        }
-
-        interaction.mode = "pan";
-        interaction.originOffsetX = viewState.offsetX;
-        interaction.originOffsetY = viewState.offsetY;
-        svg.classList.add("panning");
-      });
-
-      window.addEventListener("mousemove", (event) => {
-        if (!interaction.mode) return;
-
-        const pt = getSvgPoint(event.clientX, event.clientY);
-
-        if (interaction.mode === "pan") {
-          const dx = pt.x - interaction.startScreenX;
-          const dy = pt.y - interaction.startScreenY;
-          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) interaction.moved = true;
-          viewState.offsetX = interaction.originOffsetX + dx;
-          viewState.offsetY = interaction.originOffsetY + dy;
-          renderGraph();
-          return;
-        }
-
-        if (interaction.mode === "drag-node") {
-          const node = getNodeById(interaction.nodeId);
-          if (!node) return;
-
-          const dx = (pt.x - interaction.startScreenX) / viewState.scale;
-          const dy = (pt.y - interaction.startScreenY) / viewState.scale;
-
-          if (Math.abs(dx) > 0.2 || Math.abs(dy) > 0.2) interaction.moved = true;
-
-          node.x = Math.round(interaction.nodeStartX + dx);
-          node.y = Math.round(interaction.nodeStartY + dy);
-
-          renderGraph();
-          renderInspector();
-          updateStats();
-          return;
-        }
-
-        if (interaction.mode === "connect") {
-          interaction.connectPreviewX = pt.x;
-          interaction.connectPreviewY = pt.y;
-
-          const hoveredNodeGroup = document.elementFromPoint(event.clientX, event.clientY)?.closest?.(".graph-node");
-          interaction.hoverNodeId = hoveredNodeGroup
-            ? Number(hoveredNodeGroup.getAttribute("data-node-id"))
-            : null;
-
-          renderGraph();
-        }
-      });
-
-      window.addEventListener("mouseup", (event) => {
-        const svgEl = getSvg();
-
-        if (interaction.mode === "drag-node" && interaction.nodeId != null && interaction.moved) {
-          markDirty("Moved level.");
-        }
-
-        if (interaction.mode === "connect" && interaction.sourceNodeId != null) {
-          const hoveredNodeGroup = document.elementFromPoint(event.clientX, event.clientY)?.closest?.(".graph-node");
-          const targetId = hoveredNodeGroup
-            ? Number(hoveredNodeGroup.getAttribute("data-node-id"))
-            : null;
-
-          if (targetId != null && Number(targetId) !== Number(interaction.sourceNodeId)) {
-            addEdgeBetweenNodes(interaction.sourceNodeId, targetId);
-          } else {
-            renderGraph();
-          }
-        }
-
-        interaction.mode = null;
-        interaction.nodeId = null;
-        interaction.sourceNodeId = null;
-        interaction.hoverNodeId = null;
-        svgEl.classList.remove("panning");
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      restoreRemoteMeta();
-      updateSaveUI();
-
-      document.getElementById("searchInput").addEventListener("input", (event) => {
-        currentSearch = (event.target.value || "").trim().toLowerCase();
-        renderGraph();
-      });
-
-      attachGraphInteractions();
+      refreshChangeSummary();
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        saveDraftToLocal();
-        return;
-      }
-
-      if (hasUnsavedChanges) {
-        setStatus("Returned to editor. Local draft preserved.");
-      }
-    });
-
-    window.addEventListener("beforeunload", (event) => {
-      if (!hasUnsavedChanges) return;
-      saveDraftToLocal();
-      event.preventDefault();
-      event.returnValue = "";
+    window.addEventListener("resize", () => {
+      applyViewTransform();
     });
 
     window.zoomIn = zoomIn;
     window.zoomOut = zoomOut;
     window.resetView = resetView;
-    window.addNodeAtCenter = addNodeAtCenter;
+    window.addNode = addNode;
     window.applySelectedNodeEdits = applySelectedNodeEdits;
     window.deleteSelectedNode = deleteSelectedNode;
-    window.addEdgeFromSelected = addEdgeFromSelected;
+    window.addLinkFromSidebar = addLinkFromSidebar;
     window.deleteEdge = deleteEdge;
+    window.refreshChangeSummary = refreshChangeSummary;
+    window.copyChangeSummary = copyChangeSummary;
+    window.copyDiscordLog = copyDiscordLog;
     window.saveGraph = saveGraph;
     window.discardLocalDraft = discardLocalDraft;
-    window.refreshDiff = refreshDiff;
-    window.copySummary = copySummary;
-    window.copyDiscordLog = copyDiscordLog;
-
-    (async function init() {
-      showLoading("Loading Backrooms graph...");
-
-      const localDraft = loadDraftFromLocal();
-      if (localDraft?.data) {
-        graphData = localDraft.data;
-        lastLocalSaveAt = localDraft.savedAt || null;
-        rebuildMaps();
-        hasUnsavedChanges = true;
-        fitGraphToView();
-        hideLoading();
-        setStatus("Recovered unsaved local draft.");
-        updateSaveUI();
-        renderAll();
-        return;
-      }
-
-      await loadRemoteGraph(true);
-    })();
   </script>
 </body>
 </html>
