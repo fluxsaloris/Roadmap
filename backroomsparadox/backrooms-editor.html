@@ -4,6 +4,71 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Backrooms Graph Editor</title>
+
+  <script>
+    (() => {
+      const ALLOWED_HOSTS = [
+        "roadmap-agd.pages.dev",
+        "www.fluxioninteractive.net",
+        "fluxioninteractive.net",
+        "localhost",
+        "127.0.0.1"
+      ];
+
+      const ALLOWED_PATH_HINTS = [
+        "/backrooms",
+        "/editor"
+      ];
+
+      const hostOk = ALLOWED_HOSTS.includes(window.location.hostname);
+      const pathOk = ALLOWED_PATH_HINTS.some(part => window.location.pathname.toLowerCase().includes(part));
+
+      if (!hostOk) {
+        document.documentElement.innerHTML = `
+          <head>
+            <meta charset="UTF-8">
+            <title>Access Restricted</title>
+            <style>
+              html,body{
+                margin:0;padding:0;background:#070709;color:#f4f4f7;
+                font-family:Inter,Arial,sans-serif;min-height:100%;
+              }
+              body{
+                display:flex;align-items:center;justify-content:center;
+                background:
+                  radial-gradient(circle at top left, rgba(190,26,72,0.08), transparent 28%),
+                  linear-gradient(180deg,#0a0a0d 0%, #070709 100%);
+              }
+              .card{
+                width:min(520px,calc(100vw - 32px));
+                background:rgba(20,20,26,0.94);
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:18px;
+                padding:24px;
+                box-shadow:0 18px 40px rgba(0,0,0,0.35);
+              }
+              h1{margin:0 0 10px;font-size:22px}
+              p{margin:0;color:#a7a7b5;line-height:1.55}
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>Editor access restricted</h1>
+              <p>This editor is not available from this host.</p>
+            </div>
+          </body>
+        `;
+        throw new Error("Blocked host");
+      }
+
+      window.__EDITOR_SECURITY__ = {
+        hostOk,
+        pathOk,
+        blockedByPath: false
+      };
+    })();
+  </script>
+
   <style>
     :root {
       --bg: #070709;
@@ -98,7 +163,7 @@
       z-index: 30;
       padding: 14px 16px;
       margin-bottom: 14px;
-      background: rgba(13, 13, 18, 0.78);
+      background: rgba(13, 13, 18, 0.88);
     }
 
     .heroTop {
@@ -207,7 +272,7 @@
 
     #searchInput {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: rgba(22, 22, 30, 0.96);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 13px;
@@ -223,7 +288,7 @@
     select:focus {
       border-color: rgba(190, 26, 72, 0.42);
       box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
-      background: rgba(255,255,255,0.05);
+      background: rgba(26, 26, 34, 0.98);
       outline: none;
     }
 
@@ -602,9 +667,9 @@
     textarea,
     select {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: rgba(22, 22, 30, 0.98);
       color: #ededf4;
-      border: 1px solid rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 12px;
       padding: 10px 11px;
       font-size: 14px;
@@ -614,6 +679,34 @@
       resize: vertical;
       min-height: 88px;
       line-height: 1.45;
+    }
+
+    select,
+    #nodeType,
+    #nodeStatus,
+    #linkTarget,
+    #linkOneWay {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #cfcfe6 50%),
+        linear-gradient(135deg, #cfcfe6 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 12px) calc(50% - 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 34px;
+    }
+
+    select option,
+    #nodeType option,
+    #nodeStatus option,
+    #linkTarget option,
+    #linkOneWay option {
+      background: #151821;
+      color: #f4f4f7;
     }
 
     .actionRow {
@@ -1051,9 +1144,10 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-    const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v5";
+    const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v6";
     const LAST_REMOTE_SAVE_KEY = "backrooms-editor-last-remote-save-v3";
     const LAST_SNAPSHOT_META_KEY = "backrooms-editor-last-snapshot-meta-v3";
+    const MAX_HISTORY = 80;
 
     let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
@@ -1095,7 +1189,6 @@
 
     let undoStack = [];
     let redoStack = [];
-    const MAX_HISTORY = 80;
 
     let autosaveTimer = null;
     let diffTimer = null;
@@ -1224,6 +1317,10 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function escapeJs(value) {
+      return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
     }
 
     function nodeMatchesSearch(node, search) {
@@ -1557,7 +1654,12 @@
           updateStatsBar();
           refreshGraph();
 
+          nodeEl.classList.add("dragging");
           nodeEl.setPointerCapture(event.pointerId);
+        });
+
+        nodeEl.addEventListener("pointerup", () => {
+          nodeEl.classList.remove("dragging");
         });
 
         nodeEl.addEventListener("dblclick", (event) => {
@@ -1754,10 +1856,6 @@
       markDirty("Deleted link.");
     }
 
-    function escapeJs(value) {
-      return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
-    }
-
     function autoLayout() {
       if (!graphData.nodes.length) return;
 
@@ -1821,6 +1919,10 @@
     async function saveGraph(isAuto = false) {
       try {
         if (isSavingToGitHub) return;
+
+        if (!window.__EDITOR_SECURITY__?.hostOk) {
+          throw new Error("Blocked from saving on this host.");
+        }
 
         isSavingToGitHub = true;
         setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
