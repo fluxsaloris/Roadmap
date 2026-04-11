@@ -1,1 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Backrooms Paradox Viewer Mobile</title>
+  <style>
+    :root {
+      --bg: #070709;
+      --surface: rgba(20, 20, 26, 0.94);
+      --surface-soft: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.07);
+      --text: #f4f4f7;
+      --muted: #a7a7b5;
+      --muted-2: #7f8091;
+      --accent: #be1a48;
+      --accent-soft: rgba(190, 26, 72, 0.18);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
+      --canvas-height: 58vh;
+      --canvas-min-height: 420px;
+    }
 
+    * {
+      box-sizing: border-box;
+      min-width: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
+        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.10;
+      background-image:
+        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      margin: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(190, 26, 72, 0.10);
+      box-shadow: 0 0 18px rgba(190, 26, 72, 0.04);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #app {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 100%;
+      padding:
+        calc(12px + env(safe-area-inset-top))
+        12px
+        calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .hero,
+    .panel,
+    .sidebarCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      position: relative;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #d98aa0;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+
+    .hero p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .heroMeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .infoBadge,
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      border-radius: 999px;
+      font-weight: 700;
+      max-width: 100%;
+    }
+
+    .infoBadge {
+      padding: 7px 11px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: #cfd0db;
+    }
+
+    .heroControls {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    #searchInput {
+      width: 100%;
+      background: rgba(22, 22, 30, 0.96);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 12px 13px;
+      font-size: 14px;
+      outline: none;
+      transition: 0.18s ease;
+      font-family: inherit;
+    }
+
+    #searchInput:focus {
+      border-color: rgba(190, 26, 72, 0.42);
+      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
+      background: rgba(26, 26, 34, 0.98);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      background: rgba(255,255,255,0.04);
+      color: #e5e5ec;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.18s ease;
+      box-shadow: none;
+      font-family: inherit;
+      flex: 1 1 auto;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .primaryBtn {
+      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
+      border-color: rgba(255,255,255,0.05);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
+    }
+
+    #statusLine {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .panel,
+    .sidebarCard {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .statsBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .metaChip {
+      padding: 6px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #c1c2ce;
+    }
+
+    .canvasPanel {
+      padding: 10px;
+    }
+
+    .canvasToolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .canvasHint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      border-radius: 999px;
+    }
+
+    .graphViewport {
+      position: relative;
+      width: 100%;
+      height: var(--canvas-height);
+      min-height: var(--canvas-min-height);
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
+        linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
+      background-size: 40px 40px, 40px 40px, auto, auto;
+      user-select: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .graphViewport.panning {
+      cursor: grabbing;
+    }
+
+    .graphScene {
+      position: absolute;
+      inset: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .graphSvg {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .line-base {
+      fill: none;
+      stroke: rgba(255,255,255,0.17);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+    }
+
+    .line-related {
+      fill: none;
+      stroke: rgba(190, 26, 72, 0.95);
+      stroke-width: 3.3;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 8px rgba(190,26,72,0.40));
+    }
+
+    .line-dimmed {
+      fill: none;
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .edgeLabel {
+      fill: rgba(220,220,230,0.92);
+      font-size: 11px;
+      font-weight: 600;
+      paint-order: stroke;
+      stroke: rgba(0,0,0,0.65);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .graphNodes {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+    }
+
+    .node {
+      position: absolute;
+      min-width: 145px;
+      max-width: 210px;
+      padding: 10px 10px 9px;
+      border-radius: 13px;
+      background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow:
+        0 10px 22px rgba(0,0,0,0.42),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      transform: translate(-50%, -50%);
+      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+    }
+
+    .node.selected {
+      border-color: rgba(190,26,72,0.72);
+      box-shadow:
+        0 0 0 3px rgba(190,26,72,0.22),
+        0 18px 34px rgba(0,0,0,0.56);
+      z-index: 30;
+    }
+
+    .node.related {
+      border-color: rgba(255,255,255,0.16);
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.05),
+        0 14px 28px rgba(0,0,0,0.45);
+    }
+
+    .node.dimmed {
+      opacity: 0.42;
+    }
+
+    .node.start {
+      background: linear-gradient(180deg, rgba(50,42,24,0.98), rgba(26,22,15,0.98));
+    }
+
+    .node.progression {
+      background: linear-gradient(180deg, rgba(26,35,60,0.98), rgba(17,21,34,0.98));
+    }
+
+    .node.danger {
+      background: linear-gradient(180deg, rgba(60,26,32,0.98), rgba(32,16,20,0.98));
+    }
+
+    .node.weird {
+      background: linear-gradient(180deg, rgba(47,29,70,0.98), rgba(24,16,36,0.98));
+    }
+
+    .nodeHeader {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nodeDot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .node.start .nodeDot { background: #d7b45a; }
+    .node.progression .nodeDot { background: #7aa2ff; }
+    .node.danger .nodeDot { background: #ff7f7f; }
+    .node.weird .nodeDot { background: #a77cff; }
+
+    .nodeTitle {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #f5f5f7;
+      line-height: 1.18;
+      word-break: break-word;
+    }
+
+    .nodeSubtitle {
+      margin-top: 4px;
+      font-size: 10px;
+      line-height: 1.35;
+      color: #9ea3b7;
+      word-break: break-word;
+    }
+
+    .nodeStatusRow {
+      margin-top: 7px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .nodeBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: #cbd0df;
+    }
+
+    .sidebarTitle {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebarSub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .infoList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .infoBlock {
+      display: grid;
+      gap: 5px;
+    }
+
+    .infoLabel {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-2);
+      font-weight: 700;
+    }
+
+    .infoValue {
+      color: #ececf4;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .linkList,
+    .legendList {
+      margin: 0;
+      padding-left: 18px;
+      color: #d7dae5;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .linkList li + li,
+    .legendList li + li {
+      margin-top: 4px;
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4,4,8,0.82);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loadingCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      min-width: 220px;
+      max-width: calc(100vw - 30px);
+    }
+
+    #loadingText {
+      font-size: 14px;
+      color: #e2e2ea;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(255,255,255,0.10);
+      border-top: 3px solid #be1a48;
+      border-radius: 50%;
+      animation: spin 0.95s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    #errorPanel {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
+      z-index: 50;
+      background: rgba(36, 13, 18, 0.96);
+      border: 1px solid rgba(255, 138, 138, 0.28);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      display: none;
+    }
+
+    #errorPanel.show {
+      display: block;
+    }
+
+    #errorPanelTitle {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffced6;
+      margin-bottom: 6px;
+    }
+
+    #errorPanelText {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #f6d9df;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 390px) {
+      .node {
+        min-width: 132px;
+        max-width: 185px;
+      }
+
+      :root {
+        --canvas-min-height: 380px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay">
+    <div id="loadingCard">
+      <div class="spinner"></div>
+      <div id="loadingText">Loading graph...</div>
+    </div>
+  </div>
+
+  <div id="errorPanel">
+    <div id="errorPanelTitle">Couldn’t load viewer</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
+  </div>
+
+  <div id="app">
+    <section class="hero">
+      <div class="eyebrow">Backrooms progression map</div>
+      <h1>Backrooms Paradox Viewer</h1>
+      <p>Explore routes, loops, and weird branches in a mobile-friendly graph viewer. Tap a level to inspect its connections.</p>
+
+      <div class="heroMeta">
+        <div class="infoBadge" id="statNodes">0 nodes</div>
+        <div class="infoBadge" id="statEdges">0 links</div>
+        <div class="infoBadge" id="statSelected">No level selected</div>
+      </div>
+
+      <div class="heroControls">
+        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." autocomplete="off" />
+
+        <div class="toolbar">
+          <button onclick="zoomBy(1.12)">+</button>
+          <button onclick="zoomBy(1 / 1.12)">−</button>
+          <button onclick="resetView()">Reset</button>
+          <button onclick="fitToGraph()">Fit</button>
+          <button onclick="clearSelection()">Clear</button>
+          <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
+        </div>
+      </div>
+
+      <div id="statusLine">Loading graph...</div>
+    </section>
+
+    <section class="panel">
+      <div class="statsBar">
+        <span class="metaChip">Tap empty space to clear selection</span>
+        <span class="metaChip">Drag to pan the graph</span>
+      </div>
+    </section>
+
+    <section class="panel canvasPanel">
+      <div class="canvasToolbar">
+        <div class="canvasHint">Pan: drag empty space</div>
+        <div class="canvasHint">Zoom: use + / − buttons</div>
+      </div>
+
+      <div id="graphViewport" class="graphViewport">
+        <div id="graphScene" class="graphScene">
+          <svg id="graphSvg" class="graphSvg"></svg>
+          <div id="graphNodes" class="graphNodes"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sidebarCard">
+      <h2 class="sidebarTitle">Selected Level</h2>
+      <div class="sidebarSub" id="selectedHint">Tap a node in the graph to inspect it.</div>
+
+      <div class="infoList">
+        <div class="infoBlock">
+          <div class="infoLabel">Label</div>
+          <div class="infoValue" id="infoLabel">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Subtitle</div>
+          <div class="infoValue" id="infoSubtitle">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Type</div>
+          <div class="infoValue" id="infoType">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Status</div>
+          <div class="infoValue" id="infoStatus">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Tags</div>
+          <div class="infoValue" id="infoTags">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Description</div>
+          <div class="infoValue" id="infoDescription">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Notes</div>
+          <div class="infoValue" id="infoNotes">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sidebarCard">
+      <h2 class="sidebarTitle">Outgoing Links</h2>
+      <div class="sidebarSub">Where this level can lead next.</div>
+      <ul id="outgoingList" class="linkList">
+        <li>No level selected.</li>
+      </ul>
+    </section>
+
+    <section class="sidebarCard">
+      <h2 class="sidebarTitle">Incoming Links</h2>
+      <div class="sidebarSub">Which levels can reach this one.</div>
+      <ul id="incomingList" class="linkList">
+        <li>No level selected.</li>
+      </ul>
+    </section>
+
+    <section class="sidebarCard">
+      <h2 class="sidebarTitle">Legend</h2>
+      <ul class="legendList">
+        <li><span style="color:#d7b45a;">●</span> Start / base entry</li>
+        <li><span style="color:#7aa2ff;">●</span> Progression / stable route</li>
+        <li><span style="color:#ff7f7f;">●</span> Dangerous / hostile route</li>
+        <li><span style="color:#a77cff;">●</span> Weird / unstable / rare route</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
+
+    let graphData = { nodes: [], edges: [] };
+    let selectedNodeId = null;
+    let currentSearch = "";
+
+    let viewportState = {
+      x: 0,
+      y: 0,
+      scale: 0.75
+    };
+
+    let interaction = {
+      isPanning: false,
+      panStartMouseX: 0,
+      panStartMouseY: 0,
+      panStartX: 0,
+      panStartY: 0
+    };
+
+    const graphViewport = () => document.getElementById("graphViewport");
+    const graphScene = () => document.getElementById("graphScene");
+    const graphSvg = () => document.getElementById("graphSvg");
+    const graphNodesEl = () => document.getElementById("graphNodes");
+
+    function showLoading(text = "Loading graph...") {
+      document.getElementById("loadingText").textContent = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("statusLine");
+      el.textContent = text;
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+    }
+
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+
+    function hideErrorPanel() {
+      document.getElementById("errorPanel").classList.remove("show");
+    }
+
+    function normalizeData(raw) {
+      return {
+        nodes: Array.isArray(raw?.nodes)
+          ? raw.nodes.map((n) => ({
+              id: String(n.id ?? ""),
+              label: typeof n.label === "string" ? n.label : "Unnamed",
+              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+              description: typeof n.description === "string" ? n.description : "",
+              notes: typeof n.notes === "string" ? n.notes : "",
+              x: typeof n.x === "number" ? n.x : 0,
+              y: typeof n.y === "number" ? n.y : 0,
+              type: typeof n.type === "string" ? n.type : "progression",
+              status: typeof n.status === "string" ? n.status : "draft",
+              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+            }))
+          : [],
+        edges: Array.isArray(raw?.edges)
+          ? raw.edges.map((e) => ({
+              from: String(e.from ?? ""),
+              to: String(e.to ?? ""),
+              label: typeof e.label === "string" ? e.label : "",
+              oneWay: e.oneWay === false ? false : true
+            }))
+          : []
+      };
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getNodeById(id) {
+      return graphData.nodes.find(n => n.id === String(id)) || null;
+    }
+
+    function getSelectedNode() {
+      return selectedNodeId ? getNodeById(selectedNodeId) : null;
+    }
+
+    function getOutgoingEdges(id) {
+      return graphData.edges.filter(edge => edge.from === String(id));
+    }
+
+    function getIncomingEdges(id) {
+      return graphData.edges.filter(edge => edge.to === String(id));
+    }
+
+    function nodeMatchesSearch(node, search) {
+      if (!search) return true;
+      const hay = [
+        node.id,
+        node.label,
+        node.subtitle,
+        node.description,
+        node.notes,
+        ...(Array.isArray(node.tags) ? node.tags : [])
+      ].join(" ").toLowerCase();
+      return hay.includes(search);
+    }
+
+    function getVisibleNodeIds() {
+      const search = currentSearch.trim().toLowerCase();
+      if (!search) return new Set(graphData.nodes.map(n => n.id));
+      return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
+    }
+
+    function getRelatedNodeIds(nodeId) {
+      const related = new Set([String(nodeId)]);
+      for (const edge of graphData.edges) {
+        if (edge.from === String(nodeId)) related.add(edge.to);
+        if (edge.to === String(nodeId)) related.add(edge.from);
+      }
+      return related;
+    }
+
+    function scenePointFromClient(clientX, clientY) {
+      const rect = graphViewport().getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
+        y: (clientY - rect.top - viewportState.y) / viewportState.scale
+      };
+    }
+
+    function applyViewportTransform() {
+      graphScene().style.transform =
+        `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+    }
+
+    function getGraphBounds(nodes) {
+      if (!nodes.length) {
+        return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
+      }
+
+      const minX = Math.min(...nodes.map(n => n.x));
+      const maxX = Math.max(...nodes.map(n => n.x));
+      const minY = Math.min(...nodes.map(n => n.y));
+      const maxY = Math.max(...nodes.map(n => n.y));
+
+      return { minX, maxX, minY, maxY };
+    }
+
+    function fitToGraph() {
+      const visibleNodeIds = getVisibleNodeIds();
+      const visibleNodes = graphData.nodes.filter(node => visibleNodeIds.has(node.id));
+      const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
+      const bounds = getGraphBounds(nodesToFit);
+
+      const width = Math.max(380, bounds.maxX - bounds.minX + 280);
+      const height = Math.max(260, bounds.maxY - bounds.minY + 220);
+
+      const rect = graphViewport().getBoundingClientRect();
+      const fitScale = Math.min(
+        0.95,
+        Math.max(0.18, Math.min(rect.width / width, rect.height / height))
+      );
+
+      viewportState.scale = fitScale;
+      viewportState.x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * fitScale;
+      viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
+
+      applyViewportTransform();
+      setStatus("Fitted graph to view.");
+    }
+
+    function resetView() {
+      viewportState = { x: 30, y: 30, scale: 0.75 };
+      applyViewportTransform();
+      setStatus("View reset.");
+    }
+
+    function zoomBy(factor, clientX = null, clientY = null) {
+      const rect = graphViewport().getBoundingClientRect();
+      const px = clientX ?? (rect.left + rect.width / 2);
+      const py = clientY ?? (rect.top + rect.height / 2);
+
+      const before = scenePointFromClient(px, py);
+      viewportState.scale = Math.max(0.18, Math.min(1.8, viewportState.scale * factor));
+      viewportState.x = px - rect.left - before.x * viewportState.scale;
+      viewportState.y = py - rect.top - before.y * viewportState.scale;
+      applyViewportTransform();
+    }
+
+    function createCurvePath(x1, y1, x2, y2) {
+      const dx = Math.max(70, Math.abs(x2 - x1) * 0.40);
+      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    }
+
+    function getNodePortPosition(nodeId, side) {
+      const node = getNodeById(nodeId);
+      if (!node) return null;
+      const width = 145;
+      return {
+        x: node.x + (side === "output" ? width / 2 : -width / 2),
+        y: node.y
+      };
+    }
+
+    function updateStats() {
+      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+
+      const selected = getSelectedNode();
+      document.getElementById("statSelected").textContent =
+        selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
+    }
+
+    function updateSidebar() {
+      const node = getSelectedNode();
+
+      document.getElementById("selectedHint").textContent =
+        node ? `Inspecting ${node.label || node.id}` : "Tap a node in the graph to inspect it.";
+
+      document.getElementById("infoLabel").textContent = node?.label || "—";
+      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
+      document.getElementById("infoType").textContent = node?.type || "—";
+      document.getElementById("infoStatus").textContent = node?.status || "—";
+      document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
+      document.getElementById("infoDescription").textContent = node?.description || "—";
+      document.getElementById("infoNotes").textContent = node?.notes || "—";
+
+      const outgoingList = document.getElementById("outgoingList");
+      const incomingList = document.getElementById("incomingList");
+
+      if (!node) {
+        outgoingList.innerHTML = "<li>No level selected.</li>";
+        incomingList.innerHTML = "<li>No level selected.</li>";
+        return;
+      }
+
+      const outgoing = getOutgoingEdges(node.id);
+      const incoming = getIncomingEdges(node.id);
+
+      outgoingList.innerHTML = outgoing.length
+        ? outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No outgoing links.</li>";
+
+      incomingList.innerHTML = incoming.length
+        ? incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No incoming links.</li>";
+    }
+
+    function refreshGraph() {
+      const visibleNodeIds = getVisibleNodeIds();
+      const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
+
+      graphNodesEl().innerHTML = graphData.nodes
+        .filter(node => visibleNodeIds.has(node.id))
+        .map(node => {
+          const isSelected = node.id === selectedNodeId;
+          const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
+          const isDimmed = relatedNodeIds ? !isRelated : false;
+
+          return `
+            <div
+              class="node ${escapeHtml(node.type || "progression")} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+              data-node-id="${escapeHtml(node.id)}"
+              style="left:${node.x}px; top:${node.y}px;"
+            >
+              <div class="nodeHeader">
+                <div class="nodeDot"></div>
+                <div class="nodeTitle">${escapeHtml(node.label)}</div>
+              </div>
+
+              ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+
+              <div class="nodeStatusRow">
+                <span class="nodeBadge">${escapeHtml(node.type || "progression")}</span>
+                <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+      const svgParts = [];
+      const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
+
+      for (const edge of visibleEdges) {
+        const fromPort = getNodePortPosition(edge.from, "output");
+        const toPort = getNodePortPosition(edge.to, "input");
+        if (!fromPort || !toPort) continue;
+
+        const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+        const dimmed = selectedNodeId && !related;
+        const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
+
+        svgParts.push(`<path d="${path}" class="${related ? "line-related" : dimmed ? "line-dimmed" : "line-base"}"></path>`);
+
+        if (edge.label) {
+          const midX = (fromPort.x + toPort.x) / 2;
+          const midY = (fromPort.y + toPort.y) / 2 - 8;
+          svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
+        }
+      }
+
+      graphSvg().innerHTML = svgParts.join("");
+      bindNodeEvents();
+      updateStats();
+      updateSidebar();
+    }
+
+    function bindNodeEvents() {
+      graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
+        const nodeId = nodeEl.dataset.nodeId;
+        nodeEl.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectedNodeId = nodeId;
+          refreshGraph();
+          setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
+        });
+      });
+    }
+
+    function clearSelection() {
+      selectedNodeId = null;
+      refreshGraph();
+      setStatus("Selection cleared.");
+    }
+
+    async function fetchRemoteGraph() {
+      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
+      return normalizeData(await res.json());
+    }
+
+    async function reloadGraph() {
+      try {
+        showLoading("Loading graph...");
+        setStatus("Loading latest graph...");
+
+        graphData = await fetchRemoteGraph();
+        hideErrorPanel();
+        hideLoading();
+
+        refreshGraph();
+        fitToGraph();
+        setStatus("Loaded latest graph.");
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        setStatus("Failed to load graph.", true);
+        showErrorPanel(err.message || "Failed to load graph.");
+      }
+    }
+
+    function bindViewportEvents() {
+      const viewport = graphViewport();
+
+      viewport.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".node")) return;
+
+        interaction.isPanning = true;
+        interaction.panStartMouseX = event.clientX;
+        interaction.panStartMouseY = event.clientY;
+        interaction.panStartX = viewportState.x;
+        interaction.panStartY = viewportState.y;
+
+        viewport.classList.add("panning");
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener("pointermove", (event) => {
+        if (!interaction.isPanning) return;
+
+        viewportState.x = interaction.panStartX + (event.clientX - interaction.panStartMouseX);
+        viewportState.y = interaction.panStartY + (event.clientY - interaction.panStartMouseY);
+        applyViewportTransform();
+      });
+
+      viewport.addEventListener("pointerup", () => {
+        interaction.isPanning = false;
+        viewport.classList.remove("panning");
+      });
+
+      viewport.addEventListener("pointercancel", () => {
+        interaction.isPanning = false;
+        viewport.classList.remove("panning");
+      });
+
+      viewport.addEventListener("click", (event) => {
+        if (!event.target.closest(".node")) {
+          clearSelection();
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      bindViewportEvents();
+
+      document.getElementById("searchInput").addEventListener("input", (event) => {
+        currentSearch = event.target.value || "";
+        refreshGraph();
+      });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reloadGraph();
+    });
+
+    window.zoomBy = zoomBy;
+    window.resetView = resetView;
+    window.fitToGraph = fitToGraph;
+    window.clearSelection = clearSelection;
+    window.reloadGraph = reloadGraph;
+
+    reloadGraph();
+  </script>
+</body>
+</html>
