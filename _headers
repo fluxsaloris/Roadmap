@@ -1,0 +1,5 @@
+/dungeoncall/editor
+  Content-Security-Policy: frame-ancestors 'self' https://www.fluxioninteractive.net https://www.wix.com https://editor.wix.com
+
+/backroomsparadox/editor
+  Content-Security-Policy: frame-ancestors 'self' https://www.fluxioninteractive.net https://www.wix.com https://editor.wix.com
