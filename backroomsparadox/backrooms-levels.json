@@ -21,8 +21,32 @@
       "description": "[REDACED]",
       "notes": "[WIP]",
       "tags": [],
+      "x": 862,
+      "y": 0
+    },
+    {
+      "id": null,
+      "label": "Level 0.2",
+      "subtitle": "\"Corrupted Refurnish\"",
+      "type": "corrupted",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
       "x": 860,
-      "y": 34
+      "y": 136
+    },
+    {
+      "id": null,
+      "label": "Level 0.3",
+      "subtitle": "\"Lost Connection\"",
+      "type": "anomalous",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 859,
+      "y": 265
     }
   ],
   "edges": [
@@ -31,6 +55,18 @@
       "to": 1,
       "label": "",
       "oneWay": false
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
     }
   ]
 }
