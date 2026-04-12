@@ -21,8 +21,8 @@
       "description": "[REDACED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 862,
-      "y": 0
+      "x": 1230,
+      "y": -240
     },
     {
       "id": null,
@@ -33,8 +33,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 860,
-      "y": 136
+      "x": 1111,
+      "y": 66
     },
     {
       "id": null,
@@ -45,8 +45,92 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 859,
-      "y": 265
+      "x": 854,
+      "y": 308
+    },
+    {
+      "id": null,
+      "label": "Level 0-A",
+      "subtitle": "\"Dream Room\"",
+      "type": "stable",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 785,
+      "y": 546
+    },
+    {
+      "id": null,
+      "label": "Level 0-B",
+      "subtitle": "\"Red Paradox\"",
+      "type": "corrupted",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1116,
+      "y": -58
+    },
+    {
+      "id": null,
+      "label": "Level 0.4",
+      "subtitle": "\"Tormented Isolation\"",
+      "type": "anomalous",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1017,
+      "y": 433
+    },
+    {
+      "id": null,
+      "label": "Level 1",
+      "subtitle": "\"Nomad Halls\"",
+      "type": "stable",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1113,
+      "y": 177
+    },
+    {
+      "id": null,
+      "label": "Level 1.1",
+      "subtitle": "\"Paradox Hall\"",
+      "type": "anomalous",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1469,
+      "y": 151
+    },
+    {
+      "id": null,
+      "label": "Level 1.2",
+      "subtitle": "\"Fungal Maze\"",
+      "type": "corrupted",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1470,
+      "y": 262
+    },
+    {
+      "id": null,
+      "label": "Level 1.3",
+      "subtitle": "\"Divergence Zone\"",
+      "type": "stable",
+      "status": "draft",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
+      "tags": [],
+      "x": 1470,
+      "y": 374
     }
   ],
   "edges": [
@@ -64,6 +148,72 @@
     },
     {
       "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": 0,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": null,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
+      "to": 1,
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": null,
       "to": null,
       "label": "",
       "oneWay": true
