@@ -91,10 +91,15 @@
       --sidebar-width: 360px;
       --mobile-fab-size: 52px;
 
-      --type-stable-dot: #d7b45a;
-      --type-dangerous-dot: #7aa2ff;
-      --type-corrupted-dot: #ff7f7f;
-      --type-anomalous-dot: #a77cff;
+      --type-stable-dot: #4CAF50;
+      --type-dangerous-dot: #E53935;
+      --type-corrupted-dot: #3E5F3A;
+      --type-anomalous-dot: #8E44AD;
+
+      --type-stable-soft: rgba(76, 175, 80, 0.18);
+      --type-dangerous-soft: rgba(229, 57, 53, 0.18);
+      --type-corrupted-soft: rgba(62, 95, 58, 0.22);
+      --type-anomalous-soft: rgba(142, 68, 173, 0.20);
     }
 
     * {
@@ -477,17 +482,25 @@
 
     .line-base {
       fill: none;
-      stroke: rgba(255,255,255,0.20);
-      stroke-width: 2.5;
+      stroke-width: 2.8;
       stroke-linecap: round;
+      opacity: 0.95;
     }
 
     .line-selected {
       fill: none;
-      stroke: rgba(190, 26, 72, 0.95);
-      stroke-width: 3.5;
+      stroke-width: 3.8;
       stroke-linecap: round;
-      filter: drop-shadow(0 0 8px rgba(190,26,72,0.45));
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.18));
+      opacity: 1;
+    }
+
+    .line-dimmed {
+      fill: none;
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0.7;
     }
 
     .line-preview {
@@ -496,6 +509,22 @@
       stroke-width: 2.5;
       stroke-dasharray: 7 5;
       stroke-linecap: round;
+    }
+
+    .edge-stable {
+      stroke: #4CAF50;
+    }
+
+    .edge-dangerous {
+      stroke: #E53935;
+    }
+
+    .edge-corrupted {
+      stroke: #3E5F3A;
+    }
+
+    .edge-anomalous {
+      stroke: #8E44AD;
     }
 
     .edgeLabel {
@@ -546,27 +575,51 @@
     }
 
     .node.selected {
-      border-color: rgba(190,26,72,0.72);
-      box-shadow:
-        0 0 0 3px rgba(190,26,72,0.22),
-        0 18px 34px rgba(0,0,0,0.56);
       z-index: 30;
     }
 
     .node.stable {
-      background: linear-gradient(180deg, rgba(50,42,24,0.98), rgba(26,22,15,0.98));
+      background: linear-gradient(180deg, rgba(76,175,80,0.18), rgba(20,30,22,0.95));
+    }
+
+    .node.stable.selected {
+      border-color: rgba(76,175,80,0.72);
+      box-shadow:
+        0 0 0 3px rgba(76,175,80,0.25),
+        0 18px 34px rgba(0,0,0,0.56);
     }
 
     .node.dangerous {
-      background: linear-gradient(180deg, rgba(26,35,60,0.98), rgba(17,21,34,0.98));
+      background: linear-gradient(180deg, rgba(229,57,53,0.18), rgba(30,18,18,0.95));
+    }
+
+    .node.dangerous.selected {
+      border-color: rgba(229,57,53,0.72);
+      box-shadow:
+        0 0 0 3px rgba(229,57,53,0.25),
+        0 18px 34px rgba(0,0,0,0.56);
     }
 
     .node.corrupted {
-      background: linear-gradient(180deg, rgba(60,26,32,0.98), rgba(32,16,20,0.98));
+      background: linear-gradient(180deg, rgba(62,95,58,0.20), rgba(18,25,18,0.95));
+    }
+
+    .node.corrupted.selected {
+      border-color: rgba(62,95,58,0.72);
+      box-shadow:
+        0 0 0 3px rgba(62,95,58,0.28),
+        0 18px 34px rgba(0,0,0,0.56);
     }
 
     .node.anomalous {
-      background: linear-gradient(180deg, rgba(47,29,70,0.98), rgba(24,16,36,0.98));
+      background: linear-gradient(180deg, rgba(142,68,173,0.20), rgba(22,18,30,0.95));
+    }
+
+    .node.anomalous.selected {
+      border-color: rgba(142,68,173,0.72);
+      box-shadow:
+        0 0 0 3px rgba(142,68,173,0.25),
+        0 18px 34px rgba(0,0,0,0.56);
     }
 
     .nodeHeader {
@@ -1383,10 +1436,10 @@
         <section class="sidebarCard">
           <h2 class="sidebarTitle">Legend</h2>
           <ul class="linkList">
-            <li><span style="color:#d7b45a;">●</span> Stable</li>
-            <li><span style="color:#7aa2ff;">●</span> Dangerous</li>
-            <li><span style="color:#ff7f7f;">●</span> Corrupted</li>
-            <li><span style="color:#a77cff;">●</span> Anomalous</li>
+            <li><span style="color:#4CAF50;">●</span> Stable</li>
+            <li><span style="color:#E53935;">●</span> Dangerous</li>
+            <li><span style="color:#3E5F3A;">●</span> Corrupted</li>
+            <li><span style="color:#8E44AD;">●</span> Anomalous</li>
           </ul>
         </section>
       </div>
@@ -1537,16 +1590,32 @@
     const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
     const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-    const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v7";
+    const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v8";
     const LAST_REMOTE_SAVE_KEY = "backrooms-editor-last-remote-save-v3";
     const LAST_SNAPSHOT_META_KEY = "backrooms-editor-last-snapshot-meta-v3";
     const MAX_HISTORY = 80;
 
     const TYPE_META = {
-      stable: { className: "stable", label: "Stable" },
-      dangerous: { className: "dangerous", label: "Dangerous" },
-      corrupted: { className: "corrupted", label: "Corrupted" },
-      anomalous: { className: "anomalous", label: "Anomalous" }
+      stable: {
+        className: "stable",
+        label: "Stable",
+        edgeClass: "edge-stable"
+      },
+      dangerous: {
+        className: "dangerous",
+        label: "Dangerous",
+        edgeClass: "edge-dangerous"
+      },
+      corrupted: {
+        className: "corrupted",
+        label: "Corrupted",
+        edgeClass: "edge-corrupted"
+      },
+      anomalous: {
+        className: "anomalous",
+        label: "Anomalous",
+        edgeClass: "edge-anomalous"
+      }
     };
 
     let graphData = { nodes: [], edges: [] };
@@ -1618,6 +1687,10 @@
 
     function getTypeClass(type) {
       return TYPE_META[normalizeType(type)].className;
+    }
+
+    function getTypeEdgeClass(type) {
+      return TYPE_META[normalizeType(type)].edgeClass;
     }
 
     function isMobileLayout() {
@@ -2055,10 +2128,12 @@
         const toPort = getNodePortPosition(edge.to, "input");
         if (!fromPort || !toPort) continue;
 
+        const fromNode = getNodeById(edge.from);
+        const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
         const isSelected = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
         const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
 
-        svgParts.push(`<path d="${path}" class="${isSelected ? "line-selected" : "line-base"}"></path>`);
+        svgParts.push(`<path d="${path}" class="${isSelected ? "line-selected" : "line-base"} ${edgeTypeClass}"></path>`);
 
         if (edge.label) {
           const midX = (fromPort.x + toPort.x) / 2;
