@@ -17,8 +17,13 @@
       --accent-soft: rgba(190, 26, 72, 0.18);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
-      --canvas-height: 58vh;
-      --canvas-min-height: 420px;
+
+      /* MOBILE FIXES */
+      --canvas-height: clamp(280px, 48dvh, 460px);
+      --canvas-min-height: 280px;
+      --node-width: 120px;
+      --node-max-width: 160px;
+      --node-port-width: 120px;
     }
 
     * {
@@ -77,9 +82,9 @@
       width: 100%;
       max-width: 100%;
       padding:
-        calc(12px + env(safe-area-inset-top))
-        12px
-        calc(20px + env(safe-area-inset-bottom));
+        calc(10px + env(safe-area-inset-top))
+        10px
+        calc(16px + env(safe-area-inset-bottom));
     }
 
     .hero,
@@ -87,7 +92,7 @@
     .sidebarCard {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 14px;
       box-shadow: var(--shadow-md);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -95,23 +100,23 @@
 
     .hero {
       position: relative;
-      padding: 14px;
-      margin-bottom: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .eyebrow {
       display: inline-block;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: #d98aa0;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-weight: 700;
     }
 
     .hero h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: clamp(20px, 5vw, 28px);
       line-height: 1.08;
       letter-spacing: -0.02em;
       word-break: break-word;
@@ -120,22 +125,22 @@
     .hero p {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.45;
     }
 
     .heroMeta {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .infoBadge,
     .metaChip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       white-space: nowrap;
       border-radius: 999px;
       font-weight: 700;
@@ -143,18 +148,18 @@
     }
 
     .infoBadge {
-      padding: 7px 11px;
-      font-size: 12px;
+      padding: 6px 10px;
+      font-size: 11px;
       border: 1px solid rgba(255,255,255,0.07);
       background: rgba(255,255,255,0.04);
       color: #cfd0db;
     }
 
     .heroControls {
-      margin-top: 12px;
+      margin-top: 10px;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
     #searchInput {
@@ -162,9 +167,9 @@
       background: rgba(22, 22, 30, 0.96);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: 12px 13px;
-      font-size: 14px;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 13px;
       outline: none;
       transition: 0.18s ease;
       font-family: inherit;
@@ -177,9 +182,9 @@
     }
 
     .toolbar {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     button {
@@ -187,15 +192,15 @@
       background: rgba(255,255,255,0.04);
       color: #e5e5ec;
       border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
+      border-radius: 11px;
+      padding: 10px 8px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: 0.18s ease;
       box-shadow: none;
       font-family: inherit;
-      flex: 1 1 auto;
+      min-height: 42px;
     }
 
     button:active {
@@ -210,47 +215,47 @@
     }
 
     #statusLine {
-      margin-top: 10px;
-      font-size: 12px;
+      margin-top: 8px;
+      font-size: 11px;
       color: var(--muted);
     }
 
     .panel,
     .sidebarCard {
-      padding: 12px;
-      margin-bottom: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
     }
 
     .statsBar {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .metaChip {
-      padding: 6px 10px;
-      font-size: 11px;
+      padding: 5px 9px;
+      font-size: 10px;
       border: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.03);
       color: #c1c2ce;
     }
 
     .canvasPanel {
-      padding: 10px;
+      padding: 8px;
     }
 
     .canvasToolbar {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       margin-bottom: 8px;
     }
 
     .canvasHint {
       color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-      padding: 7px 10px;
+      font-size: 11px;
+      line-height: 1.35;
+      padding: 6px 9px;
       border: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.02);
       border-radius: 999px;
@@ -261,15 +266,16 @@
       width: 100%;
       height: var(--canvas-height);
       min-height: var(--canvas-min-height);
+      max-height: 70dvh;
       overflow: hidden;
-      border-radius: 14px;
+      border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.06);
       background:
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
         linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
-      background-size: 40px 40px, 40px 40px, auto, auto;
+      background-size: 32px 32px, 32px 32px, auto, auto;
       user-select: none;
       cursor: grab;
       touch-action: none;
@@ -296,14 +302,14 @@
     .line-base {
       fill: none;
       stroke: rgba(255,255,255,0.17);
-      stroke-width: 2.6;
+      stroke-width: 2.2;
       stroke-linecap: round;
     }
 
     .line-related {
       fill: none;
       stroke: rgba(190, 26, 72, 0.95);
-      stroke-width: 3.3;
+      stroke-width: 2.8;
       stroke-linecap: round;
       filter: drop-shadow(0 0 8px rgba(190,26,72,0.40));
     }
@@ -311,13 +317,13 @@
     .line-dimmed {
       fill: none;
       stroke: rgba(255,255,255,0.08);
-      stroke-width: 2;
+      stroke-width: 1.6;
       stroke-linecap: round;
     }
 
     .edgeLabel {
       fill: rgba(220,220,230,0.92);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       paint-order: stroke;
       stroke: rgba(0,0,0,0.65);
@@ -333,14 +339,14 @@
 
     .node {
       position: absolute;
-      min-width: 145px;
-      max-width: 210px;
-      padding: 10px 10px 9px;
-      border-radius: 13px;
+      width: var(--node-width);
+      max-width: var(--node-max-width);
+      padding: 8px 8px 7px;
+      border-radius: 11px;
       background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow:
-        0 10px 22px rgba(0,0,0,0.42),
+        0 8px 18px rgba(0,0,0,0.42),
         inset 0 1px 0 rgba(255,255,255,0.04);
       transform: translate(-50%, -50%);
       transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
@@ -352,7 +358,7 @@
       border-color: rgba(190,26,72,0.72);
       box-shadow:
         0 0 0 3px rgba(190,26,72,0.22),
-        0 18px 34px rgba(0,0,0,0.56);
+        0 14px 24px rgba(0,0,0,0.56);
       z-index: 30;
     }
 
@@ -360,7 +366,7 @@
       border-color: rgba(255,255,255,0.16);
       box-shadow:
         0 0 0 2px rgba(255,255,255,0.05),
-        0 14px 28px rgba(0,0,0,0.45);
+        0 12px 20px rgba(0,0,0,0.45);
     }
 
     .node.dimmed {
@@ -386,12 +392,12 @@
     .nodeHeader {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .nodeDot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       flex: 0 0 auto;
     }
@@ -402,26 +408,26 @@
     .node.weird .nodeDot { background: #a77cff; }
 
     .nodeTitle {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: -0.01em;
       color: #f5f5f7;
-      line-height: 1.18;
+      line-height: 1.15;
       word-break: break-word;
     }
 
     .nodeSubtitle {
-      margin-top: 4px;
-      font-size: 10px;
-      line-height: 1.35;
+      margin-top: 3px;
+      font-size: 9px;
+      line-height: 1.3;
       color: #9ea3b7;
       word-break: break-word;
     }
 
     .nodeStatusRow {
-      margin-top: 7px;
+      margin-top: 6px;
       display: flex;
-      gap: 5px;
+      gap: 4px;
       flex-wrap: wrap;
     }
 
@@ -429,9 +435,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 9.5px;
+      font-size: 8.5px;
       font-weight: 700;
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.07);
       background: rgba(255,255,255,0.04);
@@ -439,31 +445,31 @@
     }
 
     .sidebarTitle {
-      margin: 0 0 10px;
-      font-size: 14px;
+      margin: 0 0 8px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: -0.01em;
     }
 
     .sidebarSub {
       color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-      margin-bottom: 10px;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-bottom: 8px;
     }
 
     .infoList {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .infoBlock {
       display: grid;
-      gap: 5px;
+      gap: 4px;
     }
 
     .infoLabel {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted-2);
@@ -472,8 +478,8 @@
 
     .infoValue {
       color: #ececf4;
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.45;
       word-break: break-word;
       white-space: pre-wrap;
     }
@@ -481,10 +487,10 @@
     .linkList,
     .legendList {
       margin: 0;
-      padding-left: 18px;
+      padding-left: 16px;
       color: #d7dae5;
-      font-size: 12.5px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.45;
     }
 
     .linkList li + li,
@@ -507,15 +513,15 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
-      padding: 24px 24px;
+      padding: 22px 20px;
       text-align: center;
       box-shadow: var(--shadow-lg);
-      min-width: 220px;
+      min-width: 200px;
       max-width: calc(100vw - 30px);
     }
 
     #loadingText {
-      font-size: 14px;
+      font-size: 13px;
       color: #e2e2ea;
     }
 
@@ -565,14 +571,87 @@
       to { transform: rotate(360deg); }
     }
 
-    @media (max-width: 390px) {
-      .node {
-        min-width: 132px;
-        max-width: 185px;
+    @media (min-width: 700px) {
+      :root {
+        --canvas-height: 58vh;
+        --canvas-min-height: 420px;
+        --node-width: 145px;
+        --node-max-width: 210px;
+        --node-port-width: 145px;
       }
 
+      #app {
+        padding:
+          calc(12px + env(safe-area-inset-top))
+          12px
+          calc(20px + env(safe-area-inset-bottom));
+      }
+
+      .hero {
+        padding: 14px;
+      }
+
+      .hero h1 {
+        font-size: 24px;
+      }
+
+      .hero p {
+        font-size: 13px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        flex: 1 1 auto;
+        font-size: 13px;
+        padding: 10px 12px;
+      }
+
+      .nodeTitle {
+        font-size: 13px;
+      }
+
+      .nodeSubtitle {
+        font-size: 10px;
+      }
+
+      .nodeBadge {
+        font-size: 9.5px;
+      }
+
+      .infoValue {
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 390px) {
       :root {
-        --canvas-min-height: 380px;
+        --canvas-height: clamp(260px, 44dvh, 380px);
+        --canvas-min-height: 260px;
+        --node-width: 108px;
+        --node-max-width: 138px;
+        --node-port-width: 108px;
+      }
+
+      .toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hero h1 {
+        font-size: 18px;
+      }
+
+      .hero p {
+        font-size: 11px;
+      }
+
+      .infoBadge {
+        font-size: 10px;
+        padding: 5px 8px;
       }
     }
   </style>
@@ -718,7 +797,7 @@
     let viewportState = {
       x: 0,
       y: 0,
-      scale: 0.75
+      scale: window.innerWidth <= 700 ? 0.52 : 0.75
     };
 
     let interaction = {
@@ -870,13 +949,14 @@
       const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
       const bounds = getGraphBounds(nodesToFit);
 
-      const width = Math.max(380, bounds.maxX - bounds.minX + 280);
-      const height = Math.max(260, bounds.maxY - bounds.minY + 220);
+      const mobile = window.innerWidth <= 700;
+      const width = Math.max(300, bounds.maxX - bounds.minX + (mobile ? 160 : 280));
+      const height = Math.max(220, bounds.maxY - bounds.minY + (mobile ? 140 : 220));
 
       const rect = graphViewport().getBoundingClientRect();
       const fitScale = Math.min(
-        0.95,
-        Math.max(0.18, Math.min(rect.width / width, rect.height / height))
+        mobile ? 0.72 : 0.95,
+        Math.max(0.16, Math.min(rect.width / width, rect.height / height))
       );
 
       viewportState.scale = fitScale;
@@ -888,7 +968,11 @@
     }
 
     function resetView() {
-      viewportState = { x: 30, y: 30, scale: 0.75 };
+      viewportState = {
+        x: 20,
+        y: 20,
+        scale: window.innerWidth <= 700 ? 0.52 : 0.75
+      };
       applyViewportTransform();
       setStatus("View reset.");
     }
@@ -899,21 +983,21 @@
       const py = clientY ?? (rect.top + rect.height / 2);
 
       const before = scenePointFromClient(px, py);
-      viewportState.scale = Math.max(0.18, Math.min(1.8, viewportState.scale * factor));
+      viewportState.scale = Math.max(0.16, Math.min(1.5, viewportState.scale * factor));
       viewportState.x = px - rect.left - before.x * viewportState.scale;
       viewportState.y = py - rect.top - before.y * viewportState.scale;
       applyViewportTransform();
     }
 
     function createCurvePath(x1, y1, x2, y2) {
-      const dx = Math.max(70, Math.abs(x2 - x1) * 0.40);
+      const dx = Math.max(50, Math.abs(x2 - x1) * 0.40);
       return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
     }
 
     function getNodePortPosition(nodeId, side) {
       const node = getNodeById(nodeId);
       if (!node) return null;
-      const width = 145;
+      const width = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--node-port-width')) || 120;
       return {
         x: node.x + (side === "output" ? width / 2 : -width / 2),
         y: node.y
@@ -1120,6 +1204,12 @@
       document.getElementById("searchInput").addEventListener("input", (event) => {
         currentSearch = event.target.value || "";
         refreshGraph();
+      });
+
+      window.addEventListener("resize", () => {
+        if (graphData.nodes.length) {
+          fitToGraph();
+        }
       });
     });
 
