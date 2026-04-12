@@ -3,27 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Backrooms Paradox Viewer Mobile</title>
+  <title>Backrooms Paradox Viewer</title>
   <style>
     :root {
       --bg: #070709;
-      --surface: rgba(20, 20, 26, 0.94);
-      --surface-soft: rgba(255, 255, 255, 0.03);
-      --border: rgba(255, 255, 255, 0.07);
+      --surface: rgba(14, 14, 20, 0.88);
+      --surface-strong: rgba(18, 18, 25, 0.96);
+      --surface-soft: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.08);
       --text: #f4f4f7;
-      --muted: #a7a7b5;
+      --muted: #aaacb9;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --accent-soft: rgba(190, 26, 72, 0.18);
-      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
-      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
-
-      /* MOBILE FIXES */
-      --canvas-height: clamp(280px, 48dvh, 460px);
-      --canvas-min-height: 280px;
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.24);
       --node-width: 120px;
-      --node-max-width: 160px;
+      --node-max-width: 165px;
       --node-port-width: 120px;
+      --top-ui-height: 116px;
+      --sheet-collapsed: 74px;
+      --sheet-expanded: min(55dvh, 440px);
     }
 
     * {
@@ -35,18 +34,19 @@
     html, body {
       margin: 0;
       padding: 0;
-      min-height: 100%;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
-      overflow-x: hidden;
     }
 
     body {
       position: relative;
       background:
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.03), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
     }
 
@@ -64,114 +64,54 @@
         radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
 
-    body::after {
-      content: "";
+    #app {
       position: fixed;
       inset: 0;
-      margin: 6px;
-      border-radius: 14px;
-      border: 1px solid rgba(190, 26, 72, 0.10);
-      box-shadow: 0 0 18px rgba(190, 26, 72, 0.04);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    #app {
-      position: relative;
       z-index: 2;
-      width: 100%;
-      max-width: 100%;
-      padding:
-        calc(10px + env(safe-area-inset-top))
-        10px
-        calc(16px + env(safe-area-inset-bottom));
+      overflow: hidden;
     }
 
-    .hero,
-    .panel,
-    .sidebarCard {
+    .glass {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
       box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
-    .hero {
-      position: relative;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      font-size: 9px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #d98aa0;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: clamp(20px, 5vw, 28px);
-      line-height: 1.08;
-      letter-spacing: -0.02em;
-      word-break: break-word;
-    }
-
-    .hero p {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .heroMeta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .infoBadge,
-    .metaChip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      border-radius: 999px;
-      font-weight: 700;
-      max-width: 100%;
-    }
-
-    .infoBadge {
-      padding: 6px 10px;
-      font-size: 11px;
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.04);
-      color: #cfd0db;
-    }
-
-    .heroControls {
-      margin-top: 10px;
+    .topOverlay {
+      position: fixed;
+      top: calc(10px + env(safe-area-inset-top));
+      left: 10px;
+      right: 10px;
+      z-index: 30;
       display: grid;
-      grid-template-columns: 1fr;
       gap: 8px;
+      pointer-events: none;
+    }
+
+    .topCard {
+      border-radius: 16px;
+      padding: 10px;
+      pointer-events: auto;
+    }
+
+    .searchWrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     #searchInput {
       width: 100%;
+      min-width: 0;
       background: rgba(22, 22, 30, 0.96);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-size: 13px;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
       outline: none;
-      transition: 0.18s ease;
       font-family: inherit;
     }
 
@@ -181,24 +121,38 @@
       background: rgba(26, 26, 34, 0.98);
     }
 
+    .miniStat {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #d8dae5;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
     .toolbar {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 8px;
+      pointer-events: auto;
     }
 
     button {
       appearance: none;
-      background: rgba(255,255,255,0.04);
-      color: #e5e5ec;
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 11px;
+      background: rgba(255,255,255,0.05);
+      color: #ececf4;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
       padding: 10px 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: 0.18s ease;
-      box-shadow: none;
       font-family: inherit;
       min-height: 42px;
     }
@@ -208,91 +162,39 @@
     }
 
     .primaryBtn {
-      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
-      border-color: rgba(255,255,255,0.05);
+      background: linear-gradient(180deg, rgba(190, 26, 72, 0.95), rgba(148, 16, 53, 0.98));
+      border-color: rgba(255,255,255,0.06);
       color: #fff;
       box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
     }
 
-    #statusLine {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .panel,
-    .sidebarCard {
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    .statsBar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .metaChip {
-      padding: 5px 9px;
-      font-size: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
-    }
-
-    .canvasPanel {
-      padding: 8px;
-    }
-
-    .canvasToolbar {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .canvasHint {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.35;
-      padding: 6px 9px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      border-radius: 999px;
-    }
-
-    .graphViewport {
-      position: relative;
-      width: 100%;
-      height: var(--canvas-height);
-      min-height: var(--canvas-min-height);
-      max-height: 70dvh;
+    #graphViewport {
+      position: fixed;
+      inset: 0;
       overflow: hidden;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.06);
+      user-select: none;
+      cursor: grab;
+      touch-action: none;
       background:
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
         linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
-      background-size: 32px 32px, 32px 32px, auto, auto;
-      user-select: none;
-      cursor: grab;
-      touch-action: none;
+      background-size: 34px 34px, 34px 34px, auto, auto;
     }
 
-    .graphViewport.panning {
+    #graphViewport.panning {
       cursor: grabbing;
     }
 
-    .graphScene {
+    #graphScene {
       position: absolute;
       inset: 0;
       transform-origin: 0 0;
       will-change: transform;
     }
 
-    .graphSvg {
+    #graphSvg {
       position: absolute;
       inset: 0;
       overflow: visible;
@@ -308,8 +210,8 @@
 
     .line-related {
       fill: none;
-      stroke: rgba(190, 26, 72, 0.95);
-      stroke-width: 2.8;
+      stroke: rgba(190, 26, 72, 0.96);
+      stroke-width: 2.9;
       stroke-linecap: round;
       filter: drop-shadow(0 0 8px rgba(190,26,72,0.40));
     }
@@ -317,21 +219,21 @@
     .line-dimmed {
       fill: none;
       stroke: rgba(255,255,255,0.08);
-      stroke-width: 1.6;
+      stroke-width: 1.7;
       stroke-linecap: round;
     }
 
     .edgeLabel {
-      fill: rgba(220,220,230,0.92);
+      fill: rgba(230,230,236,0.94);
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 700;
       paint-order: stroke;
       stroke: rgba(0,0,0,0.65);
       stroke-width: 4px;
       stroke-linejoin: round;
     }
 
-    .graphNodes {
+    #graphNodes {
       position: absolute;
       inset: 0;
       overflow: visible;
@@ -342,14 +244,14 @@
       width: var(--node-width);
       max-width: var(--node-max-width);
       padding: 8px 8px 7px;
-      border-radius: 11px;
+      border-radius: 12px;
       background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow:
         0 8px 18px rgba(0,0,0,0.42),
         inset 0 1px 0 rgba(255,255,255,0.04);
       transform: translate(-50%, -50%);
-      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
+      transition: box-shadow .14s ease, border-color .14s ease, opacity .14s ease, transform .14s ease;
       backdrop-filter: blur(5px);
       cursor: pointer;
     }
@@ -370,7 +272,7 @@
     }
 
     .node.dimmed {
-      opacity: 0.42;
+      opacity: 0.35;
     }
 
     .node.start {
@@ -410,7 +312,6 @@
     .nodeTitle {
       font-size: 11px;
       font-weight: 800;
-      letter-spacing: -0.01em;
       color: #f5f5f7;
       line-height: 1.15;
       word-break: break-word;
@@ -434,7 +335,6 @@
     .nodeBadge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
       font-size: 8.5px;
       font-weight: 700;
       padding: 3px 5px;
@@ -444,23 +344,92 @@
       color: #cbd0df;
     }
 
-    .sidebarTitle {
-      margin: 0 0 8px;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
+    .bottomSheet {
+      position: fixed;
+      left: 10px;
+      right: 10px;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      z-index: 35;
+      border-radius: 18px;
+      overflow: hidden;
+      transform: translateY(calc(100% + 20px));
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .sidebarSub {
-      color: var(--muted);
+    .bottomSheet.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottomSheet.collapsed .sheetBody {
+      display: none;
+    }
+
+    .bottomSheet.expanded .sheetBody {
+      display: block;
+    }
+
+    .sheetHeader {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      padding: 12px 12px;
+      min-height: var(--sheet-collapsed);
+    }
+
+    .sheetHandleWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sheetHandle {
+      width: 38px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      margin: 0 auto;
+    }
+
+    .sheetTitle {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f5f5f7;
+      line-height: 1.2;
+      word-break: break-word;
+      text-align: center;
+    }
+
+    .sheetSub {
+      text-align: center;
       font-size: 11px;
-      line-height: 1.4;
-      margin-bottom: 8px;
+      color: var(--muted);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .sheetToggle {
+      flex: 0 0 auto;
+      min-width: 72px;
+      padding: 10px 10px;
+    }
+
+    .sheetBody {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      max-height: calc(var(--sheet-expanded) - var(--sheet-collapsed));
+      overflow: auto;
+      padding: 12px;
     }
 
     .infoList {
       display: grid;
-      gap: 8px;
+      gap: 10px;
     }
 
     .infoBlock {
@@ -484,8 +453,7 @@
       white-space: pre-wrap;
     }
 
-    .linkList,
-    .legendList {
+    .linkList {
       margin: 0;
       padding-left: 16px;
       color: #d7dae5;
@@ -493,9 +461,14 @@
       line-height: 1.45;
     }
 
-    .linkList li + li,
-    .legendList li + li {
+    .linkList li + li {
       margin-top: 4px;
+    }
+
+    .sectionDivider {
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      margin: 10px 0;
     }
 
     #loadingOverlay {
@@ -510,7 +483,7 @@
     }
 
     #loadingCard {
-      background: var(--surface);
+      background: var(--surface-strong);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 22px 20px;
@@ -537,10 +510,10 @@
 
     #errorPanel {
       position: fixed;
-      top: calc(12px + env(safe-area-inset-top));
-      left: 12px;
-      right: 12px;
-      z-index: 50;
+      top: calc(10px + env(safe-area-inset-top));
+      left: 10px;
+      right: 10px;
+      z-index: 60;
       background: rgba(36, 13, 18, 0.96);
       border: 1px solid rgba(255, 138, 138, 0.28);
       border-radius: 16px;
@@ -571,69 +544,21 @@
       to { transform: rotate(360deg); }
     }
 
-    @media (min-width: 700px) {
-      :root {
-        --canvas-height: 58vh;
-        --canvas-min-height: 420px;
-        --node-width: 145px;
-        --node-max-width: 210px;
-        --node-port-width: 145px;
-      }
-
-      #app {
-        padding:
-          calc(12px + env(safe-area-inset-top))
-          12px
-          calc(20px + env(safe-area-inset-bottom));
-      }
-
-      .hero {
-        padding: 14px;
-      }
-
-      .hero h1 {
-        font-size: 24px;
-      }
-
-      .hero p {
-        font-size: 13px;
-      }
-
+    @media (max-width: 640px) {
       .toolbar {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
       button {
-        flex: 1 1 auto;
-        font-size: 13px;
-        padding: 10px 12px;
-      }
-
-      .nodeTitle {
-        font-size: 13px;
-      }
-
-      .nodeSubtitle {
-        font-size: 10px;
-      }
-
-      .nodeBadge {
-        font-size: 9.5px;
-      }
-
-      .infoValue {
-        font-size: 13px;
+        font-size: 11px;
+        min-height: 40px;
       }
     }
 
     @media (max-width: 390px) {
       :root {
-        --canvas-height: clamp(260px, 44dvh, 380px);
-        --canvas-min-height: 260px;
         --node-width: 108px;
-        --node-max-width: 138px;
+        --node-max-width: 142px;
         --node-port-width: 108px;
       }
 
@@ -641,17 +566,29 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .hero h1 {
-        font-size: 18px;
+      .sheetTitle {
+        font-size: 13px;
+      }
+    }
+
+    @media (min-width: 900px) {
+      :root {
+        --node-width: 145px;
+        --node-max-width: 210px;
+        --node-port-width: 145px;
       }
 
-      .hero p {
-        font-size: 11px;
+      .topOverlay {
+        left: 16px;
+        right: 16px;
+        max-width: 760px;
       }
 
-      .infoBadge {
-        font-size: 10px;
-        padding: 5px 8px;
+      .bottomSheet {
+        max-width: 460px;
+        left: auto;
+        right: 16px;
+        bottom: 16px;
       }
     }
   </style>
@@ -670,121 +607,98 @@
   </div>
 
   <div id="app">
-    <section class="hero">
-      <div class="eyebrow">Backrooms progression map</div>
-      <h1>Backrooms Paradox Viewer</h1>
-      <p>Explore routes, loops, and weird branches in a mobile-friendly graph viewer. Tap a level to inspect its connections.</p>
-
-      <div class="heroMeta">
-        <div class="infoBadge" id="statNodes">0 nodes</div>
-        <div class="infoBadge" id="statEdges">0 links</div>
-        <div class="infoBadge" id="statSelected">No level selected</div>
-      </div>
-
-      <div class="heroControls">
-        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." autocomplete="off" />
-
-        <div class="toolbar">
-          <button onclick="zoomBy(1.12)">+</button>
-          <button onclick="zoomBy(1 / 1.12)">−</button>
-          <button onclick="resetView()">Reset</button>
-          <button onclick="fitToGraph()">Fit</button>
-          <button onclick="clearSelection()">Clear</button>
-          <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
+    <div class="topOverlay">
+      <div class="topCard glass">
+        <div class="searchWrap">
+          <input id="searchInput" type="text" placeholder="Search levels..." autocomplete="off" />
+          <div class="miniStat" id="statSelected">No selection</div>
         </div>
       </div>
 
-      <div id="statusLine">Loading graph...</div>
-    </section>
-
-    <section class="panel">
-      <div class="statsBar">
-        <span class="metaChip">Tap empty space to clear selection</span>
-        <span class="metaChip">Drag to pan the graph</span>
+      <div class="topCard glass toolbar">
+        <button onclick="zoomBy(1.12)">+</button>
+        <button onclick="zoomBy(1 / 1.12)">−</button>
+        <button onclick="resetView()">Reset</button>
+        <button onclick="fitToGraph()">Fit</button>
+        <button onclick="clearSelection()">Clear</button>
+        <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
       </div>
-    </section>
+    </div>
 
-    <section class="panel canvasPanel">
-      <div class="canvasToolbar">
-        <div class="canvasHint">Pan: drag empty space</div>
-        <div class="canvasHint">Zoom: use + / − buttons</div>
+    <div id="graphViewport">
+      <div id="graphScene">
+        <svg id="graphSvg"></svg>
+        <div id="graphNodes"></div>
+      </div>
+    </div>
+
+    <div id="bottomSheet" class="bottomSheet glass collapsed">
+      <div class="sheetHeader">
+        <div class="sheetHandleWrap">
+          <div class="sheetHandle"></div>
+          <div class="sheetTitle" id="sheetTitle">Selected Level</div>
+          <div class="sheetSub" id="sheetSubtitle">Tap a node to inspect it</div>
+        </div>
+        <button class="sheetToggle" id="sheetToggleBtn" onclick="toggleSheet()">Expand</button>
       </div>
 
-      <div id="graphViewport" class="graphViewport">
-        <div id="graphScene" class="graphScene">
-          <svg id="graphSvg" class="graphSvg"></svg>
-          <div id="graphNodes" class="graphNodes"></div>
+      <div class="sheetBody">
+        <div class="infoList">
+          <div class="infoBlock">
+            <div class="infoLabel">Label</div>
+            <div class="infoValue" id="infoLabel">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Subtitle</div>
+            <div class="infoValue" id="infoSubtitle">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Type</div>
+            <div class="infoValue" id="infoType">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Status</div>
+            <div class="infoValue" id="infoStatus">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Tags</div>
+            <div class="infoValue" id="infoTags">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Description</div>
+            <div class="infoValue" id="infoDescription">—</div>
+          </div>
+
+          <div class="infoBlock">
+            <div class="infoLabel">Notes</div>
+            <div class="infoValue" id="infoNotes">—</div>
+          </div>
+        </div>
+
+        <div class="sectionDivider"></div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Outgoing Links</div>
+          <ul id="outgoingList" class="linkList">
+            <li>No level selected.</li>
+          </ul>
+        </div>
+
+        <div class="sectionDivider"></div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Incoming Links</div>
+          <ul id="incomingList" class="linkList">
+            <li>No level selected.</li>
+          </ul>
         </div>
       </div>
-    </section>
-
-    <section class="sidebarCard">
-      <h2 class="sidebarTitle">Selected Level</h2>
-      <div class="sidebarSub" id="selectedHint">Tap a node in the graph to inspect it.</div>
-
-      <div class="infoList">
-        <div class="infoBlock">
-          <div class="infoLabel">Label</div>
-          <div class="infoValue" id="infoLabel">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Subtitle</div>
-          <div class="infoValue" id="infoSubtitle">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Type</div>
-          <div class="infoValue" id="infoType">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Status</div>
-          <div class="infoValue" id="infoStatus">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Tags</div>
-          <div class="infoValue" id="infoTags">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Description</div>
-          <div class="infoValue" id="infoDescription">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Notes</div>
-          <div class="infoValue" id="infoNotes">—</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="sidebarCard">
-      <h2 class="sidebarTitle">Outgoing Links</h2>
-      <div class="sidebarSub">Where this level can lead next.</div>
-      <ul id="outgoingList" class="linkList">
-        <li>No level selected.</li>
-      </ul>
-    </section>
-
-    <section class="sidebarCard">
-      <h2 class="sidebarTitle">Incoming Links</h2>
-      <div class="sidebarSub">Which levels can reach this one.</div>
-      <ul id="incomingList" class="linkList">
-        <li>No level selected.</li>
-      </ul>
-    </section>
-
-    <section class="sidebarCard">
-      <h2 class="sidebarTitle">Legend</h2>
-      <ul class="legendList">
-        <li><span style="color:#d7b45a;">●</span> Start / base entry</li>
-        <li><span style="color:#7aa2ff;">●</span> Progression / stable route</li>
-        <li><span style="color:#ff7f7f;">●</span> Dangerous / hostile route</li>
-        <li><span style="color:#a77cff;">●</span> Weird / unstable / rare route</li>
-      </ul>
-    </section>
+    </div>
   </div>
 
   <script>
@@ -793,6 +707,7 @@
     let graphData = { nodes: [], edges: [] };
     let selectedNodeId = null;
     let currentSearch = "";
+    let sheetExpanded = false;
 
     let viewportState = {
       x: 0,
@@ -812,6 +727,7 @@
     const graphScene = () => document.getElementById("graphScene");
     const graphSvg = () => document.getElementById("graphSvg");
     const graphNodesEl = () => document.getElementById("graphNodes");
+    const bottomSheet = () => document.getElementById("bottomSheet");
 
     function showLoading(text = "Loading graph...") {
       document.getElementById("loadingText").textContent = text;
@@ -820,12 +736,6 @@
 
     function hideLoading() {
       document.getElementById("loadingOverlay").style.display = "none";
-    }
-
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
     }
 
     function showErrorPanel(message) {
@@ -955,7 +865,7 @@
 
       const rect = graphViewport().getBoundingClientRect();
       const fitScale = Math.min(
-        mobile ? 0.72 : 0.95,
+        mobile ? 0.78 : 0.95,
         Math.max(0.16, Math.min(rect.width / width, rect.height / height))
       );
 
@@ -964,7 +874,6 @@
       viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
 
       applyViewportTransform();
-      setStatus("Fitted graph to view.");
     }
 
     function resetView() {
@@ -974,7 +883,6 @@
         scale: window.innerWidth <= 700 ? 0.52 : 0.75
       };
       applyViewportTransform();
-      setStatus("View reset.");
     }
 
     function zoomBy(factor, clientX = null, clientY = null) {
@@ -1004,54 +912,85 @@
       };
     }
 
-    function updateStats() {
-      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-
+    function updateTopStats() {
       const selected = getSelectedNode();
       document.getElementById("statSelected").textContent =
-        selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
+        selected ? (selected.label || selected.id) : "No selection";
     }
 
-    function updateSidebar() {
+    function hideSheet() {
+      bottomSheet().classList.remove("visible", "expanded");
+      bottomSheet().classList.add("collapsed");
+      sheetExpanded = false;
+      document.getElementById("sheetToggleBtn").textContent = "Expand";
+    }
+
+    function showSheetCollapsed() {
+      bottomSheet().classList.add("visible", "collapsed");
+      bottomSheet().classList.remove("expanded");
+      sheetExpanded = false;
+      document.getElementById("sheetToggleBtn").textContent = "Expand";
+    }
+
+    function toggleSheet() {
+      const sheet = bottomSheet();
+      if (!sheet.classList.contains("visible")) return;
+
+      sheetExpanded = !sheetExpanded;
+      sheet.classList.toggle("expanded", sheetExpanded);
+      sheet.classList.toggle("collapsed", !sheetExpanded);
+      document.getElementById("sheetToggleBtn").textContent = sheetExpanded ? "Collapse" : "Expand";
+    }
+
+    function updateSheet() {
       const node = getSelectedNode();
 
-      document.getElementById("selectedHint").textContent =
-        node ? `Inspecting ${node.label || node.id}` : "Tap a node in the graph to inspect it.";
-
-      document.getElementById("infoLabel").textContent = node?.label || "—";
-      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("infoType").textContent = node?.type || "—";
-      document.getElementById("infoStatus").textContent = node?.status || "—";
-      document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("infoDescription").textContent = node?.description || "—";
-      document.getElementById("infoNotes").textContent = node?.notes || "—";
-
-      const outgoingList = document.getElementById("outgoingList");
-      const incomingList = document.getElementById("incomingList");
-
       if (!node) {
-        outgoingList.innerHTML = "<li>No level selected.</li>";
-        incomingList.innerHTML = "<li>No level selected.</li>";
+        document.getElementById("sheetTitle").textContent = "Selected Level";
+        document.getElementById("sheetSubtitle").textContent = "Tap a node to inspect it";
+        document.getElementById("infoLabel").textContent = "—";
+        document.getElementById("infoSubtitle").textContent = "—";
+        document.getElementById("infoType").textContent = "—";
+        document.getElementById("infoStatus").textContent = "—";
+        document.getElementById("infoTags").textContent = "—";
+        document.getElementById("infoDescription").textContent = "—";
+        document.getElementById("infoNotes").textContent = "—";
+        document.getElementById("outgoingList").innerHTML = "<li>No level selected.</li>";
+        document.getElementById("incomingList").innerHTML = "<li>No level selected.</li>";
+        hideSheet();
         return;
       }
+
+      document.getElementById("sheetTitle").textContent = node.label || node.id;
+      document.getElementById("sheetSubtitle").textContent =
+        `${node.type || "progression"} • ${node.status || "draft"}`;
+
+      document.getElementById("infoLabel").textContent = node.label || "—";
+      document.getElementById("infoSubtitle").textContent = node.subtitle || "—";
+      document.getElementById("infoType").textContent = node.type || "—";
+      document.getElementById("infoStatus").textContent = node.status || "—";
+      document.getElementById("infoTags").textContent = node.tags?.length ? node.tags.join(", ") : "—";
+      document.getElementById("infoDescription").textContent = node.description || "—";
+      document.getElementById("infoNotes").textContent = node.notes || "—";
 
       const outgoing = getOutgoingEdges(node.id);
       const incoming = getIncomingEdges(node.id);
 
-      outgoingList.innerHTML = outgoing.length
+      document.getElementById("outgoingList").innerHTML = outgoing.length
         ? outgoing.map(edge => {
             const target = getNodeById(edge.to);
             return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
           }).join("")
         : "<li>No outgoing links.</li>";
 
-      incomingList.innerHTML = incoming.length
+      document.getElementById("incomingList").innerHTML = incoming.length
         ? incoming.map(edge => {
             const source = getNodeById(edge.from);
             return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
           }).join("")
         : "<li>No incoming links.</li>";
+
+      showSheetCollapsed();
     }
 
     function refreshGraph() {
@@ -1075,9 +1014,7 @@
                 <div class="nodeDot"></div>
                 <div class="nodeTitle">${escapeHtml(node.label)}</div>
               </div>
-
               ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
-
               <div class="nodeStatusRow">
                 <span class="nodeBadge">${escapeHtml(node.type || "progression")}</span>
                 <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
@@ -1109,8 +1046,8 @@
 
       graphSvg().innerHTML = svgParts.join("");
       bindNodeEvents();
-      updateStats();
-      updateSidebar();
+      updateTopStats();
+      updateSheet();
     }
 
     function bindNodeEvents() {
@@ -1120,7 +1057,6 @@
           event.stopPropagation();
           selectedNodeId = nodeId;
           refreshGraph();
-          setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
         });
       });
     }
@@ -1128,7 +1064,6 @@
     function clearSelection() {
       selectedNodeId = null;
       refreshGraph();
-      setStatus("Selection cleared.");
     }
 
     async function fetchRemoteGraph() {
@@ -1140,19 +1075,14 @@
     async function reloadGraph() {
       try {
         showLoading("Loading graph...");
-        setStatus("Loading latest graph...");
-
         graphData = await fetchRemoteGraph();
         hideErrorPanel();
         hideLoading();
-
         refreshGraph();
         fitToGraph();
-        setStatus("Loaded latest graph.");
       } catch (err) {
         console.error(err);
         hideLoading();
-        setStatus("Failed to load graph.", true);
         showErrorPanel(err.message || "Failed to load graph.");
       }
     }
@@ -1207,9 +1137,7 @@
       });
 
       window.addEventListener("resize", () => {
-        if (graphData.nodes.length) {
-          fitToGraph();
-        }
+        if (graphData.nodes.length) fitToGraph();
       });
     });
 
@@ -1222,6 +1150,7 @@
     window.fitToGraph = fitToGraph;
     window.clearSelection = clearSelection;
     window.reloadGraph = reloadGraph;
+    window.toggleSheet = toggleSheet;
 
     reloadGraph();
   </script>
