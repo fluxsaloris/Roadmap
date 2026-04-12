@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Backrooms Paradox: Level Path</title>
+  <title>Backrooms Paradox: Level Paths</title>
   <style>
     :root {
       --bg: #070709;
@@ -24,11 +24,8 @@
       --canvas-min-height: 620px;
 
       --mobile-fab-size: 52px;
-      --mobile-gap: 10px;
       --node-width-desktop: 170px;
       --node-width-mobile: 118px;
-      --node-port-width-desktop: 170px;
-      --node-port-width-mobile: 118px;
     }
 
     * {
@@ -93,7 +90,7 @@
     .panel,
     .sidebarCard,
     .mobilePanel,
-    .nodePopup {
+    .mobileInspector {
       background: var(--surface);
       border: 1px solid var(--border);
       box-shadow: var(--shadow-md);
@@ -444,21 +441,26 @@
       opacity: 0.42;
     }
 
-    .node.start {
+    .node.stable {
       background: linear-gradient(180deg, rgba(50,42,24,0.98), rgba(26,22,15,0.98));
     }
 
-    .node.progression {
+    .node.dangerous {
       background: linear-gradient(180deg, rgba(26,35,60,0.98), rgba(17,21,34,0.98));
     }
 
-    .node.danger {
+    .node.corrupted {
       background: linear-gradient(180deg, rgba(60,26,32,0.98), rgba(32,16,20,0.98));
     }
 
-    .node.weird {
+    .node.anomalous {
       background: linear-gradient(180deg, rgba(47,29,70,0.98), rgba(24,16,36,0.98));
     }
+
+    .node.stable .nodeDot { background: #d7b45a; }
+    .node.dangerous .nodeDot { background: #7aa2ff; }
+    .node.corrupted .nodeDot { background: #ff7f7f; }
+    .node.anomalous .nodeDot { background: #a77cff; }
 
     .nodeHeader {
       display: flex;
@@ -472,11 +474,6 @@
       border-radius: 50%;
       flex: 0 0 auto;
     }
-
-    .node.start .nodeDot { background: #d7b45a; }
-    .node.progression .nodeDot { background: #7aa2ff; }
-    .node.danger .nodeDot { background: #ff7f7f; }
-    .node.weird .nodeDot { background: #a77cff; }
 
     .nodeTitle {
       font-size: 14px;
@@ -617,54 +614,68 @@
       bottom: calc(74px + env(safe-area-inset-bottom));
     }
 
-    .nodePopup {
+    .mobileInspectorOverlay {
       position: fixed;
-      z-index: 55;
-      width: min(280px, calc(100vw - 20px));
-      max-height: min(54dvh, 390px);
-      overflow: auto;
-      border-radius: 16px;
-      padding: 10px;
-      background: rgba(18, 18, 25, 0.97);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.38);
-      transform: translate3d(0, 0, 0);
+      inset: 0;
+      background: rgba(0,0,0,0.42);
+      z-index: 54;
       display: none;
     }
 
-    .nodePopup.show {
+    .mobileInspectorOverlay.show {
       display: block;
     }
 
-    .nodePopupHeader {
+    .mobileInspector {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(88vw, 360px);
+      background: rgba(18, 18, 25, 0.98);
+      border-left: 1px solid rgba(255,255,255,0.08);
+      box-shadow: -18px 0 40px rgba(0,0,0,0.34);
+      z-index: 55;
+      padding:
+        calc(14px + env(safe-area-inset-top))
+        14px
+        calc(18px + env(safe-area-inset-bottom));
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.22s ease;
+      border-radius: 0;
+    }
+
+    .mobileInspector.show {
+      transform: translateX(0);
+    }
+
+    .mobileInspectorHeader {
       display: flex;
-      gap: 8px;
-      align-items: flex-start;
+      gap: 10px;
       justify-content: space-between;
-      margin-bottom: 8px;
+      align-items: flex-start;
+      margin-bottom: 14px;
     }
 
-    .nodePopupTitleWrap {
-      min-width: 0;
-      flex: 1;
+    .mobileInspectorEyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #d98aa0;
+      font-weight: 700;
+      margin-bottom: 6px;
     }
 
-    .nodePopupTitle {
-      font-size: 13px;
+    .mobileInspectorTitle {
+      font-size: 16px;
       font-weight: 800;
-      color: #f5f5f7;
       line-height: 1.2;
+      color: #f5f5f7;
       word-break: break-word;
     }
 
-    .nodePopupSub {
-      margin-top: 3px;
-      font-size: 11px;
-      color: #a9acba;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .nodePopupClose {
+    .mobileInspectorClose {
       flex: 0 0 auto;
       width: 34px;
       min-width: 34px;
@@ -672,44 +683,6 @@
       min-height: 34px;
       padding: 0;
       border-radius: 10px;
-    }
-
-    .nodePopupBody {
-      display: grid;
-      gap: 9px;
-    }
-
-    .popupBlock {
-      display: grid;
-      gap: 3px;
-    }
-
-    .popupLabel {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #7f8091;
-      font-weight: 700;
-    }
-
-    .popupValue {
-      font-size: 12px;
-      line-height: 1.4;
-      color: #ececf4;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    .popupList {
-      margin: 0;
-      padding-left: 16px;
-      font-size: 12px;
-      line-height: 1.4;
-      color: #d7dae5;
-    }
-
-    .popupList li + li {
-      margin-top: 4px;
     }
 
     #loadingOverlay {
@@ -931,8 +904,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .nodePopup {
-        width: min(250px, calc(100vw - 16px));
+      .mobileInspector {
+        width: min(88vw, 340px);
       }
     }
   </style>
@@ -1089,51 +1062,63 @@
       <button class="mobileFab primaryBtn" onclick="toggleMobileControls()" aria-label="Controls">⋯</button>
     </div>
 
-    <div id="nodePopup" class="nodePopup">
-      <div class="nodePopupHeader">
-        <div class="nodePopupTitleWrap">
-          <div id="popupTitle" class="nodePopupTitle">Selected Level</div>
-          <div id="popupSub" class="nodePopupSub">Tap a node to inspect it</div>
+    <div id="mobileInspectorOverlay" class="mobileInspectorOverlay" onclick="closeMobileInspector()"></div>
+
+    <div id="mobileInspector" class="mobileInspector">
+      <div class="mobileInspectorHeader">
+        <div>
+          <div class="mobileInspectorEyebrow">Selected Level</div>
+          <div id="mobileInspectorTitle" class="mobileInspectorTitle">No level selected</div>
         </div>
-        <button class="nodePopupClose" onclick="clearSelection()">×</button>
+        <button class="mobileInspectorClose" onclick="closeMobileInspector()">×</button>
       </div>
 
-      <div class="nodePopupBody">
-        <div class="popupBlock">
-          <div class="popupLabel">Type</div>
-          <div class="popupValue" id="popupType">—</div>
+      <div class="infoList">
+        <div class="infoBlock">
+          <div class="infoLabel">Label</div>
+          <div class="infoValue" id="mobileInfoLabel">—</div>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Status</div>
-          <div class="popupValue" id="popupStatus">—</div>
+        <div class="infoBlock">
+          <div class="infoLabel">Subtitle</div>
+          <div class="infoValue" id="mobileInfoSubtitle">—</div>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Subtitle</div>
-          <div class="popupValue" id="popupSubtitle">—</div>
+        <div class="infoBlock">
+          <div class="infoLabel">Type</div>
+          <div class="infoValue" id="mobileInfoType">—</div>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Tags</div>
-          <div class="popupValue" id="popupTags">—</div>
+        <div class="infoBlock">
+          <div class="infoLabel">Status</div>
+          <div class="infoValue" id="mobileInfoStatus">—</div>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Description</div>
-          <div class="popupValue" id="popupDescription">—</div>
+        <div class="infoBlock">
+          <div class="infoLabel">Tags</div>
+          <div class="infoValue" id="mobileInfoTags">—</div>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Outgoing</div>
-          <ul id="popupOutgoing" class="popupList">
+        <div class="infoBlock">
+          <div class="infoLabel">Description</div>
+          <div class="infoValue" id="mobileInfoDescription">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Notes</div>
+          <div class="infoValue" id="mobileInfoNotes">—</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="infoLabel">Outgoing</div>
+          <ul id="mobileOutgoingList" class="linkList">
             <li>No outgoing links.</li>
           </ul>
         </div>
 
-        <div class="popupBlock">
-          <div class="popupLabel">Incoming</div>
-          <ul id="popupIncoming" class="popupList">
+        <div class="infoBlock">
+          <div class="infoLabel">Incoming</div>
+          <ul id="mobileIncomingList" class="linkList">
             <li>No incoming links.</li>
           </ul>
         </div>
@@ -1166,11 +1151,36 @@
     const graphScene = () => document.getElementById("graphScene");
     const graphSvg = () => document.getElementById("graphSvg");
     const graphNodesEl = () => document.getElementById("graphNodes");
-    const nodePopup = () => document.getElementById("nodePopup");
     const desktopSearchInput = () => document.getElementById("searchInput");
     const mobileSearchInput = () => document.getElementById("mobileSearchInput");
     const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
     const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
+    const mobileInspector = () => document.getElementById("mobileInspector");
+    const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
+
+    const TYPE_META = {
+      stable: { className: "stable", label: "Stable" },
+      dangerous: { className: "dangerous", label: "Dangerous" },
+      corrupted: { className: "corrupted", label: "Corrupted" },
+      anomalous: { className: "anomalous", label: "Anomalous" }
+    };
+
+    function normalizeType(type) {
+      const value = String(type || "").trim().toLowerCase();
+      if (value === "stable" || value === "start") return "stable";
+      if (value === "dangerous" || value === "progression") return "dangerous";
+      if (value === "corrupted" || value === "danger") return "corrupted";
+      if (value === "anomalous" || value === "weird") return "anomalous";
+      return "stable";
+    }
+
+    function getTypeLabel(type) {
+      return TYPE_META[normalizeType(type)].label;
+    }
+
+    function getTypeClass(type) {
+      return TYPE_META[normalizeType(type)].className;
+    }
 
     function isMobileLayout() {
       return window.innerWidth <= 700;
@@ -1212,7 +1222,7 @@
               notes: typeof n.notes === "string" ? n.notes : "",
               x: typeof n.x === "number" ? n.x : 0,
               y: typeof n.y === "number" ? n.y : 0,
-              type: typeof n.type === "string" ? n.type : "progression",
+              type: normalizeType(n.type),
               status: typeof n.status === "string" ? n.status : "draft",
               tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
             }))
@@ -1261,6 +1271,7 @@
         node.subtitle,
         node.description,
         node.notes,
+        getTypeLabel(node.type),
         ...(Array.isArray(node.tags) ? node.tags : [])
       ].join(" ").toLowerCase();
       return hay.includes(search);
@@ -1289,21 +1300,9 @@
       };
     }
 
-    function getNodeScreenPosition(node) {
-      const rect = graphViewport().getBoundingClientRect();
-      return {
-        x: rect.left + viewportState.x + node.x * viewportState.scale,
-        y: rect.top + viewportState.y + node.y * viewportState.scale
-      };
-    }
-
     function applyViewportTransform() {
       graphScene().style.transform =
         `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
-
-      if (isMobileLayout() && selectedNodeId) {
-        updateNodePopupPosition();
-      }
     }
 
     function getGraphBounds(nodes) {
@@ -1389,6 +1388,15 @@
         selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
     }
 
+    function renderLinkListHTML(edges, direction) {
+      return edges.length
+        ? edges.map(edge => {
+            const other = getNodeById(direction === "outgoing" ? edge.to : edge.from);
+            return `<li>${escapeHtml(other?.label || (direction === "outgoing" ? edge.to : edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : `<li>No ${direction} links.</li>`;
+    }
+
     function updateSidebar() {
       const node = getSelectedNode();
 
@@ -1397,7 +1405,7 @@
 
       document.getElementById("infoLabel").textContent = node?.label || "—";
       document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("infoType").textContent = node?.type || "—";
+      document.getElementById("infoType").textContent = node ? getTypeLabel(node.type) : "—";
       document.getElementById("infoStatus").textContent = node?.status || "—";
       document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
       document.getElementById("infoDescription").textContent = node?.description || "—";
@@ -1412,129 +1420,52 @@
         return;
       }
 
-      const outgoing = getOutgoingEdges(node.id);
-      const incoming = getIncomingEdges(node.id);
-
-      outgoingList.innerHTML = outgoing.length
-        ? outgoing.map(edge => {
-            const target = getNodeById(edge.to);
-            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : "<li>No outgoing links.</li>";
-
-      incomingList.innerHTML = incoming.length
-        ? incoming.map(edge => {
-            const source = getNodeById(edge.from);
-            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : "<li>No incoming links.</li>";
+      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
+      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
     }
 
-    function hideNodePopup() {
-      nodePopup().classList.remove("show");
+    function closeMobileInspector() {
+      mobileInspector().classList.remove("show");
+      mobileInspectorOverlay().classList.remove("show");
     }
 
-    function updateNodePopupPosition() {
+    function openMobileInspector() {
+      if (!isMobileLayout()) return;
+      mobileInspector().classList.add("show");
+      mobileInspectorOverlay().classList.add("show");
+    }
+
+    function updateMobileInspector() {
       if (!isMobileLayout()) {
-        hideNodePopup();
+        closeMobileInspector();
         return;
       }
 
       const node = getSelectedNode();
+
+      document.getElementById("mobileInspectorTitle").textContent =
+        node ? (node.label || node.id) : "No level selected";
+
+      document.getElementById("mobileInfoLabel").textContent = node?.label || "—";
+      document.getElementById("mobileInfoSubtitle").textContent = node?.subtitle || "—";
+      document.getElementById("mobileInfoType").textContent = node ? getTypeLabel(node.type) : "—";
+      document.getElementById("mobileInfoStatus").textContent = node?.status || "—";
+      document.getElementById("mobileInfoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
+      document.getElementById("mobileInfoDescription").textContent = node?.description || "—";
+      document.getElementById("mobileInfoNotes").textContent = node?.notes || "—";
+
+      const outgoingList = document.getElementById("mobileOutgoingList");
+      const incomingList = document.getElementById("mobileIncomingList");
+
       if (!node) {
-        hideNodePopup();
+        outgoingList.innerHTML = "<li>No outgoing links.</li>";
+        incomingList.innerHTML = "<li>No incoming links.</li>";
+        closeMobileInspector();
         return;
       }
 
-      const popup = nodePopup();
-      const screen = getNodeScreenPosition(node);
-
-      const gap = 14;
-      const margin = 10;
-      const popupWidth = popup.offsetWidth || 250;
-      const popupHeight = popup.offsetHeight || 240;
-      const safeTop = 10 + 6;
-      const safeBottom = 10 + 6;
-
-      let left = screen.x + 24;
-      let top = screen.y - popupHeight / 2;
-      let placedBeside = true;
-
-      if (left + popupWidth > window.innerWidth - margin) {
-        left = screen.x - popupWidth - 24;
-      }
-
-      if (left < margin) {
-        placedBeside = false;
-      }
-
-      if (placedBeside) {
-        if (top < safeTop) top = safeTop;
-        const maxTop = window.innerHeight - popupHeight - safeBottom;
-        if (top > maxTop) top = Math.max(safeTop, maxTop);
-      } else {
-        left = screen.x - popupWidth / 2;
-        top = screen.y - popupHeight - gap;
-
-        if (top < safeTop) {
-          top = screen.y + gap;
-        }
-
-        if (left < margin) left = margin;
-        if (left + popupWidth > window.innerWidth - margin) {
-          left = window.innerWidth - popupWidth - margin;
-        }
-
-        if (top + popupHeight > window.innerHeight - safeBottom) {
-          top = Math.max(safeTop, window.innerHeight - popupHeight - safeBottom);
-        }
-      }
-
-      popup.style.left = `${left}px`;
-      popup.style.top = `${top}px`;
-    }
-
-    function updateNodePopup() {
-      if (!isMobileLayout()) {
-        hideNodePopup();
-        return;
-      }
-
-      const node = getSelectedNode();
-      if (!node) {
-        hideNodePopup();
-        return;
-      }
-
-      document.getElementById("popupTitle").textContent = node.label || node.id;
-      document.getElementById("popupSub").textContent =
-        `${node.type || "progression"} • ${node.status || "draft"}`;
-
-      document.getElementById("popupType").textContent = node.type || "—";
-      document.getElementById("popupStatus").textContent = node.status || "—";
-      document.getElementById("popupSubtitle").textContent = node.subtitle || "—";
-      document.getElementById("popupTags").textContent = node.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("popupDescription").textContent = node.description || "—";
-
-      const outgoing = getOutgoingEdges(node.id);
-      const incoming = getIncomingEdges(node.id);
-
-      document.getElementById("popupOutgoing").innerHTML = outgoing.length
-        ? outgoing.map(edge => {
-            const target = getNodeById(edge.to);
-            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : "<li>No outgoing links.</li>";
-
-      document.getElementById("popupIncoming").innerHTML = incoming.length
-        ? incoming.map(edge => {
-            const source = getNodeById(edge.from);
-            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : "<li>No incoming links.</li>";
-
-      nodePopup().classList.add("show");
-      requestAnimationFrame(updateNodePopupPosition);
+      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
+      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
     }
 
     function refreshGraph() {
@@ -1547,10 +1478,11 @@
           const isSelected = node.id === selectedNodeId;
           const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
           const isDimmed = relatedNodeIds ? !isRelated : false;
+          const typeClass = getTypeClass(node.type);
 
           return `
             <div
-              class="node ${escapeHtml(node.type || "progression")} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+              class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
               data-node-id="${escapeHtml(node.id)}"
               style="left:${node.x}px; top:${node.y}px;"
             >
@@ -1562,7 +1494,7 @@
               ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
 
               <div class="nodeStatusRow">
-                <span class="nodeBadge">${escapeHtml(node.type || "progression")}</span>
+                <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
                 <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
               </div>
             </div>
@@ -1598,7 +1530,7 @@
         updateSidebar();
       }
 
-      updateNodePopup();
+      updateMobileInspector();
     }
 
     function bindNodeEvents() {
@@ -1609,7 +1541,10 @@
           selectedNodeId = nodeId;
           closeMobilePanels();
           refreshGraph();
-          if (!isMobileLayout()) {
+
+          if (isMobileLayout()) {
+            openMobileInspector();
+          } else {
             setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
           }
         });
@@ -1619,7 +1554,7 @@
     function clearSelection() {
       selectedNodeId = null;
       refreshGraph();
-      hideNodePopup();
+      closeMobileInspector();
       if (!isMobileLayout()) {
         setStatus("Selection cleared.");
       }
@@ -1701,9 +1636,9 @@
 
       viewport.addEventListener("pointerdown", (event) => {
         if (event.target.closest(".node")) return;
-        if (event.target.closest(".nodePopup")) return;
         if (event.target.closest(".mobilePanel")) return;
         if (event.target.closest(".mobileFab")) return;
+        if (event.target.closest(".mobileInspector")) return;
 
         interaction.isPanning = true;
         interaction.panStartMouseX = event.clientX;
@@ -1736,9 +1671,9 @@
       viewport.addEventListener("click", (event) => {
         if (
           !event.target.closest(".node") &&
-          !event.target.closest(".nodePopup") &&
           !event.target.closest(".mobilePanel") &&
-          !event.target.closest(".mobileFab")
+          !event.target.closest(".mobileFab") &&
+          !event.target.closest(".mobileInspector")
         ) {
           closeMobilePanels();
           clearSelection();
@@ -1763,7 +1698,7 @@
 
       window.addEventListener("resize", () => {
         closeMobilePanels();
-        hideNodePopup();
+        closeMobileInspector();
         if (graphData.nodes.length) {
           fitToGraph();
           refreshGraph();
@@ -1782,6 +1717,7 @@
     window.reloadGraph = reloadGraph;
     window.toggleMobileSearch = toggleMobileSearch;
     window.toggleMobileControls = toggleMobileControls;
+    window.closeMobileInspector = closeMobileInspector;
 
     reloadGraph();
   </script>
