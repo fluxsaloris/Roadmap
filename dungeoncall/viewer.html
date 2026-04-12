@@ -2,15 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dungeon Call Roadmap</title>
-
-  <script>
-    if (window.innerWidth <= 768) {
-      window.location.replace("./viewer-mobile.html");
-    }
-  </script>
-
   <style>
     :root {
       --bg: #070709;
@@ -25,15 +18,21 @@
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      min-width: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     html, body {
       margin: 0;
       padding: 0;
       min-height: 100%;
+      width: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
+      overflow-x: hidden;
     }
 
     body {
@@ -42,7 +41,6 @@
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
         radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
-      overflow-x: hidden;
     }
 
     body::before {
@@ -77,6 +75,16 @@
       max-width: 1620px;
       margin: 0 auto;
       padding: 18px 16px 34px;
+      width: 100%;
+    }
+
+    .hero,
+    .rootCard,
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow-md);
     }
 
     .hero {
@@ -84,12 +92,9 @@
       top: 8px;
       z-index: 20;
       background: rgba(13, 13, 18, 0.68);
-      border: 1px solid var(--border);
-      border-radius: 18px;
       padding: 14px 16px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      box-shadow: var(--shadow-md);
       margin-bottom: 14px;
     }
 
@@ -121,6 +126,7 @@
       font-size: 28px;
       line-height: 1.05;
       letter-spacing: -0.02em;
+      word-break: break-word;
     }
 
     .heroTitle p {
@@ -129,6 +135,7 @@
       font-size: 13px;
       line-height: 1.5;
       max-width: 820px;
+      word-break: break-word;
     }
 
     .topRightMeta {
@@ -149,6 +156,7 @@
       font-weight: 700;
       border: 1px solid transparent;
       white-space: nowrap;
+      max-width: 100%;
     }
 
     .status-pending {
@@ -187,6 +195,7 @@
       font-size: 14px;
       outline: none;
       transition: 0.18s ease;
+      font-family: inherit;
     }
 
     #searchInput:focus {
@@ -214,6 +223,8 @@
       cursor: pointer;
       transition: 0.18s ease;
       box-shadow: none;
+      font-family: inherit;
+      max-width: 100%;
     }
 
     button:hover {
@@ -245,6 +256,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 12px 13px;
+      min-width: 0;
     }
 
     .statValue {
@@ -263,93 +275,9 @@
       font-weight: 700;
     }
 
-    #statusLine {
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .rootCard,
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: var(--shadow-md);
-    }
-
-    .rootCard {
-      margin-bottom: 14px;
-    }
-
-    .rootHeader,
-    .panelHeader {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .rootTitle,
-    .panelHeaderText h2 {
-      margin: 0;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .rootTitle {
-      font-size: 26px;
-    }
-
-    .panelHeaderText h2 {
-      font-size: 19px;
-      line-height: 1.1;
-    }
-
-    .rootDescription,
-    .panelDescription,
-    .treeNodeDescription {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 13px;
-      white-space: pre-wrap;
-    }
-
-    .rootDescription {
-      margin-top: 8px;
-    }
-
-    .miniDescription {
-      margin-top: 4px;
-      font-size: 12px;
-      line-height: 1.45;
-      color: var(--muted);
-    }
-
-    .panelTopMeta {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin: 10px 0 8px;
-    }
-
-    .metaChip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 5px 8px;
-      font-size: 10.5px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
-    }
-
     .progressWrap {
       margin: 8px 0 10px;
+      width: 100%;
     }
 
     .progressText {
@@ -357,6 +285,7 @@
       color: #c0c1cd;
       margin-bottom: 5px;
       font-weight: 600;
+      word-break: break-word;
     }
 
     .progressTrack {
@@ -376,10 +305,104 @@
       transition: width 0.25s ease;
     }
 
-    .panel.status-panel-complete .progressFill,
-    .treeNode.completeNode .progressFill,
-    .rootCard.status-root-complete .progressFill {
-      background: linear-gradient(90deg, #52e878, #8dffab);
+    #statusLine {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .rootCard {
+      margin-bottom: 14px;
+      padding: 14px;
+      width: 100%;
+    }
+
+    .panel {
+      min-height: 120px;
+      height: fit-content;
+      align-self: start;
+      padding: 14px;
+      width: 100%;
+    }
+
+    .rootHeader,
+    .panelHeader,
+    .treeNodeHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .rootTitle,
+    .panelHeaderText h2,
+    .treeNodeTitle {
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+
+    .rootTitle {
+      font-size: 26px;
+    }
+
+    .panelHeaderText h2 {
+      font-size: 19px;
+      line-height: 1.1;
+    }
+
+    .treeNodeTitle {
+      font-size: 14px;
+      line-height: 1.22;
+      letter-spacing: -0.01em;
+    }
+
+    .rootDescription,
+    .panelDescription,
+    .treeNodeDescription {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .rootDescription {
+      margin-top: 8px;
+    }
+
+    .miniDescription {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .panelTopMeta,
+    .metaRow {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 10px 0 8px;
+      width: 100%;
+    }
+
+    .metaChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #c1c2ce;
+      max-width: 100%;
     }
 
     #panels {
@@ -387,12 +410,7 @@
       grid-template-columns: repeat(2, minmax(320px, 1fr));
       gap: 14px;
       align-items: start;
-    }
-
-    .panel {
-      min-height: 120px;
-      height: fit-content;
-      align-self: start;
+      width: 100%;
     }
 
     .panel.status-panel-progress {
@@ -411,12 +429,20 @@
       margin-top: 10px;
     }
 
+    .panel.status-panel-complete .progressFill,
+    .treeNode.completeNode .progressFill,
+    .rootCard.status-root-complete .progressFill {
+      background: linear-gradient(90deg, #52e878, #8dffab);
+    }
+
     .treeNode {
       background: rgba(255,255,255,0.02);
       border: 1px solid var(--border);
       border-radius: 13px;
       padding: 10px;
       margin-top: 8px;
+      width: 100%;
+      overflow: hidden;
     }
 
     .treeNode.completeNode {
@@ -428,26 +454,11 @@
       box-shadow: 0 0 0 1px rgba(190, 26, 72, 0.10);
     }
 
-    .treeNodeHeader {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
-    }
-
-    .treeNodeTitle {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.22;
-      letter-spacing: -0.01em;
-    }
-
     .childrenWrap {
       margin-top: 8px;
       padding-left: 10px;
       border-left: 1px solid rgba(255,255,255,0.06);
+      width: 100%;
     }
 
     .nodeActions {
@@ -455,6 +466,7 @@
       gap: 6px;
       flex-wrap: wrap;
       margin-top: 8px;
+      width: 100%;
     }
 
     .emptyState {
@@ -482,6 +494,7 @@
       text-align: center;
       box-shadow: var(--shadow-lg);
       min-width: 260px;
+      max-width: calc(100vw - 32px);
     }
 
     #loadingText {
@@ -562,19 +575,36 @@
       }
     }
 
-    @media (max-width: 640px) {
-      #app {
-        padding: 14px 12px 28px;
+    @media (max-width: 768px) {
+      body::after {
+        margin: 6px;
       }
 
-      .hero,
-      .rootCard,
-      .panel {
-        padding: 12px;
+      #app {
+        padding:
+          calc(14px + env(safe-area-inset-top))
+          12px
+          calc(24px + env(safe-area-inset-bottom));
+      }
+
+      .hero {
+        position: relative;
+        top: 0;
+        padding: 14px;
+        margin-bottom: 12px;
       }
 
       .heroTitle h1 {
         font-size: 24px;
+      }
+
+      .heroTitle p {
+        font-size: 13px;
+      }
+
+      .rootCard,
+      .panel {
+        padding: 14px;
       }
 
       .rootTitle {
@@ -585,8 +615,14 @@
         font-size: 18px;
       }
 
-      .stats {
-        grid-template-columns: 1fr 1fr;
+      #panels {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .panel {
+        min-height: 0;
       }
     }
   </style>
