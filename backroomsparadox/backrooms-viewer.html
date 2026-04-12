@@ -1,1725 +1,304 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Backrooms Paradox: Level Paths</title>
-  <style>
-    :root {
-      --bg: #070709;
-      --surface: rgba(20, 20, 26, 0.92);
-      --surface-soft: rgba(255, 255, 255, 0.025);
-      --border: rgba(255, 255, 255, 0.06);
-      --border-strong: rgba(255,255,255,0.12);
-      --text: #f4f4f7;
-      --muted: #a7a7b5;
-      --muted-2: #7f8091;
-      --accent: #be1a48;
-      --accent-soft: rgba(190, 26, 72, 0.18);
-      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
-      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
-      --radius: 18px;
-      --sidebar-width: 360px;
-      --canvas-height: 78vh;
-      --canvas-min-height: 620px;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Backrooms Paradox: Level Paths</title>
+
+<style>
+:root {
+  --bg: #070709;
+  --text: #f4f4f7;
+
+  --stable: #4CAF50;
+  --dangerous: #E53935;
+  --corrupted: #3E5F3A;
+  --anomalous: #8E44AD;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, Arial, sans-serif;
+}
+
+/* === GRAPH CORE === */
+
+.graphViewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.graphScene {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+
+.graphSvg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.graphNodes {
+  position: absolute;
+  inset: 0;
+}
+
+/* === NODES === */
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 10px;
+  border-radius: 12px;
+  min-width: 120px;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+}
+
+.node.stable { background: rgba(76,175,80,0.2); }
+.node.dangerous { background: rgba(229,57,53,0.2); }
+.node.corrupted { background: rgba(62,95,58,0.25); }
+.node.anomalous { background: rgba(142,68,173,0.25); }
+
+.nodeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.node.stable .nodeDot { background: var(--stable); }
+.node.dangerous .nodeDot { background: var(--dangerous); }
+.node.corrupted .nodeDot { background: var(--corrupted); }
+.node.anomalous .nodeDot { background: var(--anomalous); }
+
+/* === EDGES === */
+
+.line {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-dasharray: 8 6;
+  animation: flow 2s linear infinite;
+}
+
+.line-stable { stroke: var(--stable); }
+.line-dangerous { stroke: var(--dangerous); }
+.line-corrupted { stroke: var(--corrupted); }
+.line-anomalous { stroke: var(--anomalous); }
+
+.line-related {
+  stroke: #ffffff;
+  stroke-width: 3.2;
+}
+
+.line-dimmed {
+  stroke: rgba(255,255,255,0.1);
+}
+
+@keyframes flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -24; }
+}
+
+/* === POPUP === */
+
+#popup {
+  position: fixed;
+  background: #111;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 10px;
+  display: none;
+  max-width: 240px;
+}
+</style>
 
-      --mobile-fab-size: 52px;
-      --node-width-desktop: 170px;
-      --node-width-mobile: 118px;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      width: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, Arial, sans-serif;
-      overflow-x: hidden;
-    }
-
-    body {
-      position: relative;
-      background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
-        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.10;
-      background-image:
-        radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      margin: 8px;
-      border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.10);
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    #app {
-      position: relative;
-      z-index: 2;
-      max-width: 1800px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    .hero,
-    .panel,
-    .sidebarCard,
-    .mobilePanel,
-    .mobileInspector {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .hero,
-    .panel,
-    .sidebarCard {
-      border-radius: var(--radius);
-    }
-
-    .hero {
-      position: sticky;
-      top: 8px;
-      z-index: 30;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      background: rgba(13, 13, 18, 0.88);
-    }
-
-    .heroTop {
-      display: flex;
-      gap: 14px;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .heroTitle {
-      min-width: 280px;
-      flex: 1;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #d98aa0;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .heroTitle h1 {
-      margin: 0;
-      font-size: 28px;
-      line-height: 1.05;
-      letter-spacing: -0.02em;
-    }
-
-    .heroTitle p {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-      max-width: 900px;
-    }
-
-    .heroMeta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .infoBadge,
-    .metaChip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-      border-radius: 999px;
-      font-weight: 700;
-    }
-
-    .infoBadge {
-      padding: 7px 11px;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.04);
-      color: #cfd0db;
-    }
-
-    .heroControls {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto;
-      gap: 10px;
-      align-items: start;
-    }
-
-    #searchInput,
-    #mobileSearchInput {
-      width: 100%;
-      background: rgba(22, 22, 30, 0.96);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: 12px 13px;
-      font-size: 14px;
-      outline: none;
-      transition: 0.18s ease;
-      font-family: inherit;
-    }
-
-    #searchInput:focus,
-    #mobileSearchInput:focus {
-      border-color: rgba(190, 26, 72, 0.42);
-      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
-      background: rgba(26, 26, 34, 0.98);
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .mobileControlsGrid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    button {
-      appearance: none;
-      background: rgba(255,255,255,0.04);
-      color: #e5e5ec;
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 9px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.18s ease;
-      box-shadow: none;
-      font-family: inherit;
-    }
-
-    button:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.14);
-      transform: translateY(-1px);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .primaryBtn {
-      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
-      border-color: rgba(255,255,255,0.05);
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
-    }
-
-    .primaryBtn:hover {
-      background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
-    }
-
-    .statusLine {
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .workspaceRow {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
-      gap: 14px;
-      align-items: start;
-    }
-
-    .leftColumn {
-      min-width: 0;
-      display: grid;
-      gap: 14px;
-    }
-
-    .rightColumn {
-      min-width: 0;
-      display: grid;
-      gap: 12px;
-      position: sticky;
-      top: 132px;
-      align-self: start;
-      max-height: calc(100vh - 150px);
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .panel,
-    .sidebarCard {
-      padding: 14px;
-    }
-
-    .statsBar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .metaChip {
-      padding: 6px 10px;
-      font-size: 11px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
-    }
-
-    .canvasPanel {
-      padding: 10px;
-    }
-
-    .canvasToolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-
-    .canvasHint {
-      color: var(--muted);
-      font-size: 12px;
-      padding: 6px 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      border-radius: 999px;
-    }
-
-    .graphViewport {
-      position: relative;
-      width: 100%;
-      height: var(--canvas-height);
-      min-height: var(--canvas-min-height);
-      overflow: hidden;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
-        linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
-      background-size: 48px 48px, 48px 48px, auto, auto;
-      user-select: none;
-      cursor: grab;
-      touch-action: none;
-    }
-
-    .graphViewport.panning {
-      cursor: grabbing;
-    }
-
-    .graphScene {
-      position: absolute;
-      inset: 0;
-      transform-origin: 0 0;
-      will-change: transform;
-    }
-
-    .graphSvg {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-      pointer-events: none;
-    }
-
-    .line-base {
-      fill: none;
-      stroke: rgba(255,255,255,0.17);
-      stroke-width: 2.6;
-      stroke-linecap: round;
-    }
-
-    .line-related {
-      fill: none;
-      stroke: rgba(190, 26, 72, 0.95);
-      stroke-width: 3.3;
-      stroke-linecap: round;
-      filter: drop-shadow(0 0 8px rgba(190,26,72,0.40));
-    }
-
-    .line-dimmed {
-      fill: none;
-      stroke: rgba(255,255,255,0.08);
-      stroke-width: 2;
-      stroke-linecap: round;
-    }
-
-    .edgeLabel {
-      fill: rgba(220,220,230,0.92);
-      font-size: 12px;
-      font-weight: 600;
-      paint-order: stroke;
-      stroke: rgba(0,0,0,0.65);
-      stroke-width: 4px;
-      stroke-linejoin: round;
-    }
-
-    .graphNodes {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-    }
-
-    .node {
-      position: absolute;
-      min-width: var(--node-width-desktop);
-      max-width: 260px;
-      padding: 12px 12px 10px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow:
-        0 10px 22px rgba(0,0,0,0.42),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-      transform: translate(-50%, -50%);
-      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
-      backdrop-filter: blur(5px);
-      cursor: pointer;
-    }
-
-    .node:hover {
-      transform: translate(-50%, -50%) scale(1.02);
-      border-color: rgba(255,255,255,0.16);
-    }
-
-    .node.selected {
-      border-color: rgba(190,26,72,0.72);
-      box-shadow:
-        0 0 0 3px rgba(190,26,72,0.22),
-        0 18px 34px rgba(0,0,0,0.56);
-      z-index: 30;
-    }
-
-    .node.related {
-      border-color: rgba(255,255,255,0.16);
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,0.05),
-        0 14px 28px rgba(0,0,0,0.45);
-    }
-
-    .node.dimmed {
-      opacity: 0.42;
-    }
-
-    .node.stable {
-      background: linear-gradient(180deg, rgba(50,42,24,0.98), rgba(26,22,15,0.98));
-    }
-
-    .node.dangerous {
-      background: linear-gradient(180deg, rgba(26,35,60,0.98), rgba(17,21,34,0.98));
-    }
-
-    .node.corrupted {
-      background: linear-gradient(180deg, rgba(60,26,32,0.98), rgba(32,16,20,0.98));
-    }
-
-    .node.anomalous {
-      background: linear-gradient(180deg, rgba(47,29,70,0.98), rgba(24,16,36,0.98));
-    }
-
-    .node.stable .nodeDot { background: #d7b45a; }
-    .node.dangerous .nodeDot { background: #7aa2ff; }
-    .node.corrupted .nodeDot { background: #ff7f7f; }
-    .node.anomalous .nodeDot { background: #a77cff; }
-
-    .nodeHeader {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nodeDot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex: 0 0 auto;
-    }
-
-    .nodeTitle {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #f5f5f7;
-      line-height: 1.2;
-      word-break: break-word;
-    }
-
-    .nodeSubtitle {
-      margin-top: 4px;
-      font-size: 11px;
-      line-height: 1.35;
-      color: #9ea3b7;
-      word-break: break-word;
-    }
-
-    .nodeStatusRow {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .nodeBadge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 7px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.04);
-      color: #cbd0df;
-    }
-
-    .sidebarTitle {
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-
-    .sidebarSub {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-      margin-bottom: 10px;
-    }
-
-    .infoList {
-      display: grid;
-      gap: 10px;
-    }
-
-    .infoBlock {
-      display: grid;
-      gap: 5px;
-    }
-
-    .infoLabel {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted-2);
-      font-weight: 700;
-    }
-
-    .infoValue {
-      color: #ececf4;
-      font-size: 13px;
-      line-height: 1.5;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    .linkList,
-    .legendList {
-      margin: 0;
-      padding-left: 18px;
-      color: #d7dae5;
-      font-size: 12.5px;
-      line-height: 1.5;
-    }
-
-    .linkList li + li,
-    .legendList li + li {
-      margin-top: 4px;
-    }
-
-    .mobileFabStack {
-      position: fixed;
-      right: 10px;
-      bottom: calc(12px + env(safe-area-inset-bottom));
-      z-index: 50;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .mobileFab {
-      width: var(--mobile-fab-size);
-      height: var(--mobile-fab-size);
-      min-width: var(--mobile-fab-size);
-      min-height: var(--mobile-fab-size);
-      border-radius: 50%;
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 800;
-      box-shadow: var(--shadow-lg);
-      background: rgba(18, 18, 25, 0.96);
-    }
-
-    .mobilePanel {
-      position: fixed;
-      left: 10px;
-      right: 10px;
-      z-index: 49;
-      border-radius: 16px;
-      padding: 10px;
-      display: none;
-    }
-
-    .mobilePanel.show {
-      display: block;
-    }
-
-    #mobileSearchPanel {
-      top: calc(10px + env(safe-area-inset-top));
-    }
-
-    #mobileControlsPanel {
-      bottom: calc(74px + env(safe-area-inset-bottom));
-    }
-
-    .mobileInspectorOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.42);
-      z-index: 54;
-      display: none;
-    }
-
-    .mobileInspectorOverlay.show {
-      display: block;
-    }
-
-    .mobileInspector {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: min(88vw, 360px);
-      background: rgba(18, 18, 25, 0.98);
-      border-left: 1px solid rgba(255,255,255,0.08);
-      box-shadow: -18px 0 40px rgba(0,0,0,0.34);
-      z-index: 55;
-      padding:
-        calc(14px + env(safe-area-inset-top))
-        14px
-        calc(18px + env(safe-area-inset-bottom));
-      overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.22s ease;
-      border-radius: 0;
-    }
-
-    .mobileInspector.show {
-      transform: translateX(0);
-    }
-
-    .mobileInspectorHeader {
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-
-    .mobileInspectorEyebrow {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #d98aa0;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .mobileInspectorTitle {
-      font-size: 16px;
-      font-weight: 800;
-      line-height: 1.2;
-      color: #f5f5f7;
-      word-break: break-word;
-    }
-
-    .mobileInspectorClose {
-      flex: 0 0 auto;
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
-      min-height: 34px;
-      padding: 0;
-      border-radius: 10px;
-    }
-
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4,4,8,0.82);
-      backdrop-filter: blur(8px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #loadingCard {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 26px 30px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      min-width: 260px;
-      max-width: calc(100vw - 30px);
-    }
-
-    #loadingText {
-      font-size: 14px;
-      color: #e2e2ea;
-    }
-
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 3px solid rgba(255,255,255,0.10);
-      border-top: 3px solid #be1a48;
-      border-radius: 50%;
-      animation: spin 0.95s linear infinite;
-      margin: 0 auto 14px;
-    }
-
-    #errorPanel {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 60;
-      width: min(420px, calc(100vw - 40px));
-      background: rgba(36, 13, 18, 0.96);
-      border: 1px solid rgba(255, 138, 138, 0.28);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
-      backdrop-filter: blur(12px);
-      display: none;
-    }
-
-    #errorPanel.show {
-      display: block;
-    }
-
-    #errorPanelTitle {
-      font-size: 14px;
-      font-weight: 800;
-      color: #ffced6;
-      margin-bottom: 6px;
-    }
-
-    #errorPanelText {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #f6d9df;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 1420px) {
-      .workspaceRow {
-        grid-template-columns: 1fr;
-      }
-
-      .rightColumn {
-        position: relative;
-        top: 0;
-        max-height: none;
-        overflow: visible;
-      }
-    }
-
-    @media (max-width: 1100px) {
-      .hero {
-        position: relative;
-        top: 0;
-      }
-
-      .heroControls {
-        grid-template-columns: 1fr;
-      }
-
-      .toolbar {
-        justify-content: flex-start;
-      }
-
-      .heroMeta {
-        justify-content: flex-start;
-      }
-
-      :root {
-        --canvas-height: 72vh;
-        --canvas-min-height: 520px;
-      }
-    }
-
-    @media (max-width: 700px) {
-      body::after {
-        display: none;
-      }
-
-      html, body {
-        height: 100%;
-        overflow: hidden;
-      }
-
-      #app {
-        max-width: none;
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        height: 100dvh;
-      }
-
-      .hero,
-      .rightColumn,
-      .canvasToolbar {
-        display: none !important;
-      }
-
-      .workspaceRow,
-      .leftColumn {
-        display: block;
-        height: 100%;
-      }
-
-      .panel,
-      .canvasPanel {
-        padding: 0;
-        margin: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
-
-      .graphViewport {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        height: 100dvh;
-        min-height: 0;
-        border-radius: 0;
-        border: none;
-        background-size: 34px 34px, 34px 34px, auto, auto;
-      }
-
-      .graphScene,
-      .graphSvg,
-      .graphNodes {
-        position: absolute;
-      }
-
-      .node {
-        min-width: var(--node-width-mobile);
-        max-width: 155px;
-        padding: 8px 8px 7px;
-        border-radius: 12px;
-      }
-
-      .node:hover {
-        transform: translate(-50%, -50%);
-      }
-
-      .nodeTitle {
-        font-size: 11px;
-      }
-
-      .nodeSubtitle {
-        margin-top: 3px;
-        font-size: 9px;
-      }
-
-      .nodeStatusRow {
-        margin-top: 6px;
-        gap: 4px;
-      }
-
-      .nodeBadge {
-        font-size: 8.5px;
-        padding: 3px 5px;
-      }
-
-      .edgeLabel {
-        font-size: 10px;
-      }
-
-      .mobileFabStack {
-        display: flex;
-      }
-
-      #errorPanel {
-        left: 10px;
-        right: 10px;
-        top: calc(10px + env(safe-area-inset-top));
-        width: auto;
-      }
-
-      .mobileControlsGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .mobileInspector {
-        width: min(88vw, 340px);
-      }
-    }
-  </style>
 </head>
+
 <body>
-  <div id="loadingOverlay">
-    <div id="loadingCard">
-      <div class="spinner"></div>
-      <div id="loadingText">Loading graph...</div>
-    </div>
+
+<div class="graphViewport" id="graphViewport">
+  <div class="graphScene" id="graphScene">
+    <svg class="graphSvg" id="graphSvg"></svg>
+    <div class="graphNodes" id="graphNodes"></div>
   </div>
+</div>
 
-  <div id="errorPanel">
-    <div id="errorPanelTitle">Couldn’t load viewer</div>
-    <div id="errorPanelText">Try refreshing or check your connection.</div>
-  </div>
+<div id="popup"></div>
 
-  <div id="app">
-    <section class="hero">
-      <div class="heroTop">
-        <div class="heroTitle">
-          <div class="eyebrow">Backrooms Paradox: Map</div>
-          <h1>Backrooms Paradox: Level Paths</h1>
-          <p>Explore level paths, their status and more. Click a node to highlight connected paths and inspect its details.</p>
-        </div>
+<script>
+const URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-        <div class="heroMeta">
-          <div class="infoBadge" id="statNodes">0 nodes</div>
-          <div class="infoBadge" id="statEdges">0 links</div>
-          <div class="infoBadge" id="statSelected">No level selected</div>
-        </div>
-      </div>
+let data = { nodes: [], edges: [] };
+let selected = null;
 
-      <div class="heroControls">
-        <input id="searchInput" type="text" placeholder="Search level name, tag, subtitle, description, or notes..." autocomplete="off" />
-        <div class="toolbar">
-          <button onclick="zoomBy(1.12)">Zoom In</button>
-          <button onclick="zoomBy(1 / 1.12)">Zoom Out</button>
-          <button onclick="resetView()">Reset View</button>
-          <button onclick="fitToGraph()">Fit Graph</button>
-          <button onclick="clearSelection()">Clear Selection</button>
-          <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
-        </div>
-      </div>
+let view = { x: 0, y: 0, scale: 1 };
 
-      <div class="statusLine" id="statusLine">Loading graph...</div>
-    </section>
+/* === TRANSFORM === */
 
-    <div class="workspaceRow">
-      <div class="leftColumn">
-        <section class="panel canvasPanel">
-          <div class="canvasToolbar">
-            <div class="canvasHint">Pan: drag empty space • Zoom: mouse wheel</div>
-            <div class="canvasHint">Select: click a node to highlight related links</div>
-          </div>
+function applyTransform() {
+  document.getElementById("graphScene").style.transform =
+    `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
+}
 
-          <div id="graphViewport" class="graphViewport">
-            <div id="graphScene" class="graphScene">
-              <svg id="graphSvg" class="graphSvg"></svg>
-              <div id="graphNodes" class="graphNodes"></div>
-            </div>
-          </div>
-        </section>
-      </div>
+/* === HELPERS === */
 
-      <div class="rightColumn">
-        <section class="sidebarCard">
-          <h2 class="sidebarTitle">Selected Level</h2>
-          <div class="sidebarSub" id="selectedHint">Click a node in the graph to inspect it.</div>
+function normalizeType(type) {
+  const t = String(type || "").toLowerCase();
+  if (t === "stable") return "stable";
+  if (t === "dangerous") return "dangerous";
+  if (t === "corrupted") return "corrupted";
+  if (t === "anomalous") return "anomalous";
+  return "stable";
+}
 
-          <div class="infoList">
-            <div class="infoBlock">
-              <div class="infoLabel">Label</div>
-              <div class="infoValue" id="infoLabel">—</div>
-            </div>
+function getNode(id) {
+  return data.nodes.find(n => String(n.id) === String(id));
+}
 
-            <div class="infoBlock">
-              <div class="infoLabel">Subtitle</div>
-              <div class="infoValue" id="infoSubtitle">—</div>
-            </div>
+/* === DRAW === */
 
-            <div class="infoBlock">
-              <div class="infoLabel">Type</div>
-              <div class="infoValue" id="infoType">—</div>
-            </div>
+function draw() {
+  const nodeContainer = document.getElementById("graphNodes");
+  const svg = document.getElementById("graphSvg");
 
-            <div class="infoBlock">
-              <div class="infoLabel">Status</div>
-              <div class="infoValue" id="infoStatus">—</div>
-            </div>
+  nodeContainer.innerHTML = "";
+  svg.innerHTML = "";
 
-            <div class="infoBlock">
-              <div class="infoLabel">Tags</div>
-              <div class="infoValue" id="infoTags">—</div>
-            </div>
+  data.nodes.forEach(n => {
+    const type = normalizeType(n.type);
 
-            <div class="infoBlock">
-              <div class="infoLabel">Description</div>
-              <div class="infoValue" id="infoDescription">—</div>
-            </div>
+    const el = document.createElement("div");
+    el.className = `node ${type}`;
+    el.style.left = n.x + "px";
+    el.style.top = n.y + "px";
 
-            <div class="infoBlock">
-              <div class="infoLabel">Notes</div>
-              <div class="infoValue" id="infoNotes">—</div>
-            </div>
-          </div>
-        </section>
+    el.innerHTML = `
+      <div class="nodeDot"></div>
+      <div>${n.label}</div>
+    `;
 
-        <section class="sidebarCard">
-          <h2 class="sidebarTitle">Outgoing Links</h2>
-          <div class="sidebarSub">Where this level can send the player next.</div>
-          <ul id="outgoingList" class="linkList">
-            <li>No level selected.</li>
-          </ul>
-        </section>
-
-        <section class="sidebarCard">
-          <h2 class="sidebarTitle">Incoming Links</h2>
-          <div class="sidebarSub">Which levels can lead into this one.</div>
-          <ul id="incomingList" class="linkList">
-            <li>No level selected.</li>
-          </ul>
-        </section>
-
-        <section class="sidebarCard">
-          <h2 class="sidebarTitle">Legend</h2>
-          <ul class="legendList">
-            <li><span style="color:#d7b45a;">●</span> Stable</li>
-            <li><span style="color:#7aa2ff;">●</span> Dangerous</li>
-            <li><span style="color:#ff7f7f;">●</span> Corrupted</li>
-            <li><span style="color:#a77cff;">●</span> Anomalous</li>
-          </ul>
-        </section>
-      </div>
-    </div>
-
-    <div id="mobileSearchPanel" class="mobilePanel">
-      <input id="mobileSearchInput" type="text" placeholder="Search levels..." autocomplete="off" />
-    </div>
-
-    <div id="mobileControlsPanel" class="mobilePanel">
-      <div class="mobileControlsGrid">
-        <button onclick="zoomBy(1.12)">+</button>
-        <button onclick="zoomBy(1 / 1.12)">−</button>
-        <button onclick="resetView()">Reset</button>
-        <button onclick="fitToGraph()">Fit</button>
-        <button onclick="clearSelection()">Clear</button>
-        <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
-      </div>
-    </div>
-
-    <div class="mobileFabStack">
-      <button class="mobileFab" onclick="toggleMobileSearch()" aria-label="Search">⌕</button>
-      <button class="mobileFab primaryBtn" onclick="toggleMobileControls()" aria-label="Controls">⋯</button>
-    </div>
-
-    <div id="mobileInspectorOverlay" class="mobileInspectorOverlay" onclick="closeMobileInspector()"></div>
-
-    <div id="mobileInspector" class="mobileInspector">
-      <div class="mobileInspectorHeader">
-        <div>
-          <div class="mobileInspectorEyebrow">Selected Level</div>
-          <div id="mobileInspectorTitle" class="mobileInspectorTitle">No level selected</div>
-        </div>
-        <button class="mobileInspectorClose" onclick="closeMobileInspector()">×</button>
-      </div>
-
-      <div class="infoList">
-        <div class="infoBlock">
-          <div class="infoLabel">Label</div>
-          <div class="infoValue" id="mobileInfoLabel">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Subtitle</div>
-          <div class="infoValue" id="mobileInfoSubtitle">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Type</div>
-          <div class="infoValue" id="mobileInfoType">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Status</div>
-          <div class="infoValue" id="mobileInfoStatus">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Tags</div>
-          <div class="infoValue" id="mobileInfoTags">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Description</div>
-          <div class="infoValue" id="mobileInfoDescription">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Notes</div>
-          <div class="infoValue" id="mobileInfoNotes">—</div>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Outgoing</div>
-          <ul id="mobileOutgoingList" class="linkList">
-            <li>No outgoing links.</li>
-          </ul>
-        </div>
-
-        <div class="infoBlock">
-          <div class="infoLabel">Incoming</div>
-          <ul id="mobileIncomingList" class="linkList">
-            <li>No incoming links.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
-
-    let graphData = { nodes: [], edges: [] };
-    let selectedNodeId = null;
-    let currentSearch = "";
-
-    let viewportState = {
-      x: 0,
-      y: 0,
-      scale: window.innerWidth <= 700 ? 0.55 : 1
+    el.onclick = (e) => {
+      e.stopPropagation();
+      selected = n.id;
+      draw();
+      showPopup(n);
     };
 
-    let interaction = {
-      isPanning: false,
-      panStartMouseX: 0,
-      panStartMouseY: 0,
-      panStartX: 0,
-      panStartY: 0
-    };
-
-    const graphViewport = () => document.getElementById("graphViewport");
-    const graphScene = () => document.getElementById("graphScene");
-    const graphSvg = () => document.getElementById("graphSvg");
-    const graphNodesEl = () => document.getElementById("graphNodes");
-    const desktopSearchInput = () => document.getElementById("searchInput");
-    const mobileSearchInput = () => document.getElementById("mobileSearchInput");
-    const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
-    const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
-    const mobileInspector = () => document.getElementById("mobileInspector");
-    const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
-
-    const TYPE_META = {
-      stable: { className: "stable", label: "Stable" },
-      dangerous: { className: "dangerous", label: "Dangerous" },
-      corrupted: { className: "corrupted", label: "Corrupted" },
-      anomalous: { className: "anomalous", label: "Anomalous" }
-    };
-
-    function normalizeType(type) {
-      const value = String(type || "").trim().toLowerCase();
-      if (value === "stable" || value === "start") return "stable";
-      if (value === "dangerous" || value === "progression") return "dangerous";
-      if (value === "corrupted" || value === "danger") return "corrupted";
-      if (value === "anomalous" || value === "weird") return "anomalous";
-      return "stable";
-    }
-
-    function getTypeLabel(type) {
-      return TYPE_META[normalizeType(type)].label;
-    }
-
-    function getTypeClass(type) {
-      return TYPE_META[normalizeType(type)].className;
-    }
-
-    function isMobileLayout() {
-      return window.innerWidth <= 700;
-    }
-
-    function showLoading(text = "Loading graph...") {
-      document.getElementById("loadingText").textContent = text;
-      document.getElementById("loadingOverlay").style.display = "flex";
-    }
-
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
-
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      if (!el) return;
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
-    }
-
-    function showErrorPanel(message) {
-      document.getElementById("errorPanelText").textContent = message;
-      document.getElementById("errorPanel").classList.add("show");
-    }
-
-    function hideErrorPanel() {
-      document.getElementById("errorPanel").classList.remove("show");
-    }
-
-    function normalizeData(raw) {
-      return {
-        nodes: Array.isArray(raw?.nodes)
-          ? raw.nodes.map((n) => ({
-              id: String(n.id ?? ""),
-              label: typeof n.label === "string" ? n.label : "Unnamed",
-              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-              description: typeof n.description === "string" ? n.description : "",
-              notes: typeof n.notes === "string" ? n.notes : "",
-              x: typeof n.x === "number" ? n.x : 0,
-              y: typeof n.y === "number" ? n.y : 0,
-              type: normalizeType(n.type),
-              status: typeof n.status === "string" ? n.status : "draft",
-              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
-            }))
-          : [],
-        edges: Array.isArray(raw?.edges)
-          ? raw.edges.map((e) => ({
-              from: String(e.from ?? ""),
-              to: String(e.to ?? ""),
-              label: typeof e.label === "string" ? e.label : "",
-              oneWay: e.oneWay === false ? false : true
-            }))
-          : []
-      };
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function getNodeById(id) {
-      return graphData.nodes.find(n => n.id === String(id)) || null;
-    }
-
-    function getSelectedNode() {
-      return selectedNodeId ? getNodeById(selectedNodeId) : null;
-    }
-
-    function getOutgoingEdges(id) {
-      return graphData.edges.filter(edge => edge.from === String(id));
-    }
-
-    function getIncomingEdges(id) {
-      return graphData.edges.filter(edge => edge.to === String(id));
-    }
-
-    function nodeMatchesSearch(node, search) {
-      if (!search) return true;
-      const hay = [
-        node.id,
-        node.label,
-        node.subtitle,
-        node.description,
-        node.notes,
-        getTypeLabel(node.type),
-        ...(Array.isArray(node.tags) ? node.tags : [])
-      ].join(" ").toLowerCase();
-      return hay.includes(search);
-    }
-
-    function getVisibleNodeIds() {
-      const search = currentSearch.trim().toLowerCase();
-      if (!search) return new Set(graphData.nodes.map(n => n.id));
-      return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
-    }
-
-    function getRelatedNodeIds(nodeId) {
-      const related = new Set([String(nodeId)]);
-      for (const edge of graphData.edges) {
-        if (edge.from === String(nodeId)) related.add(edge.to);
-        if (edge.to === String(nodeId)) related.add(edge.from);
-      }
-      return related;
-    }
-
-    function scenePointFromClient(clientX, clientY) {
-      const rect = graphViewport().getBoundingClientRect();
-      return {
-        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
-        y: (clientY - rect.top - viewportState.y) / viewportState.scale
-      };
-    }
-
-    function applyViewportTransform() {
-      graphScene().style.transform =
-        `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
-    }
-
-    function getGraphBounds(nodes) {
-      if (!nodes.length) {
-        return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
-      }
-
-      const minX = Math.min(...nodes.map(n => n.x));
-      const maxX = Math.max(...nodes.map(n => n.x));
-      const minY = Math.min(...nodes.map(n => n.y));
-      const maxY = Math.max(...nodes.map(n => n.y));
-
-      return { minX, maxX, minY, maxY };
-    }
-
-    function fitToGraph() {
-      const visibleNodeIds = getVisibleNodeIds();
-      const visibleNodes = graphData.nodes.filter(node => visibleNodeIds.has(node.id));
-      const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
-      const bounds = getGraphBounds(nodesToFit);
-
-      const mobile = isMobileLayout();
-      const width = Math.max(mobile ? 320 : 500, bounds.maxX - bounds.minX + (mobile ? 170 : 340));
-      const height = Math.max(mobile ? 220 : 320, bounds.maxY - bounds.minY + (mobile ? 150 : 240));
-
-      const rect = graphViewport().getBoundingClientRect();
-      const fitScale = Math.min(
-        mobile ? 0.82 : 1.2,
-        Math.max(0.22, Math.min(rect.width / width, rect.height / height))
-      );
-
-      viewportState.scale = fitScale;
-      viewportState.x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * fitScale;
-      viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
-
-      applyViewportTransform();
-      if (!mobile) setStatus("Fitted graph to view.");
-    }
-
-    function resetView() {
-      viewportState = {
-        x: isMobileLayout() ? 20 : 80,
-        y: isMobileLayout() ? 20 : 80,
-        scale: isMobileLayout() ? 0.55 : 1
-      };
-      applyViewportTransform();
-      if (!isMobileLayout()) setStatus("View reset.");
-    }
-
-    function zoomBy(factor, clientX = null, clientY = null) {
-      const rect = graphViewport().getBoundingClientRect();
-      const px = clientX ?? (rect.left + rect.width / 2);
-      const py = clientY ?? (rect.top + rect.height / 2);
-
-      const before = scenePointFromClient(px, py);
-      viewportState.scale = Math.max(0.22, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
-      viewportState.x = px - rect.left - before.x * viewportState.scale;
-      viewportState.y = py - rect.top - before.y * viewportState.scale;
-      applyViewportTransform();
-    }
-
-    function createCurvePath(x1, y1, x2, y2) {
-      const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
-      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-    }
-
-    function getNodePortPosition(nodeId, side) {
-      const node = getNodeById(nodeId);
-      if (!node) return null;
-      const width = isMobileLayout() ? 118 : 170;
-      return {
-        x: node.x + (side === "output" ? width / 2 : -width / 2),
-        y: node.y
-      };
-    }
-
-    function updateStats() {
-      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-
-      const selected = getSelectedNode();
-      document.getElementById("statSelected").textContent =
-        selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
-    }
-
-    function renderLinkListHTML(edges, direction) {
-      return edges.length
-        ? edges.map(edge => {
-            const other = getNodeById(direction === "outgoing" ? edge.to : edge.from);
-            return `<li>${escapeHtml(other?.label || (direction === "outgoing" ? edge.to : edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : `<li>No ${direction} links.</li>`;
-    }
-
-    function updateSidebar() {
-      const node = getSelectedNode();
-
-      document.getElementById("selectedHint").textContent =
-        node ? `Inspecting ${node.label || node.id}` : "Click a node in the graph to inspect it.";
-
-      document.getElementById("infoLabel").textContent = node?.label || "—";
-      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("infoType").textContent = node ? getTypeLabel(node.type) : "—";
-      document.getElementById("infoStatus").textContent = node?.status || "—";
-      document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("infoDescription").textContent = node?.description || "—";
-      document.getElementById("infoNotes").textContent = node?.notes || "—";
-
-      const outgoingList = document.getElementById("outgoingList");
-      const incomingList = document.getElementById("incomingList");
-
-      if (!node) {
-        outgoingList.innerHTML = "<li>No level selected.</li>";
-        incomingList.innerHTML = "<li>No level selected.</li>";
-        return;
-      }
-
-      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
-      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
-    }
-
-    function closeMobileInspector() {
-      mobileInspector().classList.remove("show");
-      mobileInspectorOverlay().classList.remove("show");
-    }
-
-    function openMobileInspector() {
-      if (!isMobileLayout()) return;
-      mobileInspector().classList.add("show");
-      mobileInspectorOverlay().classList.add("show");
-    }
-
-    function updateMobileInspector() {
-      if (!isMobileLayout()) {
-        closeMobileInspector();
-        return;
-      }
-
-      const node = getSelectedNode();
-
-      document.getElementById("mobileInspectorTitle").textContent =
-        node ? (node.label || node.id) : "No level selected";
-
-      document.getElementById("mobileInfoLabel").textContent = node?.label || "—";
-      document.getElementById("mobileInfoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("mobileInfoType").textContent = node ? getTypeLabel(node.type) : "—";
-      document.getElementById("mobileInfoStatus").textContent = node?.status || "—";
-      document.getElementById("mobileInfoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("mobileInfoDescription").textContent = node?.description || "—";
-      document.getElementById("mobileInfoNotes").textContent = node?.notes || "—";
-
-      const outgoingList = document.getElementById("mobileOutgoingList");
-      const incomingList = document.getElementById("mobileIncomingList");
-
-      if (!node) {
-        outgoingList.innerHTML = "<li>No outgoing links.</li>";
-        incomingList.innerHTML = "<li>No incoming links.</li>";
-        closeMobileInspector();
-        return;
-      }
-
-      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
-      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
-    }
-
-    function refreshGraph() {
-      const visibleNodeIds = getVisibleNodeIds();
-      const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
-
-      graphNodesEl().innerHTML = graphData.nodes
-        .filter(node => visibleNodeIds.has(node.id))
-        .map(node => {
-          const isSelected = node.id === selectedNodeId;
-          const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
-          const isDimmed = relatedNodeIds ? !isRelated : false;
-          const typeClass = getTypeClass(node.type);
-
-          return `
-            <div
-              class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
-              data-node-id="${escapeHtml(node.id)}"
-              style="left:${node.x}px; top:${node.y}px;"
-            >
-              <div class="nodeHeader">
-                <div class="nodeDot"></div>
-                <div class="nodeTitle">${escapeHtml(node.label)}</div>
-              </div>
-
-              ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
-
-              <div class="nodeStatusRow">
-                <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
-                <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
-              </div>
-            </div>
-          `;
-        }).join("");
-
-      const svgParts = [];
-      const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
-
-      for (const edge of visibleEdges) {
-        const fromPort = getNodePortPosition(edge.from, "output");
-        const toPort = getNodePortPosition(edge.to, "input");
-        if (!fromPort || !toPort) continue;
-
-        const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-        const dimmed = selectedNodeId && !related;
-        const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
-
-        svgParts.push(`<path d="${path}" class="${related ? "line-related" : dimmed ? "line-dimmed" : "line-base"}"></path>`);
-
-        if (edge.label) {
-          const midX = (fromPort.x + toPort.x) / 2;
-          const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
-          svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
-        }
-      }
-
-      graphSvg().innerHTML = svgParts.join("");
-      bindNodeEvents();
-
-      if (!isMobileLayout()) {
-        updateStats();
-        updateSidebar();
-      }
-
-      updateMobileInspector();
-    }
-
-    function bindNodeEvents() {
-      graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
-        const nodeId = nodeEl.dataset.nodeId;
-        nodeEl.addEventListener("click", (event) => {
-          event.stopPropagation();
-          selectedNodeId = nodeId;
-          closeMobilePanels();
-          refreshGraph();
-
-          if (isMobileLayout()) {
-            openMobileInspector();
-          } else {
-            setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
-          }
-        });
-      });
-    }
-
-    function clearSelection() {
-      selectedNodeId = null;
-      refreshGraph();
-      closeMobileInspector();
-      if (!isMobileLayout()) {
-        setStatus("Selection cleared.");
+    nodeContainer.appendChild(el);
+  });
+
+  data.edges.forEach(e => {
+    const from = getNode(e.from);
+    const to = getNode(e.to);
+    if (!from || !to) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    const dx = Math.abs(to.x - from.x) * 0.4;
+
+    const d = `
+      M ${from.x} ${from.y}
+      C ${from.x + dx} ${from.y},
+        ${to.x - dx} ${to.y},
+        ${to.x} ${to.y}
+    `;
+
+    path.setAttribute("d", d);
+
+    let type = normalizeType(from.type);
+    let cls = `line line-${type}`;
+
+    if (selected) {
+      if (e.from === selected || e.to === selected) {
+        cls = "line-related";
+      } else {
+        cls = "line-dimmed";
       }
     }
 
-    function syncSearchInputs(value) {
-      if (desktopSearchInput()) desktopSearchInput().value = value;
-      if (mobileSearchInput()) mobileSearchInput().value = value;
-    }
+    path.setAttribute("class", cls);
 
-    function setSearch(value) {
-      currentSearch = value || "";
-      syncSearchInputs(currentSearch);
-      refreshGraph();
-    }
+    svg.appendChild(path);
+  });
+}
 
-    function closeMobilePanels() {
-      mobileSearchPanel().classList.remove("show");
-      mobileControlsPanel().classList.remove("show");
-    }
+/* === POPUP === */
 
-    function toggleMobileSearch() {
-      if (!isMobileLayout()) return;
-      const panel = mobileSearchPanel();
-      const willShow = !panel.classList.contains("show");
-      closeMobilePanels();
-      if (willShow) {
-        panel.classList.add("show");
-        setTimeout(() => mobileSearchInput().focus(), 30);
-      }
-    }
+function showPopup(node) {
+  const popup = document.getElementById("popup");
 
-    function toggleMobileControls() {
-      if (!isMobileLayout()) return;
-      const panel = mobileControlsPanel();
-      const willShow = !panel.classList.contains("show");
-      closeMobilePanels();
-      if (willShow) {
-        panel.classList.add("show");
-      }
-    }
+  popup.innerHTML = `
+    <b>${node.label}</b><br>
+    Type: ${node.type}<br>
+    Status: ${node.status || ""}<br>
+    ${node.description || ""}
+  `;
 
-    async function fetchRemoteGraph() {
-      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
-      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
-      return normalizeData(await res.json());
-    }
+  const x = node.x * view.scale + view.x;
+  const y = node.y * view.scale + view.y;
 
-    async function reloadGraph() {
-      try {
-        showLoading("Loading graph...");
-        if (!isMobileLayout()) setStatus("Loading latest graph...");
+  popup.style.left = (x + 20) + "px";
+  popup.style.top = y + "px";
+  popup.style.display = "block";
+}
 
-        graphData = await fetchRemoteGraph();
-        hideErrorPanel();
-        hideLoading();
+/* === INTERACTION === */
 
-        refreshGraph();
-        fitToGraph();
+document.getElementById("graphViewport").addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  view.scale = Math.max(0.2, Math.min(2, view.scale * factor));
+  applyTransform();
+}, { passive: false });
 
-        if (!isMobileLayout()) setStatus("Loaded latest graph.");
-      } catch (err) {
-        console.error(err);
-        hideLoading();
-        if (!isMobileLayout()) setStatus("Failed to load graph.", true);
-        showErrorPanel(err.message || "Failed to load graph.");
-      }
-    }
+document.getElementById("graphViewport").addEventListener("mousedown", (e) => {
+  let startX = e.clientX;
+  let startY = e.clientY;
 
-    function bindViewportEvents() {
-      const viewport = graphViewport();
+  function move(ev) {
+    view.x += ev.clientX - startX;
+    view.y += ev.clientY - startY;
+    startX = ev.clientX;
+    startY = ev.clientY;
+    applyTransform();
+  }
 
-      viewport.addEventListener("wheel", (event) => {
-        if (isMobileLayout()) return;
-        event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
-        zoomBy(factor, event.clientX, event.clientY);
-      }, { passive: false });
+  function up() {
+    window.removeEventListener("mousemove", move);
+    window.removeEventListener("mouseup", up);
+  }
 
-      viewport.addEventListener("pointerdown", (event) => {
-        if (event.target.closest(".node")) return;
-        if (event.target.closest(".mobilePanel")) return;
-        if (event.target.closest(".mobileFab")) return;
-        if (event.target.closest(".mobileInspector")) return;
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", up);
+});
 
-        interaction.isPanning = true;
-        interaction.panStartMouseX = event.clientX;
-        interaction.panStartMouseY = event.clientY;
-        interaction.panStartX = viewportState.x;
-        interaction.panStartY = viewportState.y;
+/* === LOAD === */
 
-        viewport.classList.add("panning");
-        viewport.setPointerCapture(event.pointerId);
-      });
+async function load() {
+  const res = await fetch(URL);
+  const raw = await res.json();
+  data = raw;
+  draw();
+}
 
-      viewport.addEventListener("pointermove", (event) => {
-        if (!interaction.isPanning) return;
+document.body.onclick = () => {
+  document.getElementById("popup").style.display = "none";
+  selected = null;
+  draw();
+};
 
-        viewportState.x = interaction.panStartX + (event.clientX - interaction.panStartMouseX);
-        viewportState.y = interaction.panStartY + (event.clientY - interaction.panStartMouseY);
-        applyViewportTransform();
-      });
+load();
+applyTransform();
+</script>
 
-      viewport.addEventListener("pointerup", () => {
-        interaction.isPanning = false;
-        viewport.classList.remove("panning");
-      });
-
-      viewport.addEventListener("pointercancel", () => {
-        interaction.isPanning = false;
-        viewport.classList.remove("panning");
-      });
-
-      viewport.addEventListener("click", (event) => {
-        if (
-          !event.target.closest(".node") &&
-          !event.target.closest(".mobilePanel") &&
-          !event.target.closest(".mobileFab") &&
-          !event.target.closest(".mobileInspector")
-        ) {
-          closeMobilePanels();
-          clearSelection();
-        }
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      bindViewportEvents();
-
-      if (desktopSearchInput()) {
-        desktopSearchInput().addEventListener("input", (event) => {
-          setSearch(event.target.value || "");
-        });
-      }
-
-      if (mobileSearchInput()) {
-        mobileSearchInput().addEventListener("input", (event) => {
-          setSearch(event.target.value || "");
-        });
-      }
-
-      window.addEventListener("resize", () => {
-        closeMobilePanels();
-        closeMobileInspector();
-        if (graphData.nodes.length) {
-          fitToGraph();
-          refreshGraph();
-        }
-      });
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) reloadGraph();
-    });
-
-    window.zoomBy = zoomBy;
-    window.resetView = resetView;
-    window.fitToGraph = fitToGraph;
-    window.clearSelection = clearSelection;
-    window.reloadGraph = reloadGraph;
-    window.toggleMobileSearch = toggleMobileSearch;
-    window.toggleMobileControls = toggleMobileControls;
-    window.closeMobileInspector = closeMobileInspector;
-
-    reloadGraph();
-  </script>
 </body>
 </html>
