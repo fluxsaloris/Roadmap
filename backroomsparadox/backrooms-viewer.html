@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Backrooms Paradox Viewer</title>
   <style>
     :root {
@@ -22,14 +22,25 @@
       --sidebar-width: 360px;
       --canvas-height: 78vh;
       --canvas-min-height: 620px;
+
+      --mobile-fab-size: 52px;
+      --mobile-gap: 10px;
+      --node-width-desktop: 170px;
+      --node-width-mobile: 118px;
+      --node-port-width-desktop: 170px;
+      --node-port-width-mobile: 118px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     html, body {
       margin: 0;
       padding: 0;
       min-height: 100%;
+      width: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
@@ -80,13 +91,20 @@
 
     .hero,
     .panel,
-    .sidebarCard {
+    .sidebarCard,
+    .mobilePanel,
+    .nodePopup {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
       box-shadow: var(--shadow-md);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+    }
+
+    .hero,
+    .panel,
+    .sidebarCard {
+      border-radius: var(--radius);
     }
 
     .hero {
@@ -169,7 +187,8 @@
       align-items: start;
     }
 
-    #searchInput {
+    #searchInput,
+    #mobileSearchInput {
       width: 100%;
       background: rgba(22, 22, 30, 0.96);
       color: var(--text);
@@ -179,9 +198,11 @@
       font-size: 14px;
       outline: none;
       transition: 0.18s ease;
+      font-family: inherit;
     }
 
-    #searchInput:focus {
+    #searchInput:focus,
+    #mobileSearchInput:focus {
       border-color: rgba(190, 26, 72, 0.42);
       box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
       background: rgba(26, 26, 34, 0.98);
@@ -192,6 +213,12 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .mobileControlsGrid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
     }
 
     button {
@@ -213,6 +240,10 @@
       background: rgba(255,255,255,0.07);
       border-color: rgba(255,255,255,0.14);
       transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     .primaryBtn {
@@ -374,7 +405,7 @@
 
     .node {
       position: absolute;
-      min-width: 170px;
+      min-width: var(--node-width-desktop);
       max-width: 260px;
       padding: 12px 12px 10px;
       border-radius: 14px;
@@ -524,18 +555,7 @@
       white-space: pre-wrap;
     }
 
-    .linkList {
-      margin: 0;
-      padding-left: 18px;
-      color: #d7dae5;
-      font-size: 12.5px;
-      line-height: 1.5;
-    }
-
-    .linkList li + li {
-      margin-top: 4px;
-    }
-
+    .linkList,
     .legendList {
       margin: 0;
       padding-left: 18px;
@@ -544,7 +564,151 @@
       line-height: 1.5;
     }
 
+    .linkList li + li,
     .legendList li + li {
+      margin-top: 4px;
+    }
+
+    .mobileFabStack {
+      position: fixed;
+      right: 10px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mobileFab {
+      width: var(--mobile-fab-size);
+      height: var(--mobile-fab-size);
+      min-width: var(--mobile-fab-size);
+      min-height: var(--mobile-fab-size);
+      border-radius: 50%;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      box-shadow: var(--shadow-lg);
+      background: rgba(18, 18, 25, 0.96);
+    }
+
+    .mobilePanel {
+      position: fixed;
+      left: 10px;
+      right: 10px;
+      z-index: 49;
+      border-radius: 16px;
+      padding: 10px;
+      display: none;
+    }
+
+    .mobilePanel.show {
+      display: block;
+    }
+
+    #mobileSearchPanel {
+      top: calc(10px + env(safe-area-inset-top));
+    }
+
+    #mobileControlsPanel {
+      bottom: calc(74px + env(safe-area-inset-bottom));
+    }
+
+    .nodePopup {
+      position: fixed;
+      z-index: 55;
+      width: min(280px, calc(100vw - 20px));
+      max-height: min(54dvh, 390px);
+      overflow: auto;
+      border-radius: 16px;
+      padding: 10px;
+      background: rgba(18, 18, 25, 0.97);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.38);
+      transform: translate3d(0, 0, 0);
+      display: none;
+    }
+
+    .nodePopup.show {
+      display: block;
+    }
+
+    .nodePopupHeader {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .nodePopupTitleWrap {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .nodePopupTitle {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f5f5f7;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .nodePopupSub {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #a9acba;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .nodePopupClose {
+      flex: 0 0 auto;
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-radius: 10px;
+    }
+
+    .nodePopupBody {
+      display: grid;
+      gap: 9px;
+    }
+
+    .popupBlock {
+      display: grid;
+      gap: 3px;
+    }
+
+    .popupLabel {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7f8091;
+      font-weight: 700;
+    }
+
+    .popupValue {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #ececf4;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .popupList {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #d7dae5;
+    }
+
+    .popupList li + li {
       margin-top: 4px;
     }
 
@@ -567,6 +731,7 @@
       text-align: center;
       box-shadow: var(--shadow-lg);
       min-width: 260px;
+      max-width: calc(100vw - 30px);
     }
 
     #loadingText {
@@ -588,7 +753,7 @@
       position: fixed;
       top: 18px;
       right: 18px;
-      z-index: 50;
+      z-index: 60;
       width: min(420px, calc(100vw - 40px));
       background: rgba(36, 13, 18, 0.96);
       border: 1px solid rgba(255, 138, 138, 0.28);
@@ -658,23 +823,116 @@
     }
 
     @media (max-width: 700px) {
+      body::after {
+        display: none;
+      }
+
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+
       #app {
-        padding: 12px;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        height: 100dvh;
       }
 
       .hero,
+      .rightColumn,
+      .canvasToolbar {
+        display: none !important;
+      }
+
+      .workspaceRow,
+      .leftColumn {
+        display: block;
+        height: 100%;
+      }
+
       .panel,
-      .sidebarCard {
-        padding: 12px;
+      .canvasPanel {
+        padding: 0;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
-      .heroTitle h1 {
-        font-size: 24px;
+      .graphViewport {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        border-radius: 0;
+        border: none;
+        background-size: 34px 34px, 34px 34px, auto, auto;
       }
 
-      :root {
-        --canvas-height: 68vh;
-        --canvas-min-height: 460px;
+      .graphScene,
+      .graphSvg,
+      .graphNodes {
+        position: absolute;
+      }
+
+      .node {
+        min-width: var(--node-width-mobile);
+        max-width: 155px;
+        padding: 8px 8px 7px;
+        border-radius: 12px;
+      }
+
+      .node:hover {
+        transform: translate(-50%, -50%);
+      }
+
+      .nodeTitle {
+        font-size: 11px;
+      }
+
+      .nodeSubtitle {
+        margin-top: 3px;
+        font-size: 9px;
+      }
+
+      .nodeStatusRow {
+        margin-top: 6px;
+        gap: 4px;
+      }
+
+      .nodeBadge {
+        font-size: 8.5px;
+        padding: 3px 5px;
+      }
+
+      .edgeLabel {
+        font-size: 10px;
+      }
+
+      .mobileFabStack {
+        display: flex;
+      }
+
+      #errorPanel {
+        left: 10px;
+        right: 10px;
+        top: calc(10px + env(safe-area-inset-top));
+        width: auto;
+      }
+
+      .mobileControlsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .nodePopup {
+        width: min(250px, calc(100vw - 16px));
       }
     }
   </style>
@@ -810,6 +1068,77 @@
         </section>
       </div>
     </div>
+
+    <div id="mobileSearchPanel" class="mobilePanel">
+      <input id="mobileSearchInput" type="text" placeholder="Search levels..." autocomplete="off" />
+    </div>
+
+    <div id="mobileControlsPanel" class="mobilePanel">
+      <div class="mobileControlsGrid">
+        <button onclick="zoomBy(1.12)">+</button>
+        <button onclick="zoomBy(1 / 1.12)">−</button>
+        <button onclick="resetView()">Reset</button>
+        <button onclick="fitToGraph()">Fit</button>
+        <button onclick="clearSelection()">Clear</button>
+        <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="mobileFabStack">
+      <button class="mobileFab" onclick="toggleMobileSearch()" aria-label="Search">⌕</button>
+      <button class="mobileFab primaryBtn" onclick="toggleMobileControls()" aria-label="Controls">⋯</button>
+    </div>
+
+    <div id="nodePopup" class="nodePopup">
+      <div class="nodePopupHeader">
+        <div class="nodePopupTitleWrap">
+          <div id="popupTitle" class="nodePopupTitle">Selected Level</div>
+          <div id="popupSub" class="nodePopupSub">Tap a node to inspect it</div>
+        </div>
+        <button class="nodePopupClose" onclick="clearSelection()">×</button>
+      </div>
+
+      <div class="nodePopupBody">
+        <div class="popupBlock">
+          <div class="popupLabel">Type</div>
+          <div class="popupValue" id="popupType">—</div>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Status</div>
+          <div class="popupValue" id="popupStatus">—</div>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Subtitle</div>
+          <div class="popupValue" id="popupSubtitle">—</div>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Tags</div>
+          <div class="popupValue" id="popupTags">—</div>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Description</div>
+          <div class="popupValue" id="popupDescription">—</div>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Outgoing</div>
+          <ul id="popupOutgoing" class="popupList">
+            <li>No outgoing links.</li>
+          </ul>
+        </div>
+
+        <div class="popupBlock">
+          <div class="popupLabel">Incoming</div>
+          <ul id="popupIncoming" class="popupList">
+            <li>No incoming links.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -822,7 +1151,7 @@
     let viewportState = {
       x: 0,
       y: 0,
-      scale: 1
+      scale: window.innerWidth <= 700 ? 0.55 : 1
     };
 
     let interaction = {
@@ -837,6 +1166,15 @@
     const graphScene = () => document.getElementById("graphScene");
     const graphSvg = () => document.getElementById("graphSvg");
     const graphNodesEl = () => document.getElementById("graphNodes");
+    const nodePopup = () => document.getElementById("nodePopup");
+    const desktopSearchInput = () => document.getElementById("searchInput");
+    const mobileSearchInput = () => document.getElementById("mobileSearchInput");
+    const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
+    const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
+
+    function isMobileLayout() {
+      return window.innerWidth <= 700;
+    }
 
     function showLoading(text = "Loading graph...") {
       document.getElementById("loadingText").textContent = text;
@@ -849,6 +1187,7 @@
 
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
+      if (!el) return;
       el.textContent = text;
       el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
     }
@@ -950,9 +1289,21 @@
       };
     }
 
+    function getNodeScreenPosition(node) {
+      const rect = graphViewport().getBoundingClientRect();
+      return {
+        x: rect.left + viewportState.x + node.x * viewportState.scale,
+        y: rect.top + viewportState.y + node.y * viewportState.scale
+      };
+    }
+
     function applyViewportTransform() {
       graphScene().style.transform =
         `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+
+      if (isMobileLayout() && selectedNodeId) {
+        updateNodePopupPosition();
+      }
     }
 
     function getGraphBounds(nodes) {
@@ -974,12 +1325,13 @@
       const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
       const bounds = getGraphBounds(nodesToFit);
 
-      const width = Math.max(500, bounds.maxX - bounds.minX + 340);
-      const height = Math.max(320, bounds.maxY - bounds.minY + 240);
+      const mobile = isMobileLayout();
+      const width = Math.max(mobile ? 320 : 500, bounds.maxX - bounds.minX + (mobile ? 170 : 340));
+      const height = Math.max(mobile ? 220 : 320, bounds.maxY - bounds.minY + (mobile ? 150 : 240));
 
       const rect = graphViewport().getBoundingClientRect();
       const fitScale = Math.min(
-        1.2,
+        mobile ? 0.82 : 1.2,
         Math.max(0.22, Math.min(rect.width / width, rect.height / height))
       );
 
@@ -988,13 +1340,17 @@
       viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
 
       applyViewportTransform();
-      setStatus("Fitted graph to view.");
+      if (!mobile) setStatus("Fitted graph to view.");
     }
 
     function resetView() {
-      viewportState = { x: 80, y: 80, scale: 1 };
+      viewportState = {
+        x: isMobileLayout() ? 20 : 80,
+        y: isMobileLayout() ? 20 : 80,
+        scale: isMobileLayout() ? 0.55 : 1
+      };
       applyViewportTransform();
-      setStatus("View reset.");
+      if (!isMobileLayout()) setStatus("View reset.");
     }
 
     function zoomBy(factor, clientX = null, clientY = null) {
@@ -1003,21 +1359,21 @@
       const py = clientY ?? (rect.top + rect.height / 2);
 
       const before = scenePointFromClient(px, py);
-      viewportState.scale = Math.max(0.22, Math.min(2.4, viewportState.scale * factor));
+      viewportState.scale = Math.max(0.22, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
       viewportState.x = px - rect.left - before.x * viewportState.scale;
       viewportState.y = py - rect.top - before.y * viewportState.scale;
       applyViewportTransform();
     }
 
     function createCurvePath(x1, y1, x2, y2) {
-      const dx = Math.max(80, Math.abs(x2 - x1) * 0.45);
+      const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
       return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
     }
 
     function getNodePortPosition(nodeId, side) {
       const node = getNodeById(nodeId);
       if (!node) return null;
-      const width = 170;
+      const width = isMobileLayout() ? 118 : 170;
       return {
         x: node.x + (side === "output" ? width / 2 : -width / 2),
         y: node.y
@@ -1074,6 +1430,113 @@
         : "<li>No incoming links.</li>";
     }
 
+    function hideNodePopup() {
+      nodePopup().classList.remove("show");
+    }
+
+    function updateNodePopupPosition() {
+      if (!isMobileLayout()) {
+        hideNodePopup();
+        return;
+      }
+
+      const node = getSelectedNode();
+      if (!node) {
+        hideNodePopup();
+        return;
+      }
+
+      const popup = nodePopup();
+      const screen = getNodeScreenPosition(node);
+
+      const gap = 14;
+      const margin = 10;
+      const popupWidth = popup.offsetWidth || 250;
+      const popupHeight = popup.offsetHeight || 240;
+      const safeTop = 10 + 6;
+      const safeBottom = 10 + 6;
+
+      let left = screen.x + 24;
+      let top = screen.y - popupHeight / 2;
+      let placedBeside = true;
+
+      if (left + popupWidth > window.innerWidth - margin) {
+        left = screen.x - popupWidth - 24;
+      }
+
+      if (left < margin) {
+        placedBeside = false;
+      }
+
+      if (placedBeside) {
+        if (top < safeTop) top = safeTop;
+        const maxTop = window.innerHeight - popupHeight - safeBottom;
+        if (top > maxTop) top = Math.max(safeTop, maxTop);
+      } else {
+        left = screen.x - popupWidth / 2;
+        top = screen.y - popupHeight - gap;
+
+        if (top < safeTop) {
+          top = screen.y + gap;
+        }
+
+        if (left < margin) left = margin;
+        if (left + popupWidth > window.innerWidth - margin) {
+          left = window.innerWidth - popupWidth - margin;
+        }
+
+        if (top + popupHeight > window.innerHeight - safeBottom) {
+          top = Math.max(safeTop, window.innerHeight - popupHeight - safeBottom);
+        }
+      }
+
+      popup.style.left = `${left}px`;
+      popup.style.top = `${top}px`;
+    }
+
+    function updateNodePopup() {
+      if (!isMobileLayout()) {
+        hideNodePopup();
+        return;
+      }
+
+      const node = getSelectedNode();
+      if (!node) {
+        hideNodePopup();
+        return;
+      }
+
+      document.getElementById("popupTitle").textContent = node.label || node.id;
+      document.getElementById("popupSub").textContent =
+        `${node.type || "progression"} • ${node.status || "draft"}`;
+
+      document.getElementById("popupType").textContent = node.type || "—";
+      document.getElementById("popupStatus").textContent = node.status || "—";
+      document.getElementById("popupSubtitle").textContent = node.subtitle || "—";
+      document.getElementById("popupTags").textContent = node.tags?.length ? node.tags.join(", ") : "—";
+      document.getElementById("popupDescription").textContent = node.description || "—";
+
+      const outgoing = getOutgoingEdges(node.id);
+      const incoming = getIncomingEdges(node.id);
+
+      document.getElementById("popupOutgoing").innerHTML = outgoing.length
+        ? outgoing.map(edge => {
+            const target = getNodeById(edge.to);
+            return `<li>${escapeHtml(target?.label || edge.to)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No outgoing links.</li>";
+
+      document.getElementById("popupIncoming").innerHTML = incoming.length
+        ? incoming.map(edge => {
+            const source = getNodeById(edge.from);
+            return `<li>${escapeHtml(source?.label || edge.from)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+          }).join("")
+        : "<li>No incoming links.</li>";
+
+      nodePopup().classList.add("show");
+      requestAnimationFrame(updateNodePopupPosition);
+    }
+
     function refreshGraph() {
       const visibleNodeIds = getVisibleNodeIds();
       const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
@@ -1122,15 +1585,20 @@
 
         if (edge.label) {
           const midX = (fromPort.x + toPort.x) / 2;
-          const midY = (fromPort.y + toPort.y) / 2 - 10;
+          const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
           svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
         }
       }
 
       graphSvg().innerHTML = svgParts.join("");
       bindNodeEvents();
-      updateStats();
-      updateSidebar();
+
+      if (!isMobileLayout()) {
+        updateStats();
+        updateSidebar();
+      }
+
+      updateNodePopup();
     }
 
     function bindNodeEvents() {
@@ -1139,8 +1607,11 @@
         nodeEl.addEventListener("click", (event) => {
           event.stopPropagation();
           selectedNodeId = nodeId;
+          closeMobilePanels();
           refreshGraph();
-          setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
+          if (!isMobileLayout()) {
+            setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
+          }
         });
       });
     }
@@ -1148,7 +1619,47 @@
     function clearSelection() {
       selectedNodeId = null;
       refreshGraph();
-      setStatus("Selection cleared.");
+      hideNodePopup();
+      if (!isMobileLayout()) {
+        setStatus("Selection cleared.");
+      }
+    }
+
+    function syncSearchInputs(value) {
+      if (desktopSearchInput()) desktopSearchInput().value = value;
+      if (mobileSearchInput()) mobileSearchInput().value = value;
+    }
+
+    function setSearch(value) {
+      currentSearch = value || "";
+      syncSearchInputs(currentSearch);
+      refreshGraph();
+    }
+
+    function closeMobilePanels() {
+      mobileSearchPanel().classList.remove("show");
+      mobileControlsPanel().classList.remove("show");
+    }
+
+    function toggleMobileSearch() {
+      if (!isMobileLayout()) return;
+      const panel = mobileSearchPanel();
+      const willShow = !panel.classList.contains("show");
+      closeMobilePanels();
+      if (willShow) {
+        panel.classList.add("show");
+        setTimeout(() => mobileSearchInput().focus(), 30);
+      }
+    }
+
+    function toggleMobileControls() {
+      if (!isMobileLayout()) return;
+      const panel = mobileControlsPanel();
+      const willShow = !panel.classList.contains("show");
+      closeMobilePanels();
+      if (willShow) {
+        panel.classList.add("show");
+      }
     }
 
     async function fetchRemoteGraph() {
@@ -1160,7 +1671,7 @@
     async function reloadGraph() {
       try {
         showLoading("Loading graph...");
-        setStatus("Loading latest graph...");
+        if (!isMobileLayout()) setStatus("Loading latest graph...");
 
         graphData = await fetchRemoteGraph();
         hideErrorPanel();
@@ -1168,11 +1679,12 @@
 
         refreshGraph();
         fitToGraph();
-        setStatus("Loaded latest graph.");
+
+        if (!isMobileLayout()) setStatus("Loaded latest graph.");
       } catch (err) {
         console.error(err);
         hideLoading();
-        setStatus("Failed to load graph.", true);
+        if (!isMobileLayout()) setStatus("Failed to load graph.", true);
         showErrorPanel(err.message || "Failed to load graph.");
       }
     }
@@ -1181,6 +1693,7 @@
       const viewport = graphViewport();
 
       viewport.addEventListener("wheel", (event) => {
+        if (isMobileLayout()) return;
         event.preventDefault();
         const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
         zoomBy(factor, event.clientX, event.clientY);
@@ -1188,6 +1701,9 @@
 
       viewport.addEventListener("pointerdown", (event) => {
         if (event.target.closest(".node")) return;
+        if (event.target.closest(".nodePopup")) return;
+        if (event.target.closest(".mobilePanel")) return;
+        if (event.target.closest(".mobileFab")) return;
 
         interaction.isPanning = true;
         interaction.panStartMouseX = event.clientX;
@@ -1218,7 +1734,13 @@
       });
 
       viewport.addEventListener("click", (event) => {
-        if (!event.target.closest(".node")) {
+        if (
+          !event.target.closest(".node") &&
+          !event.target.closest(".nodePopup") &&
+          !event.target.closest(".mobilePanel") &&
+          !event.target.closest(".mobileFab")
+        ) {
+          closeMobilePanels();
           clearSelection();
         }
       });
@@ -1227,9 +1749,25 @@
     document.addEventListener("DOMContentLoaded", () => {
       bindViewportEvents();
 
-      document.getElementById("searchInput").addEventListener("input", (event) => {
-        currentSearch = event.target.value || "";
-        refreshGraph();
+      if (desktopSearchInput()) {
+        desktopSearchInput().addEventListener("input", (event) => {
+          setSearch(event.target.value || "");
+        });
+      }
+
+      if (mobileSearchInput()) {
+        mobileSearchInput().addEventListener("input", (event) => {
+          setSearch(event.target.value || "");
+        });
+      }
+
+      window.addEventListener("resize", () => {
+        closeMobilePanels();
+        hideNodePopup();
+        if (graphData.nodes.length) {
+          fitToGraph();
+          refreshGraph();
+        }
       });
     });
 
@@ -1242,6 +1780,8 @@
     window.fitToGraph = fitToGraph;
     window.clearSelection = clearSelection;
     window.reloadGraph = reloadGraph;
+    window.toggleMobileSearch = toggleMobileSearch;
+    window.toggleMobileControls = toggleMobileControls;
 
     reloadGraph();
   </script>
