@@ -2,27 +2,27 @@
   "nodes": [
     {
       "id": 0,
-      "label": "Start",
-      "subtitle": "",
-      "type": "progression",
+      "label": "Level 0",
+      "subtitle": "\"The Yellow Paradox\"",
+      "type": "dangerous",
       "status": "draft",
-      "description": "",
-      "notes": "",
+      "description": "[REDACTED]",
+      "notes": "[WIP]",
       "tags": [],
-      "x": 573,
-      "y": 226
+      "x": 571,
+      "y": 231
     },
     {
       "id": 1,
-      "label": "Test",
-      "subtitle": "",
-      "type": "progression",
+      "label": "Level 0.1",
+      "subtitle": "\"Fallen Station\"",
+      "type": "stable",
       "status": "draft",
-      "description": "",
-      "notes": "",
+      "description": "[REDACED]",
+      "notes": "[WIP]",
       "tags": [],
-      "x": 895,
-      "y": 77
+      "x": 860,
+      "y": 34
     }
   ],
   "edges": [
