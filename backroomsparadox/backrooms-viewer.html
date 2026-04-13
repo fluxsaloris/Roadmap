@@ -337,10 +337,9 @@
 
 .graphSvg {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
   pointer-events: none;
 }
@@ -1234,16 +1233,13 @@ function normalizeData(raw) {
     };
   }
 
- function syncSvgSize() {
+function syncSvgSize() {
+  const viewport = graphViewport();
   const svg = graphSvg();
-  const bounds = getGraphBounds(graphData.nodes);
-  const padding = isMobileLayout() ? 220 : 320;
 
-  const width = Math.max(2000, bounds.maxX + padding);
-  const height = Math.max(1400, bounds.maxY + padding);
+  const width = Math.max(1, viewport.clientWidth);
+  const height = Math.max(1, viewport.clientHeight);
 
-  svg.style.left = "0px";
-  svg.style.top = "0px";
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -1332,73 +1328,78 @@ function normalizeData(raw) {
   }
 
   function refreshGraph() {
-    syncSvgSize();
+  syncSvgSize();
 
-    const visibleNodeIds = getVisibleNodeIds();
-    const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
+  const visibleNodeIds = getVisibleNodeIds();
+  const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
 
-    graphNodesEl().innerHTML = graphData.nodes
-      .filter(node => visibleNodeIds.has(node.id))
-      .map(node => {
-        const isSelected = node.id === selectedNodeId;
-        const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
-        const isDimmed = relatedNodeIds ? !isRelated : false;
-        const typeClass = getTypeClass(node.type);
+  graphNodesEl().innerHTML = graphData.nodes
+    .filter(node => visibleNodeIds.has(node.id))
+    .map(node => {
+      const isSelected = node.id === selectedNodeId;
+      const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
+      const isDimmed = relatedNodeIds ? !isRelated : false;
+      const typeClass = getTypeClass(node.type);
 
-        return `
-          <div
-            class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
-            data-node-id="${escapeHtml(node.id)}"
-            style="left:${node.x}px; top:${node.y}px;"
-          >
-            <div class="nodeHeader">
-              <div class="nodeDot"></div>
-              <div class="nodeTitle">${escapeHtml(node.label)}</div>
-            </div>
-            ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
-            <div class="nodeStatusRow">
-              <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
-              <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
-            </div>
+      return `
+        <div
+          class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+          data-node-id="${escapeHtml(node.id)}"
+          style="left:${node.x}px; top:${node.y}px;"
+        >
+          <div class="nodeHeader">
+            <div class="nodeDot"></div>
+            <div class="nodeTitle">${escapeHtml(node.label)}</div>
           </div>
-        `;
-      }).join("");
+          ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+          <div class="nodeStatusRow">
+            <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
+            <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
 
-    const svgParts = [];
-    const visibleEdges = graphData.edges.filter(
-      edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+  const svgParts = [];
+  const visibleEdges = graphData.edges.filter(
+    edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+  );
+
+  for (const edge of visibleEdges) {
+    const fromPort = getNodePortPosition(edge.from, "output");
+    const toPort = getNodePortPosition(edge.to, "input");
+    if (!fromPort || !toPort) continue;
+
+    const fromSceneX = fromPort.x * viewportState.scale + viewportState.x;
+    const fromSceneY = fromPort.y * viewportState.scale + viewportState.y;
+    const toSceneX = toPort.x * viewportState.scale + viewportState.x;
+    const toSceneY = toPort.y * viewportState.scale + viewportState.y;
+
+    const fromNode = getNodeById(edge.from);
+    const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
+    const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+    const dimmed = selectedNodeId && !related;
+    const path = createCurvePath(fromSceneX, fromSceneY, toSceneX, toSceneY);
+
+    svgParts.push(
+      `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
     );
 
-    for (const edge of visibleEdges) {
-      const fromPort = getNodePortPosition(edge.from, "output");
-      const toPort = getNodePortPosition(edge.to, "input");
-      if (!fromPort || !toPort) continue;
-
-      const fromNode = getNodeById(edge.from);
-      const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
-      const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-      const dimmed = selectedNodeId && !related;
-      const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
-
+    if (edge.label) {
+      const midX = (fromSceneX + toSceneX) / 2;
+      const midY = (fromSceneY + toSceneY) / 2 - (isMobileLayout() ? 8 : 10);
       svgParts.push(
-        `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
+        `<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
       );
-
-      if (edge.label) {
-        const midX = (fromPort.x + toPort.x) / 2;
-        const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
-        svgParts.push(
-          `<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
-        );
-      }
     }
-
-    graphSvg().innerHTML = svgParts.join("");
-    bindNodeEvents();
-    updateStats();
-    updateSidebar();
-    updateMobileInspector();
   }
+
+  graphSvg().innerHTML = svgParts.join("");
+  bindNodeEvents();
+  updateStats();
+  updateSidebar();
+  updateMobileInspector();
+}
 
   function bindNodeEvents() {
     graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
