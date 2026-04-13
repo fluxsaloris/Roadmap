@@ -15,10 +15,7 @@
         "127.0.0.1"
       ];
 
-      const ALLOWED_PATH_HINTS = [
-        "/backrooms",
-        "/editor"
-      ];
+      const ALLOWED_PATH_HINTS = ["/backrooms", "/editor"];
 
       const hostOk = ALLOWED_HOSTS.includes(window.location.hostname);
       const pathOk = ALLOWED_PATH_HINTS.some(part => window.location.pathname.toLowerCase().includes(part));
@@ -29,26 +26,10 @@
             <meta charset="UTF-8">
             <title>Access Restricted</title>
             <style>
-              html,body{
-                margin:0;padding:0;background:#070709;color:#f4f4f7;
-                font-family:Inter,Arial,sans-serif;min-height:100%;
-              }
-              body{
-                display:flex;align-items:center;justify-content:center;
-                background:
-                  radial-gradient(circle at top left, rgba(190,26,72,0.08), transparent 28%),
-                  linear-gradient(180deg,#0a0a0d 0%, #070709 100%);
-              }
-              .card{
-                width:min(520px,calc(100vw - 32px));
-                background:rgba(20,20,26,0.94);
-                border:1px solid rgba(255,255,255,0.08);
-                border-radius:18px;
-                padding:24px;
-                box-shadow:0 18px 40px rgba(0,0,0,0.35);
-              }
-              h1{margin:0 0 10px;font-size:22px}
-              p{margin:0;color:#a7a7b5;line-height:1.55}
+              html,body{margin:0;padding:0;background:#070709;color:#f4f4f7;font-family:Inter,Arial,sans-serif;min-height:100%}
+              body{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top left, rgba(190,26,72,0.08), transparent 28%),linear-gradient(180deg,#0a0a0d 0%, #070709 100%)}
+              .card{width:min(520px,calc(100vw - 32px));background:rgba(20,20,26,0.94);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px;box-shadow:0 18px 40px rgba(0,0,0,0.35)}
+              h1{margin:0 0 10px;font-size:22px} p{margin:0;color:#a7a7b5;line-height:1.55}
             </style>
           </head>
           <body>
@@ -61,11 +42,7 @@
         throw new Error("Blocked host");
       }
 
-      window.__EDITOR_SECURITY__ = {
-        hostOk,
-        pathOk,
-        blockedByPath: false
-      };
+      window.__EDITOR_SECURITY__ = { hostOk, pathOk, blockedByPath: false };
     })();
   </script>
 
@@ -75,12 +52,10 @@
       --surface: rgba(20, 20, 26, 0.92);
       --surface-soft: rgba(255, 255, 255, 0.025);
       --border: rgba(255, 255, 255, 0.06);
-      --border-strong: rgba(255,255,255,0.12);
       --text: #f4f4f7;
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --accent-soft: rgba(190, 26, 72, 0.15);
       --ok-soft: rgba(110, 240, 138, 0.13);
       --warn-soft: rgba(255, 210, 122, 0.14);
       --error-soft: rgba(255, 138, 138, 0.14);
@@ -95,1143 +70,227 @@
       --type-dangerous-dot: #E53935;
       --type-corrupted-dot: #3E5F3A;
       --type-anomalous-dot: #8E44AD;
-
-      --type-stable-soft: rgba(76, 175, 80, 0.18);
-      --type-dangerous-soft: rgba(229, 57, 53, 0.18);
-      --type-corrupted-soft: rgba(62, 95, 58, 0.22);
-      --type-anomalous-soft: rgba(142, 68, 173, 0.20);
     }
 
-    * {
-      box-sizing: border-box;
-      min-width: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, Arial, sans-serif;
-      overflow-x: hidden;
-    }
-
+    * { box-sizing: border-box; min-width: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { margin:0; padding:0; min-height:100%; background:var(--bg); color:var(--text); font-family:Inter,Arial,sans-serif; overflow-x:hidden; }
     body {
-      position: relative;
+      position:relative;
       background:
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
         radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
         linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
     }
-
     body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.10;
+      content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.10;
       background-image:
         radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.85), transparent),
         radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,0.7), transparent),
         radial-gradient(1.3px 1.3px at 52% 40%, rgba(255,255,255,0.8), transparent),
         radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
-
     body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      margin: 8px;
-      border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.10);
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
-      pointer-events: none;
-      z-index: 1;
+      content:""; position:fixed; inset:0; margin:8px; border-radius:16px;
+      border:1px solid rgba(190, 26, 72, 0.10); box-shadow:0 0 20px rgba(190, 26, 72, 0.04);
+      pointer-events:none; z-index:1;
     }
+    #app { position:relative; z-index:2; max-width:1750px; margin:0 auto; padding:16px; }
 
-    #app {
-      position: relative;
-      z-index: 2;
-      max-width: 1750px;
-      margin: 0 auto;
-      padding: 16px;
+    .hero,.panel,.sidebarCard,.changePanel,.mobilePanel,.mobileInspector {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow-md); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
     }
+    .hero { position:sticky; top:8px; z-index:30; padding:14px 16px; margin-bottom:14px; background:rgba(13,13,18,0.88); }
+    .heroTop { display:flex; gap:14px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+    .heroTitle { min-width:280px; flex:1; }
+    .eyebrow { display:inline-block; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#d98aa0; margin-bottom:8px; font-weight:700; }
+    .heroTitle h1 { margin:0; font-size:26px; line-height:1.05; letter-spacing:-0.02em; }
+    .heroTitle p { margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; max-width:860px; }
+    .heroMeta { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 
-    .hero,
-    .panel,
-    .sidebarCard,
-    .changePanel,
-    .mobilePanel,
-    .mobileInspector {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    .saveBadge,.infoBadge,.metaChip { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; border-radius:999px; font-size:12px; font-weight:700; }
+    .saveBadge,.infoBadge { padding:7px 11px; border:1px solid transparent; }
+    .save-clean { background:var(--ok-soft); border-color:rgba(110,240,138,0.28); color:#cbffd6; }
+    .save-dirty { background:var(--warn-soft); border-color:rgba(255,210,122,0.28); color:#ffe6b2; }
+    .save-saving { background:rgba(190,26,72,0.12); border-color:rgba(190,26,72,0.30); color:#ffc0d1; }
+    .save-error { background:var(--error-soft); border-color:rgba(255,138,138,0.34); color:#ffd0d0; }
+    .infoBadge { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.07); color:#cfd0db; font-weight:600; }
 
-    .hero {
-      position: sticky;
-      top: 8px;
-      z-index: 30;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      background: rgba(13, 13, 18, 0.88);
+    .heroControls { margin-top:12px; display:grid; grid-template-columns:minmax(260px, 1fr) auto; gap:10px; align-items:start; }
+    #searchInput,#mobileSearchInput,input,textarea,select {
+      width:100%; background:rgba(22, 22, 30, 0.98); color:#ededf4; border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px; padding:10px 11px; font-size:14px; font-family:inherit;
     }
+    #searchInput,#mobileSearchInput { border-radius:13px; padding:12px 13px; outline:none; transition:0.18s ease; }
+    #searchInput:focus,#mobileSearchInput:focus,input:focus,textarea:focus,select:focus {
+      border-color:rgba(190,26,72,0.42); box-shadow:0 0 0 4px rgba(190,26,72,0.10); background:rgba(26,26,34,0.98); outline:none;
+    }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .mobileControlsGrid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+    button { appearance:none; background:rgba(255,255,255,0.04); color:#e5e5ec; border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:9px 12px; font-size:13px; font-weight:600; cursor:pointer; transition:0.18s ease; font-family:inherit; }
+    button:hover { background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.14); transform:translateY(-1px); }
+    button:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+    button:active { transform:scale(0.98); }
+    .primaryBtn { background:linear-gradient(180deg, rgba(190,26,72,0.9), rgba(148,16,53,0.95)); border-color:rgba(255,255,255,0.05); color:#fff; box-shadow:0 8px 18px rgba(190,26,72,0.22); }
+    .dangerBtn { border-color:rgba(255,138,138,0.26); color:#ffcbcb; background:rgba(255,138,138,0.05); }
+    #statusLine { margin-top:8px; font-size:12px; color:var(--muted); }
 
-    .heroTop {
-      display: flex;
-      gap: 14px;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .heroTitle {
-      min-width: 280px;
-      flex: 1;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #d98aa0;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .heroTitle h1 {
-      margin: 0;
-      font-size: 26px;
-      line-height: 1.05;
-      letter-spacing: -0.02em;
-    }
-
-    .heroTitle p {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-      max-width: 860px;
-    }
-
-    .heroMeta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .statusBadge,
-    .saveBadge,
-    .infoBadge,
-    .metaChip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .statusBadge,
-    .saveBadge,
-    .infoBadge {
-      padding: 7px 11px;
-      border: 1px solid transparent;
-    }
-
-    .save-clean {
-      background: var(--ok-soft);
-      border-color: rgba(110, 240, 138, 0.28);
-      color: #cbffd6;
-    }
-
-    .save-dirty {
-      background: var(--warn-soft);
-      border-color: rgba(255, 210, 122, 0.28);
-      color: #ffe6b2;
-    }
-
-    .save-saving {
-      background: rgba(190, 26, 72, 0.12);
-      border-color: rgba(190, 26, 72, 0.30);
-      color: #ffc0d1;
-    }
-
-    .save-error {
-      background: var(--error-soft);
-      border-color: rgba(255, 138, 138, 0.34);
-      color: #ffd0d0;
-    }
-
-    .infoBadge {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.07);
-      color: #cfd0db;
-      font-weight: 600;
-    }
-
-    .heroControls {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto;
-      gap: 10px;
-      align-items: start;
-    }
-
-    #searchInput,
-    #mobileSearchInput {
-      width: 100%;
-      background: rgba(22, 22, 30, 0.96);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: 12px 13px;
-      font-size: 14px;
-      outline: none;
-      transition: 0.18s ease;
-    }
-
-    #searchInput:focus,
-    #mobileSearchInput:focus,
-    input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: rgba(190, 26, 72, 0.42);
-      box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
-      background: rgba(26, 26, 34, 0.98);
-      outline: none;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .mobileControlsGrid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    button,
-    input,
-    textarea,
-    select {
-      font-family: inherit;
-    }
-
-    button {
-      appearance: none;
-      background: rgba(255,255,255,0.04);
-      color: #e5e5ec;
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 9px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.18s ease;
-    }
-
-    button:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.14);
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .primaryBtn {
-      background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
-      border-color: rgba(255,255,255,0.05);
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
-    }
-
-    .dangerBtn {
-      border-color: rgba(255, 138, 138, 0.26);
-      color: #ffcbcb;
-      background: rgba(255, 138, 138, 0.05);
-    }
-
-    #statusLine {
-      margin-top: 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .workspaceRow {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
-      gap: 14px;
-      align-items: start;
-    }
-
-    .leftColumn {
-      min-width: 0;
-      display: grid;
-      gap: 14px;
-    }
-
-    .rightColumn {
-      min-width: 0;
-      display: grid;
-      gap: 12px;
-      position: sticky;
-      top: 132px;
-      align-self: start;
-      max-height: calc(100vh - 150px);
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .panel {
-      padding: 14px;
-    }
-
-    .statsBar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .metaChip {
-      padding: 6px 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
-      font-size: 11px;
-    }
-
-    .canvasPanel {
-      padding: 10px;
-    }
-
-    .canvasToolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-
-    .canvasHint {
-      color: var(--muted);
-      font-size: 12px;
-      padding: 6px 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      border-radius: 999px;
-    }
+    .workspaceRow { display:grid; grid-template-columns:minmax(0, 1fr) var(--sidebar-width); gap:14px; align-items:start; }
+    .leftColumn { min-width:0; display:grid; gap:14px; }
+    .rightColumn { min-width:0; display:grid; gap:12px; position:sticky; top:132px; align-self:start; max-height:calc(100vh - 150px); overflow-y:auto; padding-right:2px; }
+    .panel,.sidebarCard,.changePanel { padding:14px; }
+    .statsBar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .metaChip { padding:6px 10px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#c1c2ce; font-size:11px; }
+    .canvasPanel { padding:10px; }
+    .canvasToolbar { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .canvasHint { color:var(--muted); font-size:12px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); border-radius:999px; }
 
     .graphViewport {
-      position: relative;
-      width: 100%;
-      height: var(--canvas-height);
-      overflow: hidden;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
+      position:relative; width:100%; height:var(--canvas-height); overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,0.06);
       background:
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
         linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
-      background-size: 48px 48px, 48px 48px, auto, auto;
-      user-select: none;
-      cursor: grab;
-      touch-action: none;
+      background-size:48px 48px, 48px 48px, auto, auto;
+      user-select:none; cursor:grab; touch-action:none;
     }
-
-    .graphViewport.panning {
-      cursor: grabbing;
-    }
-
-    .graphScene {
-      position: absolute;
-      inset: 0;
-      transform-origin: 0 0;
-      will-change: transform;
-    }
-
-    .graphSvg {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-      pointer-events: none;
-    }
-
-    .line-base {
-      fill: none;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-      opacity: 0.95;
-    }
-
-    .line-selected {
-      fill: none;
-      stroke-width: 3.8;
-      stroke-linecap: round;
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.18));
-      opacity: 1;
-    }
-
-    .line-dimmed {
-      fill: none;
-      stroke: rgba(255,255,255,0.08);
-      stroke-width: 2;
-      stroke-linecap: round;
-      opacity: 0.7;
-    }
-
-    .line-preview {
-      fill: none;
-      stroke: rgba(255,255,255,0.5);
-      stroke-width: 2.5;
-      stroke-dasharray: 7 5;
-      stroke-linecap: round;
-    }
-
-    .edge-stable {
-      stroke: #4CAF50;
-    }
-
-    .edge-dangerous {
-      stroke: #E53935;
-    }
-
-    .edge-corrupted {
-      stroke: #3E5F3A;
-    }
-
-    .edge-anomalous {
-      stroke: #8E44AD;
-    }
-
-    .edgeLabel {
-      fill: rgba(220,220,230,0.92);
-      font-size: 12px;
-      font-weight: 600;
-      paint-order: stroke;
-      stroke: rgba(0,0,0,0.65);
-      stroke-width: 4px;
-      stroke-linejoin: round;
-    }
-
-    .graphNodes {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-    }
+    .graphViewport.panning { cursor:grabbing; }
+    .graphScene { position:absolute; inset:0; transform-origin:0 0; will-change:transform; }
+    .graphSvg { position:absolute; inset:0; overflow:visible; pointer-events:none; }
+    .line-base { fill:none; stroke-width:2.8; stroke-linecap:round; opacity:0.95; }
+    .line-selected { fill:none; stroke-width:3.8; stroke-linecap:round; filter:drop-shadow(0 0 8px rgba(255,255,255,0.18)); opacity:1; }
+    .line-preview { fill:none; stroke:rgba(255,255,255,0.5); stroke-width:2.5; stroke-dasharray:7 5; stroke-linecap:round; }
+    .edge-stable { stroke:#4CAF50; }
+    .edge-dangerous { stroke:#E53935; }
+    .edge-corrupted { stroke:#3E5F3A; }
+    .edge-anomalous { stroke:#8E44AD; }
+    .edgeLabel { fill:rgba(220,220,230,0.92); font-size:12px; font-weight:600; paint-order:stroke; stroke:rgba(0,0,0,0.65); stroke-width:4px; stroke-linejoin:round; }
+    .graphNodes { position:absolute; inset:0; overflow:visible; }
 
     .node {
-      position: absolute;
-      min-width: 170px;
-      max-width: 260px;
-      padding: 12px 12px 10px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow:
-        0 10px 22px rgba(0,0,0,0.42),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-      cursor: grab;
-      transform: translate(-50%, -50%);
-      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease;
-      backdrop-filter: blur(5px);
+      position:absolute; min-width:170px; max-width:260px; padding:12px 12px 10px; border-radius:14px;
+      background:linear-gradient(180deg, rgba(25,28,38,0.98), rgba(17,19,28,0.98)); border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 10px 22px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor:grab; transform:translate(-50%, -50%); transition:box-shadow .14s ease, border-color .14s ease, transform .14s ease; backdrop-filter:blur(5px);
     }
+    .node:hover { transform:translate(-50%, -50%) scale(1.02); border-color:rgba(255,255,255,0.16); }
+    .node.dragging { cursor:grabbing; transform:translate(-50%, -50%) scale(1.04); box-shadow:0 18px 34px rgba(0,0,0,0.58), 0 0 0 3px rgba(190,26,72,0.20); z-index:40; }
+    .node.selected { z-index:30; }
+    .node.stable { background:linear-gradient(180deg, rgba(76,175,80,0.18), rgba(20,30,22,0.95)); }
+    .node.stable.selected { border-color:rgba(76,175,80,0.72); box-shadow:0 0 0 3px rgba(76,175,80,0.25), 0 18px 34px rgba(0,0,0,0.56); }
+    .node.dangerous { background:linear-gradient(180deg, rgba(229,57,53,0.18), rgba(30,18,18,0.95)); }
+    .node.dangerous.selected { border-color:rgba(229,57,53,0.72); box-shadow:0 0 0 3px rgba(229,57,53,0.25), 0 18px 34px rgba(0,0,0,0.56); }
+    .node.corrupted { background:linear-gradient(180deg, rgba(62,95,58,0.20), rgba(18,25,18,0.95)); }
+    .node.corrupted.selected { border-color:rgba(62,95,58,0.72); box-shadow:0 0 0 3px rgba(62,95,58,0.28), 0 18px 34px rgba(0,0,0,0.56); }
+    .node.anomalous { background:linear-gradient(180deg, rgba(142,68,173,0.20), rgba(22,18,30,0.95)); }
+    .node.anomalous.selected { border-color:rgba(142,68,173,0.72); box-shadow:0 0 0 3px rgba(142,68,173,0.25), 0 18px 34px rgba(0,0,0,0.56); }
+    .nodeHeader { display:flex; align-items:center; gap:8px; }
+    .nodeDot { width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+    .node.stable .nodeDot { background:var(--type-stable-dot); }
+    .node.dangerous .nodeDot { background:var(--type-dangerous-dot); }
+    .node.corrupted .nodeDot { background:var(--type-corrupted-dot); }
+    .node.anomalous .nodeDot { background:var(--type-anomalous-dot); }
+    .nodeTitle { font-size:14px; font-weight:800; letter-spacing:-0.01em; color:#f5f5f7; line-height:1.2; word-break:break-word; }
+    .nodeSubtitle { margin-top:4px; font-size:11px; line-height:1.35; color:#9ea3b7; word-break:break-word; }
+    .nodeStatusRow { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
+    .nodeBadge { display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:700; padding:4px 7px; border-radius:999px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.04); color:#cbd0df; }
+    .nodePorts { position:absolute; inset:0; pointer-events:none; }
+    .port { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; transform:translateY(-50%); background:rgba(255,255,255,0.9); border:2px solid rgba(13,13,18,0.9); box-shadow:0 0 0 2px rgba(255,255,255,0.05); }
+    .port.input { left:-7px; } .port.output { right:-7px; }
 
-    .node:hover {
-      transform: translate(-50%, -50%) scale(1.02);
-      border-color: rgba(255,255,255,0.16);
-    }
-
-    .node.dragging {
-      cursor: grabbing;
-      transform: translate(-50%, -50%) scale(1.04);
-      box-shadow:
-        0 18px 34px rgba(0,0,0,0.58),
-        0 0 0 3px rgba(190,26,72,0.20);
-      z-index: 40;
-    }
-
-    .node.selected {
-      z-index: 30;
-    }
-
-    .node.stable {
-      background: linear-gradient(180deg, rgba(76,175,80,0.18), rgba(20,30,22,0.95));
-    }
-
-    .node.stable.selected {
-      border-color: rgba(76,175,80,0.72);
-      box-shadow:
-        0 0 0 3px rgba(76,175,80,0.25),
-        0 18px 34px rgba(0,0,0,0.56);
-    }
-
-    .node.dangerous {
-      background: linear-gradient(180deg, rgba(229,57,53,0.18), rgba(30,18,18,0.95));
-    }
-
-    .node.dangerous.selected {
-      border-color: rgba(229,57,53,0.72);
-      box-shadow:
-        0 0 0 3px rgba(229,57,53,0.25),
-        0 18px 34px rgba(0,0,0,0.56);
-    }
-
-    .node.corrupted {
-      background: linear-gradient(180deg, rgba(62,95,58,0.20), rgba(18,25,18,0.95));
-    }
-
-    .node.corrupted.selected {
-      border-color: rgba(62,95,58,0.72);
-      box-shadow:
-        0 0 0 3px rgba(62,95,58,0.28),
-        0 18px 34px rgba(0,0,0,0.56);
-    }
-
-    .node.anomalous {
-      background: linear-gradient(180deg, rgba(142,68,173,0.20), rgba(22,18,30,0.95));
-    }
-
-    .node.anomalous.selected {
-      border-color: rgba(142,68,173,0.72);
-      box-shadow:
-        0 0 0 3px rgba(142,68,173,0.25),
-        0 18px 34px rgba(0,0,0,0.56);
-    }
-
-    .nodeHeader {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nodeDot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex: 0 0 auto;
-    }
-
-    .node.stable .nodeDot { background: var(--type-stable-dot); }
-    .node.dangerous .nodeDot { background: var(--type-dangerous-dot); }
-    .node.corrupted .nodeDot { background: var(--type-corrupted-dot); }
-    .node.anomalous .nodeDot { background: var(--type-anomalous-dot); }
-
-    .nodeTitle {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #f5f5f7;
-      line-height: 1.2;
-      word-break: break-word;
-    }
-
-    .nodeSubtitle {
-      margin-top: 4px;
-      font-size: 11px;
-      line-height: 1.35;
-      color: #9ea3b7;
-      word-break: break-word;
-    }
-
-    .nodeStatusRow {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .nodeBadge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 7px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.04);
-      color: #cbd0df;
-    }
-
-    .nodePorts {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .port {
-      position: absolute;
-      top: 50%;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.9);
-      border: 2px solid rgba(13,13,18,0.9);
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
-    }
-
-    .port.input { left: -7px; }
-    .port.output { right: -7px; }
-
-    .sidebarCard {
-      padding: 14px;
-    }
-
-    .sidebarTitle {
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-
-    .sidebarSub {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-      margin-bottom: 10px;
-    }
-
-    .fieldGrid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .twoCol {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .fieldBlock {
-      display: grid;
-      gap: 5px;
-    }
-
-    .fieldLabel {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted-2);
-      font-weight: 700;
-    }
-
-    input,
-    textarea,
+    .sidebarTitle { margin:0 0 10px; font-size:14px; font-weight:800; letter-spacing:-0.01em; }
+    .sidebarSub { color:var(--muted); font-size:12px; line-height:1.45; margin-bottom:10px; }
+    .fieldGrid { display:grid; gap:10px; }
+    .twoCol { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .fieldBlock { display:grid; gap:5px; }
+    .fieldLabel { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted-2); font-weight:700; }
+    textarea { resize:vertical; min-height:88px; line-height:1.45; }
     select {
-      width: 100%;
-      background: rgba(22, 22, 30, 0.98);
-      color: #ededf4;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 10px 11px;
-      font-size: 14px;
+      appearance:none; -webkit-appearance:none; -moz-appearance:none;
+      background-image:linear-gradient(45deg, transparent 50%, #cfcfe6 50%), linear-gradient(135deg, #cfcfe6 50%, transparent 50%);
+      background-position:calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+      background-size:6px 6px, 6px 6px; background-repeat:no-repeat; padding-right:34px;
     }
+    select option { background:#151821; color:#f4f4f7; }
+    .actionRow { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .linkList { margin:0; padding-left:18px; color:#d7dae5; font-size:12.5px; line-height:1.5; }
+    .linkList li + li { margin-top:4px; }
+    .changeTitle { margin:0; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+    .changeSub { margin-top:6px; color:var(--muted); font-size:13px; line-height:1.45; }
+    .changeToolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .changeGrid { display:grid; grid-template-columns:repeat(2, minmax(260px, 1fr)); gap:12px; margin-top:14px; }
+    .changeBucket { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:14px; padding:12px; }
+    .changeBucket h3 { margin:0 0 8px; font-size:14px; }
+    .changeList { margin:0; padding-left:18px; color:#d8d9e2; font-size:12.5px; line-height:1.5; }
+    .changeEmpty { color:var(--muted-2); font-size:12px; }
+    .changeTextarea { width:100%; margin-top:14px; min-height:150px; background:rgba(255,255,255,0.03); color:#ededf4; border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:10px 12px; font-size:12.5px; line-height:1.5; resize:vertical; }
 
-    textarea {
-      resize: vertical;
-      min-height: 88px;
-      line-height: 1.45;
-    }
-
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image:
-        linear-gradient(45deg, transparent 50%, #cfcfe6 50%),
-        linear-gradient(135deg, #cfcfe6 50%, transparent 50%);
-      background-position:
-        calc(100% - 18px) calc(50% - 2px),
-        calc(100% - 12px) calc(50% - 2px);
-      background-size: 6px 6px, 6px 6px;
-      background-repeat: no-repeat;
-      padding-right: 34px;
-    }
-
-    select option {
-      background: #151821;
-      color: #f4f4f7;
-    }
-
-    .actionRow {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
-    .linkList {
-      margin: 0;
-      padding-left: 18px;
-      color: #d7dae5;
-      font-size: 12.5px;
-      line-height: 1.5;
-    }
-
-    .linkList li + li {
-      margin-top: 4px;
-    }
-
-    .changePanel {
-      padding: 14px;
-    }
-
-    .changeTitle {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .changeSub {
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .changeToolbar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-
-    .changeGrid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .changeBucket {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 14px;
-      padding: 12px;
-    }
-
-    .changeBucket h3 {
-      margin: 0 0 8px;
-      font-size: 14px;
-    }
-
-    .changeList {
-      margin: 0;
-      padding-left: 18px;
-      color: #d8d9e2;
-      font-size: 12.5px;
-      line-height: 1.5;
-    }
-
-    .changeEmpty {
-      color: var(--muted-2);
-      font-size: 12px;
-    }
-
-    .changeTextarea {
-      width: 100%;
-      margin-top: 14px;
-      min-height: 150px;
-      background: rgba(255,255,255,0.03);
-      color: #ededf4;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12.5px;
-      line-height: 1.5;
-      resize: vertical;
-    }
-
-    .mobileFabStack {
-      position: fixed;
-      right: 10px;
-      bottom: calc(12px + env(safe-area-inset-bottom));
-      z-index: 50;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .mobileFab {
-      width: var(--mobile-fab-size);
-      height: var(--mobile-fab-size);
-      min-width: var(--mobile-fab-size);
-      min-height: var(--mobile-fab-size);
-      border-radius: 50%;
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 800;
-      box-shadow: var(--shadow-lg);
-      background: rgba(18, 18, 25, 0.96);
-    }
-
-    .mobilePanel {
-      position: fixed;
-      left: 10px;
-      right: 10px;
-      z-index: 49;
-      border-radius: 16px;
-      padding: 10px;
-      display: none;
-    }
-
-    .mobilePanel.show {
-      display: block;
-    }
-
-    #mobileSearchPanel {
-      top: calc(10px + env(safe-area-inset-top));
-    }
-
-    #mobileControlsPanel {
-      bottom: calc(74px + env(safe-area-inset-bottom));
-    }
-
-    .mobileInspectorOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.42);
-      z-index: 54;
-      display: none;
-    }
-
-    .mobileInspectorOverlay.show {
-      display: block;
-    }
-
+    .mobileFabStack { position:fixed; right:10px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:50; display:none; flex-direction:column; gap:10px; }
+    .mobileFab { width:var(--mobile-fab-size); height:var(--mobile-fab-size); min-width:var(--mobile-fab-size); min-height:var(--mobile-fab-size); border-radius:50%; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; box-shadow:var(--shadow-lg); background:rgba(18,18,25,0.96); }
+    .mobilePanel { position:fixed; left:10px; right:10px; z-index:49; border-radius:16px; padding:10px; display:none; }
+    .mobilePanel.show { display:block; }
+    #mobileSearchPanel { top:calc(10px + env(safe-area-inset-top)); }
+    #mobileControlsPanel { bottom:calc(74px + env(safe-area-inset-bottom)); }
+    .mobileInspectorOverlay { position:fixed; inset:0; background:rgba(0,0,0,0.42); z-index:54; display:none; }
+    .mobileInspectorOverlay.show { display:block; }
     .mobileInspector {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: min(88vw, 360px);
-      background: rgba(18, 18, 25, 0.98);
-      border-left: 1px solid rgba(255,255,255,0.08);
-      box-shadow: -18px 0 40px rgba(0,0,0,0.34);
-      z-index: 55;
-      padding:
-        calc(14px + env(safe-area-inset-top))
-        14px
-        calc(18px + env(safe-area-inset-bottom));
-      overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.22s ease;
-      border-radius: 0;
+      position:fixed; top:0; right:0; bottom:0; width:min(88vw, 360px); background:rgba(18,18,25,0.98);
+      border-left:1px solid rgba(255,255,255,0.08); box-shadow:-18px 0 40px rgba(0,0,0,0.34); z-index:55;
+      padding:calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom)); overflow-y:auto;
+      transform:translateX(100%); transition:transform 0.22s ease; border-radius:0;
     }
+    .mobileInspector.show { transform:translateX(0); }
+    .mobileInspectorHeader { display:flex; gap:10px; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+    .mobileInspectorEyebrow { font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#d98aa0; font-weight:700; margin-bottom:6px; }
+    .mobileInspectorTitle { font-size:16px; font-weight:800; line-height:1.2; color:#f5f5f7; word-break:break-word; }
+    .mobileInspectorClose { flex:0 0 auto; width:34px; min-width:34px; height:34px; min-height:34px; padding:0; border-radius:10px; }
 
-    .mobileInspector.show {
-      transform: translateX(0);
-    }
-
-    .mobileInspectorHeader {
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-
-    .mobileInspectorEyebrow {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #d98aa0;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .mobileInspectorTitle {
-      font-size: 16px;
-      font-weight: 800;
-      line-height: 1.2;
-      color: #f5f5f7;
-      word-break: break-word;
-    }
-
-    .mobileInspectorClose {
-      flex: 0 0 auto;
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
-      min-height: 34px;
-      padding: 0;
-      border-radius: 10px;
-    }
-
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4,4,8,0.82);
-      backdrop-filter: blur(8px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #loadingCard {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 26px 30px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      min-width: 260px;
-    }
-
-    #loadingText {
-      font-size: 14px;
-      color: #e2e2ea;
-    }
-
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 3px solid rgba(255,255,255,0.10);
-      border-top: 3px solid #be1a48;
-      border-radius: 50%;
-      animation: spin 0.95s linear infinite;
-      margin: 0 auto 14px;
-    }
-
-    #errorPanel {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 100;
-      width: min(420px, calc(100vw - 40px));
-      background: rgba(36, 13, 18, 0.96);
-      border: 1px solid rgba(255, 138, 138, 0.28);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
-      backdrop-filter: blur(12px);
-      display: none;
-    }
-
-    #errorPanel.show {
-      display: block;
-    }
-
-    #errorPanelTitle {
-      font-size: 14px;
-      font-weight: 800;
-      color: #ffced6;
-      margin-bottom: 6px;
-    }
-
-    #errorPanelText {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #f6d9df;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    #loadingOverlay { position:fixed; inset:0; background:rgba(4,4,8,0.82); backdrop-filter:blur(8px); z-index:100; display:flex; align-items:center; justify-content:center; }
+    #loadingCard { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:26px 30px; text-align:center; box-shadow:var(--shadow-lg); min-width:260px; }
+    #loadingText { font-size:14px; color:#e2e2ea; }
+    .spinner { width:34px; height:34px; border:3px solid rgba(255,255,255,0.10); border-top:3px solid #be1a48; border-radius:50%; animation:spin 0.95s linear infinite; margin:0 auto 14px; }
+    #errorPanel { position:fixed; top:18px; right:18px; z-index:100; width:min(420px, calc(100vw - 40px)); background:rgba(36,13,18,0.96); border:1px solid rgba(255,138,138,0.28); border-radius:16px; padding:14px; box-shadow:0 14px 28px rgba(0,0,0,0.35); backdrop-filter:blur(12px); display:none; }
+    #errorPanel.show { display:block; }
+    #errorPanelTitle { font-size:14px; font-weight:800; color:#ffced6; margin-bottom:6px; }
+    #errorPanelText { font-size:13px; line-height:1.5; color:#f6d9df; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
     @media (max-width: 1180px) {
-      .hero {
-        position: relative;
-        top: 0;
-      }
-
-      .heroControls {
-        grid-template-columns: 1fr;
-      }
-
-      .toolbar {
-        justify-content: flex-start;
-      }
-
-      .heroMeta {
-        justify-content: flex-start;
-      }
-
-      .changeGrid,
-      .twoCol {
-        grid-template-columns: 1fr;
-      }
-
-      :root {
-        --canvas-height: calc(100vh - 260px);
-        --sidebar-width: 380px;
-      }
-
-      .workspaceRow {
-        grid-template-columns: 1fr;
-      }
-
+      .hero { position:relative; top:0; }
+      .heroControls { grid-template-columns:1fr; }
+      .toolbar,.heroMeta { justify-content:flex-start; }
+      .changeGrid,.twoCol { grid-template-columns:1fr; }
+      :root { --canvas-height:calc(100vh - 260px); --sidebar-width:380px; }
+      .workspaceRow { grid-template-columns:1fr; }
       .rightColumn {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: min(92vw, 420px);
-        max-height: none;
-        overflow-y: auto;
-        padding: 72px 12px 16px;
-        background: rgba(7, 7, 9, 0.82);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        z-index: 80;
-        transform: translateX(100%);
-        transition: transform 0.22s ease;
+        position:fixed; top:0; right:0; bottom:0; width:min(92vw, 420px); max-height:none; overflow-y:auto; padding:72px 12px 16px;
+        background:rgba(7,7,9,0.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); z-index:80; transform:translateX(100%); transition:transform 0.22s ease;
       }
-
-      .rightColumn.open {
-        transform: translateX(0);
-      }
-
-      .graphViewport {
-        height: var(--canvas-height);
-        min-height: 480px;
-      }
+      .rightColumn.open { transform:translateX(0); }
+      .graphViewport { height:var(--canvas-height); min-height:480px; }
     }
 
     @media (max-width: 700px) {
-      body::after {
-        display: none;
-      }
-
-      html, body {
-        height: 100%;
-        overflow: hidden;
-      }
-
-      #app {
-        max-width: none;
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        height: 100dvh;
-      }
-
-      .hero {
-        display: none !important;
-      }
-
-      .workspaceRow,
-      .leftColumn {
-        display: block;
-        height: 100%;
-      }
-
-      .panel,
-      .canvasPanel,
-      .changePanel {
-        padding: 0;
-        margin: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
-
-      .statsBar,
-      #changeSummaryPanel {
-        display: none !important;
-      }
-
-      .graphViewport {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        height: 100dvh;
-        min-height: 0;
-        border-radius: 0;
-        border: none;
-        background-size: 34px 34px, 34px 34px, auto, auto;
-      }
-
-      .canvasToolbar {
-        display: none !important;
-      }
-
-      .rightColumn {
-        display: none !important;
-      }
-
-      .node {
-        min-width: 118px;
-        max-width: 155px;
-        padding: 8px 8px 7px;
-        border-radius: 12px;
-      }
-
-      .node:hover {
-        transform: translate(-50%, -50%);
-      }
-
-      .nodeTitle {
-        font-size: 11px;
-      }
-
-      .nodeSubtitle {
-        margin-top: 3px;
-        font-size: 9px;
-      }
-
-      .nodeStatusRow {
-        margin-top: 6px;
-        gap: 4px;
-      }
-
-      .nodeBadge {
-        font-size: 8.5px;
-        padding: 3px 5px;
-      }
-
-      .edgeLabel {
-        font-size: 10px;
-      }
-
-      .mobileFabStack {
-        display: flex;
-      }
-
-      .mobileInspector {
-        width: min(88vw, 340px);
-      }
-
-      #errorPanel {
-        left: 10px;
-        right: 10px;
-        top: calc(10px + env(safe-area-inset-top));
-        width: auto;
-      }
+      body::after { display:none; }
+      html,body { height:100%; overflow:hidden; }
+      #app { max-width:none; margin:0; padding:0; height:100vh; height:100dvh; }
+      .hero { display:none !important; }
+      .workspaceRow,.leftColumn { display:block; height:100%; }
+      .panel,.canvasPanel,.changePanel { padding:0; margin:0; border:none; border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
+      .statsBar,#changeSummaryPanel { display:none !important; }
+      .graphViewport { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; min-height:0; border-radius:0; border:none; background-size:34px 34px, 34px 34px, auto, auto; }
+      .canvasToolbar,.rightColumn { display:none !important; }
+      .node { min-width:118px; max-width:155px; padding:8px 8px 7px; border-radius:12px; }
+      .node:hover { transform:translate(-50%, -50%); }
+      .nodeTitle { font-size:11px; }
+      .nodeSubtitle { margin-top:3px; font-size:9px; }
+      .nodeStatusRow { margin-top:6px; gap:4px; }
+      .nodeBadge { font-size:8.5px; padding:3px 5px; }
+      .edgeLabel { font-size:10px; }
+      .mobileFabStack { display:flex; }
+      .mobileInspector { width:min(88vw, 340px); }
+      #errorPanel { left:10px; right:10px; top:calc(10px + env(safe-area-inset-top)); width:auto; }
     }
   </style>
 </head>
@@ -1275,7 +334,7 @@
           <button onclick="redoAction()">Redo</button>
           <button onclick="addNode()">Add Level</button>
           <button onclick="refreshChangeSummary()">Refresh Diff</button>
-          <button class="primaryBtn" onclick="saveGraph()">Save to GitHub</button>
+          <button class="primaryBtn saveTrigger" onclick="saveGraph()">Save to GitHub</button>
           <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
         </div>
       </div>
@@ -1419,16 +478,12 @@
 
             <div>
               <div class="fieldLabel" style="margin-bottom:6px;">Outgoing</div>
-              <ul id="outgoingList" class="linkList">
-                <li>No level selected.</li>
-              </ul>
+              <ul id="outgoingList" class="linkList"><li>No level selected.</li></ul>
             </div>
 
             <div>
               <div class="fieldLabel" style="margin-bottom:6px;">Incoming</div>
-              <ul id="incomingList" class="linkList">
-                <li>No level selected.</li>
-              </ul>
+              <ul id="incomingList" class="linkList"><li>No level selected.</li></ul>
             </div>
           </div>
         </section>
@@ -1458,7 +513,7 @@
         <button onclick="addNode()">Add</button>
         <button onclick="undoAction()">Undo</button>
         <button onclick="redoAction()">Redo</button>
-        <button onclick="saveGraph()" class="primaryBtn">Save</button>
+        <button onclick="saveGraph()" class="primaryBtn saveTrigger">Save</button>
       </div>
     </div>
 
@@ -1480,1869 +535,1698 @@
       </div>
 
       <div class="fieldGrid">
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileNodeLabel">Label</label>
-          <input id="mobileNodeLabel" type="text" />
-        </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileNodeSubtitle">Subtitle</label>
-          <input id="mobileNodeSubtitle" type="text" />
-        </div>
-
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeLabel">Label</label><input id="mobileNodeLabel" type="text" /></div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeSubtitle">Subtitle</label><input id="mobileNodeSubtitle" type="text" /></div>
         <div class="twoCol">
-          <div class="fieldBlock">
-            <label class="fieldLabel" for="mobileNodeType">Type</label>
-            <select id="mobileNodeType">
-              <option value="stable">Stable</option>
-              <option value="dangerous">Dangerous</option>
-              <option value="corrupted">Corrupted</option>
-              <option value="anomalous">Anomalous</option>
-            </select>
-          </div>
-
-          <div class="fieldBlock">
-            <label class="fieldLabel" for="mobileNodeStatus">Status</label>
-            <select id="mobileNodeStatus">
-              <option value="draft">Draft</option>
-              <option value="planned">Planned</option>
-              <option value="in-progress">In Progress</option>
-              <option value="implemented">Implemented</option>
-              <option value="cut">Cut</option>
-            </select>
-          </div>
+          <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeType">Type</label><select id="mobileNodeType"><option value="stable">Stable</option><option value="dangerous">Dangerous</option><option value="corrupted">Corrupted</option><option value="anomalous">Anomalous</option></select></div>
+          <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeStatus">Status</label><select id="mobileNodeStatus"><option value="draft">Draft</option><option value="planned">Planned</option><option value="in-progress">In Progress</option><option value="implemented">Implemented</option><option value="cut">Cut</option></select></div>
         </div>
-
         <div class="twoCol">
-          <div class="fieldBlock">
-            <label class="fieldLabel" for="mobileNodeX">X</label>
-            <input id="mobileNodeX" type="number" />
-          </div>
-          <div class="fieldBlock">
-            <label class="fieldLabel" for="mobileNodeY">Y</label>
-            <input id="mobileNodeY" type="number" />
-          </div>
+          <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeX">X</label><input id="mobileNodeX" type="number" /></div>
+          <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeY">Y</label><input id="mobileNodeY" type="number" /></div>
         </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileNodeTags">Tags (comma separated)</label>
-          <input id="mobileNodeTags" type="text" />
-        </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileNodeDescription">Description</label>
-          <textarea id="mobileNodeDescription"></textarea>
-        </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileNodeNotes">Notes</label>
-          <textarea id="mobileNodeNotes"></textarea>
-        </div>
-
-        <div class="actionRow">
-          <button onclick="applySelectedNodeChanges()">Apply Node Changes</button>
-          <button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button>
-        </div>
-
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeTags">Tags (comma separated)</label><input id="mobileNodeTags" type="text" /></div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeDescription">Description</label><textarea id="mobileNodeDescription"></textarea></div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileNodeNotes">Notes</label><textarea id="mobileNodeNotes"></textarea></div>
+        <div class="actionRow"><button onclick="applySelectedNodeChanges()">Apply Node Changes</button><button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button></div>
         <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:6px 0 0;">
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileLinkTarget">Target Level</label>
-          <select id="mobileLinkTarget"></select>
-        </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileLinkLabel">Link Label</label>
-          <input id="mobileLinkLabel" type="text" placeholder="red slide trigger" />
-        </div>
-
-        <div class="fieldBlock">
-          <label class="fieldLabel" for="mobileLinkOneWay">One Way</label>
-          <select id="mobileLinkOneWay">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-
-        <div class="actionRow">
-          <button onclick="addConnectionFromSidebar()">Add Link</button>
-        </div>
-
-        <div>
-          <div class="fieldLabel" style="margin-bottom:6px;">Outgoing</div>
-          <ul id="mobileOutgoingList" class="linkList">
-            <li>No level selected.</li>
-          </ul>
-        </div>
-
-        <div>
-          <div class="fieldLabel" style="margin-bottom:6px;">Incoming</div>
-          <ul id="mobileIncomingList" class="linkList">
-            <li>No level selected.</li>
-          </ul>
-        </div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileLinkTarget">Target Level</label><select id="mobileLinkTarget"></select></div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileLinkLabel">Link Label</label><input id="mobileLinkLabel" type="text" placeholder="red slide trigger" /></div>
+        <div class="fieldBlock"><label class="fieldLabel" for="mobileLinkOneWay">One Way</label><select id="mobileLinkOneWay"><option value="yes">Yes</option><option value="no">No</option></select></div>
+        <div class="actionRow"><button onclick="addConnectionFromSidebar()">Add Link</button></div>
+        <div><div class="fieldLabel" style="margin-bottom:6px;">Outgoing</div><ul id="mobileOutgoingList" class="linkList"><li>No level selected.</li></ul></div>
+        <div><div class="fieldLabel" style="margin-bottom:6px;">Incoming</div><ul id="mobileIncomingList" class="linkList"><li>No level selected.</li></ul></div>
       </div>
     </div>
   </div>
 
   <script>
-  const PROJECT = "backroomsparadox";
-  const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
-  const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
+    const PROJECT = "backroomsparadox";
+    const SAVE_URL = "https://roadmap.flux-saloris.workers.dev";
+    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-  const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v8";
-  const LAST_REMOTE_SAVE_KEY = "backrooms-editor-last-remote-save-v3";
-  const LAST_SNAPSHOT_META_KEY = "backrooms-editor-last-snapshot-meta-v3";
-  const MAX_HISTORY = 80;
+    const LOCAL_DRAFT_KEY = "backrooms-editor-draft-v9";
+    const LAST_REMOTE_SAVE_KEY = "backrooms-editor-last-remote-save-v4";
+    const LAST_SNAPSHOT_META_KEY = "backrooms-editor-last-snapshot-meta-v4";
+    const MAX_HISTORY = 80;
+    const SAVE_COOLDOWN_MS = 15000;
 
-  const TYPE_META = {
-    stable: {
-      className: "stable",
-      label: "Stable",
-      edgeClass: "edge-stable"
-    },
-    dangerous: {
-      className: "dangerous",
-      label: "Dangerous",
-      edgeClass: "edge-dangerous"
-    },
-    corrupted: {
-      className: "corrupted",
-      label: "Corrupted",
-      edgeClass: "edge-corrupted"
-    },
-    anomalous: {
-      className: "anomalous",
-      label: "Anomalous",
-      edgeClass: "edge-anomalous"
-    }
-  };
+    const TYPE_META = {
+      stable: { className: "stable", label: "Stable", edgeClass: "edge-stable" },
+      dangerous: { className: "dangerous", label: "Dangerous", edgeClass: "edge-dangerous" },
+      corrupted: { className: "corrupted", label: "Corrupted", edgeClass: "edge-corrupted" },
+      anomalous: { className: "anomalous", label: "Anomalous", edgeClass: "edge-anomalous" }
+    };
 
-  let graphData = { nodes: [], edges: [] };
-  let selectedNodeId = null;
-  let currentSearch = "";
+    let graphData = { nodes: [], edges: [] };
+    let selectedNodeId = null;
+    let currentSearch = "";
 
-  let viewportState = {
-    x: 0,
-    y: 0,
-    scale: window.innerWidth <= 700 ? 0.55 : 1
-  };
+    let viewportState = { x: 0, y: 0, scale: window.innerWidth <= 700 ? 0.55 : 1 };
+    let interaction = {
+      isPanning: false,
+      dragNodeId: null,
+      dragStartMouseX: 0,
+      dragStartMouseY: 0,
+      dragStartNodeX: 0,
+      dragStartNodeY: 0,
+      panStartX: 0,
+      panStartY: 0,
+      panMouseX: 0,
+      panMouseY: 0,
+      connectFromNodeId: null,
+      connectMouseSceneX: 0,
+      connectMouseSceneY: 0,
+      movedDuringPointer: false
+    };
 
-  let interaction = {
-    isPanning: false,
-    dragNodeId: null,
-    dragStartMouseX: 0,
-    dragStartMouseY: 0,
-    dragStartNodeX: 0,
-    dragStartNodeY: 0,
-    panStartX: 0,
-    panStartY: 0,
-    panMouseX: 0,
-    panMouseY: 0,
-    connectFromNodeId: null,
-    connectMouseSceneX: 0,
-    connectMouseSceneY: 0,
-    movedDuringPointer: false
-  };
+    let hasUnsavedChanges = false;
+    let isSavingToGitHub = false;
+    let lastLocalSaveAt = null;
+    let lastRemoteSaveAt = null;
+    let lastVersionId = null;
+    let lastSnapshotPath = null;
+    let historyIndexCache = null;
+    let snapshotCache = new Map();
+    let latestDiffContext = null;
+    let undoStack = [];
+    let redoStack = [];
+    let autosaveTimer = null;
+    let diffTimer = null;
+    let saveCooldownUntil = 0;
 
-  let hasUnsavedChanges = false;
-  let isSavingToGitHub = false;
-  let lastLocalSaveAt = null;
-  let lastRemoteSaveAt = null;
-  let lastVersionId = null;
-  let lastSnapshotPath = null;
+    const graphViewport = () => document.getElementById("graphViewport");
+    const graphScene = () => document.getElementById("graphScene");
+    const graphSvg = () => document.getElementById("graphSvg");
+    const graphNodesEl = () => document.getElementById("graphNodes");
+    const mobileSearchInput = () => document.getElementById("mobileSearchInput");
+    const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
+    const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
+    const mobileInspector = () => document.getElementById("mobileInspector");
+    const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
 
-  let historyIndexCache = null;
-  let snapshotCache = new Map();
-  let latestDiffContext = null;
-
-  let undoStack = [];
-  let redoStack = [];
-
-  let autosaveTimer = null;
-  let diffTimer = null;
-
-  const graphViewport = () => document.getElementById("graphViewport");
-  const graphScene = () => document.getElementById("graphScene");
-  const graphSvg = () => document.getElementById("graphSvg");
-  const graphNodesEl = () => document.getElementById("graphNodes");
-  const mobileSearchInput = () => document.getElementById("mobileSearchInput");
-  const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
-  const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
-  const mobileInspector = () => document.getElementById("mobileInspector");
-  const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
-
-  function normalizeType(type) {
-    const value = String(type || "").trim().toLowerCase();
-    if (value === "stable" || value === "start") return "stable";
-    if (value === "dangerous" || value === "progression") return "dangerous";
-    if (value === "corrupted" || value === "danger") return "corrupted";
-    if (value === "anomalous" || value === "weird") return "anomalous";
-    return "stable";
-  }
-
-  function getTypeLabel(type) {
-    return TYPE_META[normalizeType(type)].label;
-  }
-
-  function getTypeClass(type) {
-    return TYPE_META[normalizeType(type)].className;
-  }
-
-  function getTypeEdgeClass(type) {
-    return TYPE_META[normalizeType(type)].edgeClass;
-  }
-
-  function isMobileLayout() {
-    return window.innerWidth <= 700;
-  }
-
-  function isCompactEditorLayout() {
-    return window.innerWidth <= 1180 && window.innerWidth > 700;
-  }
-
-  function showLoading(text = "Loading graph...") {
-    document.getElementById("loadingText").textContent = text;
-    document.getElementById("loadingOverlay").style.display = "flex";
-  }
-
-  function hideLoading() {
-    document.getElementById("loadingOverlay").style.display = "none";
-  }
-
-  function setStatus(text, isError = false) {
-    const el = document.getElementById("statusLine");
-    if (!el) return;
-    el.textContent = text;
-    el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
-  }
-
-  function showErrorPanel(message) {
-    document.getElementById("errorPanelText").textContent = message;
-    document.getElementById("errorPanel").classList.add("show");
-  }
-
-  function hideErrorPanel() {
-    document.getElementById("errorPanel").classList.remove("show");
-  }
-
-  function setSaveBadge(mode, text) {
-    const el = document.getElementById("saveStateBadge");
-    el.className = `saveBadge ${mode}`;
-    el.textContent = text;
-  }
-
-  function formatTimestamp(ts) {
-    if (!ts) return "never";
-    try {
-      return new Date(ts).toLocaleString([], {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
-    } catch {
-      return "unknown";
-    }
-  }
-
-  function updateMetaBadges() {
-    document.getElementById("lastRemoteSaveBadge").textContent =
-      lastRemoteSaveAt ? `GitHub: ${formatTimestamp(lastRemoteSaveAt)}` : "GitHub: not saved yet";
-
-    document.getElementById("lastSnapshotBadge").textContent =
-      lastVersionId ? `Snapshot: ${lastVersionId}` : "No snapshot yet";
-  }
-
-  function updateStatsBar() {
-    document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-    document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-
-    const selected = getSelectedNode();
-    document.getElementById("statSelected").textContent = selected
-      ? `Selected: ${selected.label || selected.id}`
-      : "No level selected";
-
-    document.getElementById("statLocalSave").textContent =
-      `Local draft: ${formatTimestamp(lastLocalSaveAt)}`;
-
-    document.getElementById("statUndo").textContent = `Undo: ${undoStack.length}`;
-    document.getElementById("statRedo").textContent = `Redo: ${redoStack.length}`;
-  }
-
-  function cloneData(data) {
-    return JSON.parse(JSON.stringify(data));
-  }
-
-  function slugifyLabel(label) {
-    return String(label || "node")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "node";
-  }
-
-  function makeUniqueId(base, used) {
-    let id = base;
-    let i = 2;
-
-    while (used.has(id)) {
-      id = `${base}-${i}`;
-      i++;
+    function normalizeType(type) {
+      const value = String(type || "").trim().toLowerCase();
+      if (value === "stable" || value === "start") return "stable";
+      if (value === "dangerous" || value === "progression") return "dangerous";
+      if (value === "corrupted" || value === "danger") return "corrupted";
+      if (value === "anomalous" || value === "weird") return "anomalous";
+      return "stable";
     }
 
-    used.add(id);
-    return id;
-  }
+    function getTypeLabel(type) { return TYPE_META[normalizeType(type)].label; }
+    function getTypeClass(type) { return TYPE_META[normalizeType(type)].className; }
+    function getTypeEdgeClass(type) { return TYPE_META[normalizeType(type)].edgeClass; }
+    function isMobileLayout() { return window.innerWidth <= 700; }
+    function isCompactEditorLayout() { return window.innerWidth <= 1180 && window.innerWidth > 700; }
 
-  function normalizeEdgeLabel(label) {
-    return typeof label === "string" ? label : "";
-  }
-
-  function normalizeData(raw) {
-    const usedIds = new Set();
-    const nodes = [];
-    const idMap = new Map();
-
-    const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
-
-    for (let i = 0; i < rawNodes.length; i++) {
-      const n = rawNodes[i];
-
-      const originalId =
-        n?.id !== null && n?.id !== undefined && String(n.id).trim() !== ""
-          ? String(n.id).trim()
-          : null;
-
-      const baseId = originalId || slugifyLabel(n?.label || `node-${i + 1}`);
-      const finalId = makeUniqueId(baseId, usedIds);
-
-      const node = {
-        id: finalId,
-        label: typeof n?.label === "string" ? n.label : "Unnamed",
-        subtitle: typeof n?.subtitle === "string" ? n.subtitle : "",
-        description: typeof n?.description === "string" ? n.description : "",
-        notes: typeof n?.notes === "string" ? n.notes : "",
-        x: typeof n?.x === "number" ? n.x : 0,
-        y: typeof n?.y === "number" ? n.y : 0,
-        type: normalizeType(n?.type),
-        status: typeof n?.status === "string" ? n.status : "draft",
-        tags: Array.isArray(n?.tags) ? n.tags.map(tag => String(tag)) : []
-      };
-
-      nodes.push(node);
-
-      if (originalId) idMap.set(originalId, finalId);
-      idMap.set(node.label, finalId);
-      idMap.set(finalId, finalId);
+    function showLoading(text = "Loading graph...") {
+      document.getElementById("loadingText").textContent = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+    function hideLoading() { document.getElementById("loadingOverlay").style.display = "none"; }
+    function setStatus(text, isError = false) {
+      const el = document.getElementById("statusLine");
+      if (!el) return;
+      el.textContent = text;
+      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+    }
+    function showErrorPanel(message) {
+      document.getElementById("errorPanelText").textContent = message;
+      document.getElementById("errorPanel").classList.add("show");
+    }
+    function hideErrorPanel() { document.getElementById("errorPanel").classList.remove("show"); }
+    function setSaveBadge(mode, text) {
+      const el = document.getElementById("saveStateBadge");
+      el.className = `saveBadge ${mode}`;
+      el.textContent = text;
+    }
+    function formatTimestamp(ts) {
+      if (!ts) return "never";
+      try {
+        return new Date(ts).toLocaleString([], { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      } catch {
+        return "unknown";
+      }
     }
 
-    const edges = [];
-    const seenEdges = new Set();
-    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-
-    for (const e of rawEdges) {
-      const rawFrom =
-        e?.from !== null && e?.from !== undefined && String(e.from).trim() !== ""
-          ? String(e.from).trim()
-          : null;
-
-      const rawTo =
-        e?.to !== null && e?.to !== undefined && String(e.to).trim() !== ""
-          ? String(e.to).trim()
-          : null;
-
-      const from = rawFrom ? (idMap.get(rawFrom) || null) : null;
-      const to = rawTo ? (idMap.get(rawTo) || null) : null;
-
-      if (!from || !to || from === to) continue;
-
-      const edge = {
-        from,
-        to,
-        label: normalizeEdgeLabel(e?.label),
-        oneWay: e?.oneWay === false ? false : true
-      };
-
-      const key = `${edge.from}|${edge.to}|${edge.label}|${edge.oneWay}`;
-      if (seenEdges.has(key)) continue;
-      seenEdges.add(key);
-
-      edges.push(edge);
+    function updateMetaBadges() {
+      document.getElementById("lastRemoteSaveBadge").textContent = lastRemoteSaveAt ? `GitHub: ${formatTimestamp(lastRemoteSaveAt)}` : "GitHub: not saved yet";
+      document.getElementById("lastSnapshotBadge").textContent = lastVersionId ? `Snapshot: ${lastVersionId}` : "No snapshot yet";
     }
 
-    return { nodes, edges };
-  }
+    function updateStatsBar() {
+      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+      const selected = getSelectedNode();
+      document.getElementById("statSelected").textContent = selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
+      document.getElementById("statLocalSave").textContent = `Local draft: ${formatTimestamp(lastLocalSaveAt)}`;
+      document.getElementById("statUndo").textContent = `Undo: ${undoStack.length}`;
+      document.getElementById("statRedo").textContent = `Redo: ${redoStack.length}`;
+    }
 
-  function sanitizeGraphDataForSave() {
-    const usedIds = new Set();
-    const nodeRefMap = new Map();
+    function cloneData(data) { return JSON.parse(JSON.stringify(data)); }
+    function slugifyLabel(label) {
+      return String(label || "node").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "node";
+    }
+    function makeUniqueId(base, used) {
+      let normalizedBase = String(base || "node").trim() || "node";
+      let id = normalizedBase;
+      let i = 2;
+      while (used.has(id)) { id = `${normalizedBase}-${i}`; i++; }
+      used.add(id);
+      return id;
+    }
+    function normalizeEdgeLabel(label) { return typeof label === "string" ? label : ""; }
 
-    for (const node of graphData.nodes) {
-      const previousId =
-        node?.id !== null && node?.id !== undefined && String(node.id).trim() !== ""
-          ? String(node.id).trim()
-          : null;
+    function buildNodeMapsFromRaw(rawNodes) {
+      const usedIds = new Set();
+      const nodes = [];
+      const rawKeyToId = new Map();
 
-      const baseId = previousId || slugifyLabel(node.label || "node");
-      const finalId = makeUniqueId(baseId, usedIds);
+      for (let i = 0; i < rawNodes.length; i++) {
+        const n = rawNodes[i] || {};
+        const explicitId = n.id !== null && n.id !== undefined && String(n.id).trim() !== "" ? String(n.id).trim() : null;
+        const label = typeof n.label === "string" ? n.label : "Unnamed";
+        const finalId = makeUniqueId(explicitId || slugifyLabel(label || `node-${i + 1}`), usedIds);
 
-      if (previousId) {
-        nodeRefMap.set(previousId, finalId);
+        const node = {
+          id: finalId,
+          label,
+          subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+          description: typeof n.description === "string" ? n.description : "",
+          notes: typeof n.notes === "string" ? n.notes : "",
+          x: typeof n.x === "number" ? n.x : 0,
+          y: typeof n.y === "number" ? n.y : 0,
+          type: normalizeType(n.type),
+          status: typeof n.status === "string" ? n.status : "draft",
+          tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+        };
+
+        nodes.push(node);
+
+        rawKeyToId.set(finalId, finalId);
+        rawKeyToId.set(label, finalId);
+        if (explicitId) rawKeyToId.set(explicitId, finalId);
       }
 
-      nodeRefMap.set(finalId, finalId);
-      nodeRefMap.set(String(node.label || "").trim(), finalId);
-
-      node.id = finalId;
+      return { nodes, rawKeyToId };
     }
 
-    if (selectedNodeId && nodeRefMap.has(String(selectedNodeId))) {
-      selectedNodeId = nodeRefMap.get(String(selectedNodeId));
+    function normalizeData(raw) {
+      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+      const { nodes, rawKeyToId } = buildNodeMapsFromRaw(rawNodes);
+      const validIds = new Set(nodes.map(n => n.id));
+      const seen = new Set();
+      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
+      const edges = [];
+
+      for (const e of rawEdges) {
+        const rawFrom = e?.from !== null && e?.from !== undefined && String(e.from).trim() !== "" ? String(e.from).trim() : null;
+        const rawTo = e?.to !== null && e?.to !== undefined && String(e.to).trim() !== "" ? String(e.to).trim() : null;
+        const from = rawFrom ? (rawKeyToId.get(rawFrom) || null) : null;
+        const to = rawTo ? (rawKeyToId.get(rawTo) || null) : null;
+
+        if (!from || !to) continue;
+        if (!validIds.has(from) || !validIds.has(to)) continue;
+        if (from === to) continue;
+
+        const edge = {
+          from,
+          to,
+          label: normalizeEdgeLabel(e?.label),
+          oneWay: e?.oneWay === false ? false : true
+        };
+
+        const key = `${edge.from}|${edge.to}|${edge.label}|${edge.oneWay}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        edges.push(edge);
+      }
+
+      return { nodes, edges };
     }
 
-    const validIds = new Set(graphData.nodes.map(node => node.id));
-    const seenEdges = new Set();
+    function sanitizeGraphDataForSave() {
+      const usedIds = new Set();
+      const previousIdToNewId = new Map();
 
-    graphData.edges = graphData.edges
-      .map(edge => {
-        const rawFrom =
-          edge?.from !== null && edge?.from !== undefined && String(edge.from).trim() !== ""
+      for (const node of graphData.nodes) {
+        const oldId = node?.id !== null && node?.id !== undefined && String(node.id).trim() !== ""
+          ? String(node.id).trim()
+          : "";
+        const finalId = makeUniqueId(oldId || slugifyLabel(node.label || "node"), usedIds);
+        previousIdToNewId.set(oldId, finalId);
+        previousIdToNewId.set(finalId, finalId);
+        previousIdToNewId.set(String(node.label || "").trim(), finalId);
+        node.id = finalId;
+      }
+
+      if (selectedNodeId) {
+        const mapped = previousIdToNewId.get(String(selectedNodeId).trim());
+        if (mapped) selectedNodeId = mapped;
+      }
+
+      const validIds = new Set(graphData.nodes.map(node => node.id));
+      const seen = new Set();
+
+      graphData.edges = graphData.edges
+        .map(edge => {
+          const rawFrom = edge?.from !== null && edge?.from !== undefined && String(edge.from).trim() !== ""
             ? String(edge.from).trim()
             : null;
-
-        const rawTo =
-          edge?.to !== null && edge?.to !== undefined && String(edge.to).trim() !== ""
+          const rawTo = edge?.to !== null && edge?.to !== undefined && String(edge.to).trim() !== ""
             ? String(edge.to).trim()
             : null;
 
-        const from = rawFrom ? (nodeRefMap.get(rawFrom) || rawFrom) : null;
-        const to = rawTo ? (nodeRefMap.get(rawTo) || rawTo) : null;
+          const from = rawFrom ? (previousIdToNewId.get(rawFrom) || rawFrom) : null;
+          const to = rawTo ? (previousIdToNewId.get(rawTo) || rawTo) : null;
 
-        return {
-          from,
-          to,
-          label: normalizeEdgeLabel(edge?.label),
-          oneWay: edge?.oneWay === false ? false : true
-        };
-      })
-      .filter(edge => {
-        if (!edge.from || !edge.to) return false;
-        if (!validIds.has(edge.from) || !validIds.has(edge.to)) return false;
-        if (edge.from === edge.to) return false;
+          return {
+            from,
+            to,
+            label: normalizeEdgeLabel(edge?.label),
+            oneWay: edge?.oneWay === false ? false : true
+          };
+        })
+        .filter(edge => {
+          if (!edge.from || !edge.to) return false;
+          if (!validIds.has(edge.from) || !validIds.has(edge.to)) return false;
+          if (edge.from === edge.to) return false;
 
-        const key = `${edge.from}|${edge.to}|${edge.label}|${edge.oneWay}`;
-        if (seenEdges.has(key)) return false;
-        seenEdges.add(key);
-
-        return true;
-      });
-  }
-
-  function getSerializableGraphData() {
-    sanitizeGraphDataForSave();
-
-    return {
-      nodes: graphData.nodes.map(node => ({
-        id: node.id,
-        label: node.label,
-        subtitle: node.subtitle,
-        type: node.type,
-        status: node.status,
-        description: node.description,
-        notes: node.notes,
-        tags: Array.isArray(node.tags) ? [...node.tags] : [],
-        x: node.x,
-        y: node.y
-      })),
-      edges: graphData.edges.map(edge => ({
-        from: edge.from,
-        to: edge.to,
-        label: edge.label || "",
-        oneWay: edge.oneWay === false ? false : true
-      }))
-    };
-  }
-
-  function generateNodeId() {
-    const used = new Set(graphData.nodes.map(n => String(n.id || "")));
-    return makeUniqueId("level", used);
-  }
-
-  function getNodeById(id) {
-    return graphData.nodes.find(n => n.id === String(id)) || null;
-  }
-
-  function getSelectedNode() {
-    return selectedNodeId ? getNodeById(selectedNodeId) : null;
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function escapeJs(value) {
-    return String(value ?? "")
-      .replaceAll("\\", "\\\\")
-      .replaceAll("'", "\\'");
-  }
-
-  function nodeMatchesSearch(node, search) {
-    if (!search) return true;
-    const hay = [
-      node.id,
-      node.label,
-      node.subtitle,
-      node.description,
-      node.notes,
-      getTypeLabel(node.type),
-      ...(Array.isArray(node.tags) ? node.tags : [])
-    ].join(" ").toLowerCase();
-    return hay.includes(search);
-  }
-
-  function getVisibleNodeIds() {
-    const search = currentSearch.trim().toLowerCase();
-    if (!search) return new Set(graphData.nodes.map(n => n.id));
-    return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
-  }
-
-  function scenePointFromClient(clientX, clientY) {
-    const rect = graphViewport().getBoundingClientRect();
-    return {
-      x: (clientX - rect.left - viewportState.x) / viewportState.scale,
-      y: (clientY - rect.top - viewportState.y) / viewportState.scale
-    };
-  }
-
-  function applyViewportTransform() {
-    graphScene().style.transform =
-      `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
-  }
-
-  function centerViewOnContent() {
-    if (!graphData.nodes.length) {
-      viewportState.x = isMobileLayout() ? 20 : 80;
-      viewportState.y = isMobileLayout() ? 20 : 80;
-      viewportState.scale = isMobileLayout() ? 0.55 : 1;
-      applyViewportTransform();
-      return;
+          const key = `${edge.from}|${edge.to}|${edge.label}|${edge.oneWay}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
     }
 
-    const minX = Math.min(...graphData.nodes.map(n => n.x));
-    const maxX = Math.max(...graphData.nodes.map(n => n.x));
-    const minY = Math.min(...graphData.nodes.map(n => n.y));
-    const maxY = Math.max(...graphData.nodes.map(n => n.y));
+    function getSerializableGraphData() {
+      sanitizeGraphDataForSave();
 
-    const mobile = isMobileLayout();
-    const boundsWidth = Math.max(mobile ? 320 : 400, maxX - minX + (mobile ? 180 : 260));
-    const boundsHeight = Math.max(mobile ? 220 : 280, maxY - minY + (mobile ? 160 : 220));
-
-    const rect = graphViewport().getBoundingClientRect();
-    const fitScale = Math.min(
-      mobile ? 0.82 : 1.2,
-      Math.max(0.35, Math.min(rect.width / boundsWidth, rect.height / boundsHeight))
-    );
-
-    viewportState.scale = fitScale;
-    viewportState.x = rect.width / 2 - ((minX + maxX) / 2) * fitScale;
-    viewportState.y = rect.height / 2 - ((minY + maxY) / 2) * fitScale;
-
-    applyViewportTransform();
-  }
-
-  function zoomBy(factor, clientX = null, clientY = null) {
-    const rect = graphViewport().getBoundingClientRect();
-    const px = clientX ?? (rect.left + rect.width / 2);
-    const py = clientY ?? (rect.top + rect.height / 2);
-
-    const before = scenePointFromClient(px, py);
-    viewportState.scale = Math.max(0.25, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
-    viewportState.x = px - rect.left - before.x * viewportState.scale;
-    viewportState.y = py - rect.top - before.y * viewportState.scale;
-    applyViewportTransform();
-  }
-
-  function resetView() {
-    centerViewOnContent();
-    if (!isMobileLayout()) setStatus("View reset.");
-  }
-
-  function pushUndoState(label = "Edit") {
-    undoStack.push({
-      label,
-      data: cloneData(graphData),
-      selectedNodeId
-    });
-    if (undoStack.length > MAX_HISTORY) undoStack.shift();
-    redoStack = [];
-    updateStatsBar();
-  }
-
-  function restoreState(snapshot, reason) {
-    graphData = normalizeData(snapshot.data);
-    selectedNodeId = snapshot.selectedNodeId || null;
-    refreshAllUI();
-    setStatus(reason);
-  }
-
-  function undoAction() {
-    if (!undoStack.length) return;
-    redoStack.push({
-      label: "Redo",
-      data: cloneData(graphData),
-      selectedNodeId
-    });
-    const snapshot = undoStack.pop();
-    restoreState(snapshot, "Undid last action.");
-    markDirtyNoHistory("Undo applied.");
-  }
-
-  function redoAction() {
-    if (!redoStack.length) return;
-    undoStack.push({
-      label: "Undo",
-      data: cloneData(graphData),
-      selectedNodeId
-    });
-    const snapshot = redoStack.pop();
-    restoreState(snapshot, "Redid last action.");
-    markDirtyNoHistory("Redo applied.");
-  }
-
-  function markDirty(reason = "Unsaved changes") {
-    hasUnsavedChanges = true;
-    setSaveBadge("save-dirty", "Unsaved changes");
-    if (!isMobileLayout()) setStatus(reason);
-    saveDraftToLocal();
-    scheduleDiffRefresh();
-    updateStatsBar();
-  }
-
-  function markDirtyNoHistory(reason = "Unsaved changes") {
-    hasUnsavedChanges = true;
-    setSaveBadge("save-dirty", "Unsaved changes");
-    if (!isMobileLayout()) setStatus(reason);
-    saveDraftToLocal();
-    scheduleDiffRefresh();
-    updateStatsBar();
-  }
-
-  function markClean(message = "All changes saved locally") {
-    hasUnsavedChanges = false;
-    setSaveBadge("save-clean", message);
-    if (!isMobileLayout()) setStatus(message);
-    updateStatsBar();
-    scheduleDiffRefresh();
-  }
-
-  function saveDraftToLocal() {
-    try {
-      const payload = {
-        savedAt: Date.now(),
-        data: getSerializableGraphData(),
-        selectedNodeId,
-        viewportState
+      return {
+        nodes: graphData.nodes.map(node => ({
+          id: node.id,
+          label: node.label,
+          subtitle: node.subtitle,
+          type: node.type,
+          status: node.status,
+          description: node.description,
+          notes: node.notes,
+          tags: Array.isArray(node.tags) ? [...node.tags] : [],
+          x: node.x,
+          y: node.y
+        })),
+        edges: graphData.edges.map(edge => ({
+          from: edge.from,
+          to: edge.to,
+          label: edge.label || "",
+          oneWay: edge.oneWay === false ? false : true
+        }))
       };
-      localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
-      lastLocalSaveAt = payload.savedAt;
+    }
+
+    function generateNodeId() {
+      const used = new Set(graphData.nodes.map(n => String(n.id || "")));
+      return makeUniqueId("level", used);
+    }
+
+    function getNodeById(id) {
+      return graphData.nodes.find(n => n.id === String(id)) || null;
+    }
+
+    function getSelectedNode() {
+      return selectedNodeId ? getNodeById(selectedNodeId) : null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeJs(value) {
+      return String(value ?? "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'");
+    }
+
+    function nodeMatchesSearch(node, search) {
+      if (!search) return true;
+      const hay = [
+        node.id,
+        node.label,
+        node.subtitle,
+        node.description,
+        node.notes,
+        getTypeLabel(node.type),
+        ...(Array.isArray(node.tags) ? node.tags : [])
+      ].join(" ").toLowerCase();
+      return hay.includes(search);
+    }
+
+    function getVisibleNodeIds() {
+      const search = currentSearch.trim().toLowerCase();
+      if (!search) return new Set(graphData.nodes.map(n => n.id));
+      return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
+    }
+
+    function scenePointFromClient(clientX, clientY) {
+      const rect = graphViewport().getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
+        y: (clientY - rect.top - viewportState.y) / viewportState.scale
+      };
+    }
+
+    function applyViewportTransform() {
+      graphScene().style.transform = `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+    }
+
+    function centerViewOnContent() {
+      if (!graphData.nodes.length) {
+        viewportState.x = isMobileLayout() ? 20 : 80;
+        viewportState.y = isMobileLayout() ? 20 : 80;
+        viewportState.scale = isMobileLayout() ? 0.55 : 1;
+        applyViewportTransform();
+        return;
+      }
+
+      const minX = Math.min(...graphData.nodes.map(n => n.x));
+      const maxX = Math.max(...graphData.nodes.map(n => n.x));
+      const minY = Math.min(...graphData.nodes.map(n => n.y));
+      const maxY = Math.max(...graphData.nodes.map(n => n.y));
+
+      const mobile = isMobileLayout();
+      const boundsWidth = Math.max(mobile ? 320 : 400, maxX - minX + (mobile ? 180 : 260));
+      const boundsHeight = Math.max(mobile ? 220 : 280, maxY - minY + (mobile ? 160 : 220));
+
+      const rect = graphViewport().getBoundingClientRect();
+      const fitScale = Math.min(
+        mobile ? 0.82 : 1.2,
+        Math.max(0.35, Math.min(rect.width / boundsWidth, rect.height / boundsHeight))
+      );
+
+      viewportState.scale = fitScale;
+      viewportState.x = rect.width / 2 - ((minX + maxX) / 2) * fitScale;
+      viewportState.y = rect.height / 2 - ((minY + maxY) / 2) * fitScale;
+      applyViewportTransform();
+    }
+
+    function zoomBy(factor, clientX = null, clientY = null) {
+      const rect = graphViewport().getBoundingClientRect();
+      const px = clientX ?? (rect.left + rect.width / 2);
+      const py = clientY ?? (rect.top + rect.height / 2);
+
+      const before = scenePointFromClient(px, py);
+      viewportState.scale = Math.max(0.25, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
+      viewportState.x = px - rect.left - before.x * viewportState.scale;
+      viewportState.y = py - rect.top - before.y * viewportState.scale;
+      applyViewportTransform();
+    }
+
+    function resetView() {
+      centerViewOnContent();
+      if (!isMobileLayout()) setStatus("View reset.");
+    }
+
+    function pushUndoState(label = "Edit") {
+      undoStack.push({
+        label,
+        data: cloneData(graphData),
+        selectedNodeId
+      });
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack = [];
       updateStatsBar();
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function loadDraftFromLocal() {
-    try {
-      const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed?.data) return null;
-      return parsed;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  }
-
-  function clearLocalDraft() {
-    try {
-      localStorage.removeItem(LOCAL_DRAFT_KEY);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function restoreMetaFromLocalStorage() {
-    const savedRemote = localStorage.getItem(LAST_REMOTE_SAVE_KEY);
-    const savedSnapshot = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
-
-    if (savedRemote) {
-      const n = Number(savedRemote);
-      if (!Number.isNaN(n) && n > 0) lastRemoteSaveAt = n;
     }
 
-    if (savedSnapshot) {
+    function restoreState(snapshot, reason) {
+      graphData = normalizeData(snapshot.data);
+      selectedNodeId = snapshot.selectedNodeId || null;
+      refreshAllUI();
+      setStatus(reason);
+    }
+
+    function undoAction() {
+      if (!undoStack.length) return;
+      redoStack.push({
+        label: "Redo",
+        data: cloneData(graphData),
+        selectedNodeId
+      });
+      const snapshot = undoStack.pop();
+      restoreState(snapshot, "Undid last action.");
+      markDirtyNoHistory("Undo applied.");
+    }
+
+    function redoAction() {
+      if (!redoStack.length) return;
+      undoStack.push({
+        label: "Undo",
+        data: cloneData(graphData),
+        selectedNodeId
+      });
+      const snapshot = redoStack.pop();
+      restoreState(snapshot, "Redid last action.");
+      markDirtyNoHistory("Redo applied.");
+    }
+
+    function markDirty(reason = "Unsaved changes") {
+      hasUnsavedChanges = true;
+      setSaveBadge("save-dirty", "Unsaved changes");
+      if (!isMobileLayout()) setStatus(reason);
+      saveDraftToLocal();
+      scheduleDiffRefresh();
+      updateStatsBar();
+    }
+
+    function markDirtyNoHistory(reason = "Unsaved changes") {
+      hasUnsavedChanges = true;
+      setSaveBadge("save-dirty", "Unsaved changes");
+      if (!isMobileLayout()) setStatus(reason);
+      saveDraftToLocal();
+      scheduleDiffRefresh();
+      updateStatsBar();
+    }
+
+    function markClean(message = "All changes saved locally") {
+      hasUnsavedChanges = false;
+      setSaveBadge("save-clean", message);
+      if (!isMobileLayout()) setStatus(message);
+      updateStatsBar();
+      scheduleDiffRefresh();
+    }
+
+    function saveDraftToLocal() {
       try {
-        const parsed = JSON.parse(savedSnapshot);
-        lastVersionId = parsed?.version || null;
-        lastSnapshotPath = parsed?.snapshotPath || null;
+        const payload = {
+          savedAt: Date.now(),
+          data: getSerializableGraphData(),
+          selectedNodeId,
+          viewportState
+        };
+        localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(payload));
+        lastLocalSaveAt = payload.savedAt;
+        updateStatsBar();
       } catch (err) {
         console.error(err);
       }
     }
 
-    updateMetaBadges();
-  }
-
-  function persistMetaToLocalStorage() {
-    if (lastRemoteSaveAt) {
-      localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt));
-    }
-    localStorage.setItem(LAST_SNAPSHOT_META_KEY, JSON.stringify({
-      version: lastVersionId,
-      snapshotPath: lastSnapshotPath
-    }));
-  }
-
-  function createCurvePath(x1, y1, x2, y2) {
-    const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
-    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-  }
-
-  function getNodePortPosition(nodeId, side) {
-    const node = getNodeById(nodeId);
-    if (!node) return null;
-    const width = isMobileLayout() ? 118 : 170;
-    return {
-      x: node.x + (side === "output" ? width / 2 : -width / 2),
-      y: node.y
-    };
-  }
-
-  function renderLinkList(direction, nodeId, targetId) {
-    const listEl = document.getElementById(targetId);
-    if (!listEl) return;
-
-    if (!nodeId) {
-      listEl.innerHTML = "<li>No level selected.</li>";
-      return;
+    function loadDraftFromLocal() {
+      try {
+        const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed?.data) return null;
+        return parsed;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
     }
 
-    const edges = direction === "outgoing"
-      ? graphData.edges.filter(e => e.from === nodeId)
-      : graphData.edges.filter(e => e.to === nodeId);
+    function clearLocalDraft() {
+      try {
+        localStorage.removeItem(LOCAL_DRAFT_KEY);
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-    listEl.innerHTML = edges.length
-      ? edges.map(edge => {
-          const otherId = direction === "outgoing" ? edge.to : edge.from;
-          const other = getNodeById(otherId);
-          if (direction === "outgoing" && targetId === "outgoingList") {
-            return `<li>${escapeHtml(other?.label || otherId)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""} <button onclick="deleteEdge('${escapeJs(edge.from)}','${escapeJs(edge.to)}','${escapeJs(edge.label || "")}')">Remove</button></li>`;
+    function restoreMetaFromLocalStorage() {
+      const savedRemote = localStorage.getItem(LAST_REMOTE_SAVE_KEY);
+      const savedSnapshot = localStorage.getItem(LAST_SNAPSHOT_META_KEY);
+
+      if (savedRemote) {
+        const n = Number(savedRemote);
+        if (!Number.isNaN(n) && n > 0) lastRemoteSaveAt = n;
+      }
+
+      if (savedSnapshot) {
+        try {
+          const parsed = JSON.parse(savedSnapshot);
+          lastVersionId = parsed?.version || null;
+          lastSnapshotPath = parsed?.snapshotPath || null;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      updateMetaBadges();
+    }
+
+    function persistMetaToLocalStorage() {
+      if (lastRemoteSaveAt) {
+        localStorage.setItem(LAST_REMOTE_SAVE_KEY, String(lastRemoteSaveAt));
+      }
+      localStorage.setItem(LAST_SNAPSHOT_META_KEY, JSON.stringify({
+        version: lastVersionId,
+        snapshotPath: lastSnapshotPath
+      }));
+    }
+
+    function createCurvePath(x1, y1, x2, y2) {
+      const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
+      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    }
+
+    function getNodePortPosition(nodeId, side) {
+      const node = getNodeById(nodeId);
+      if (!node) return null;
+      const width = isMobileLayout() ? 118 : 170;
+      return {
+        x: node.x + (side === "output" ? width / 2 : -width / 2),
+        y: node.y
+      };
+    }
+
+    function renderLinkList(direction, nodeId, targetId) {
+      const listEl = document.getElementById(targetId);
+      if (!listEl) return;
+
+      if (!nodeId) {
+        listEl.innerHTML = "<li>No level selected.</li>";
+        return;
+      }
+
+      const edges = direction === "outgoing"
+        ? graphData.edges.filter(e => e.from === nodeId)
+        : graphData.edges.filter(e => e.to === nodeId);
+
+      listEl.innerHTML = edges.length
+        ? edges.map(edge => {
+            const otherId = direction === "outgoing" ? edge.to : edge.from;
+            const other = getNodeById(otherId);
+            const removeButton = direction === "outgoing"
+              ? ` <button onclick="deleteEdge('${escapeJs(edge.from)}','${escapeJs(edge.to)}','${escapeJs(edge.label || "")}')">Remove</button>`
+              : "";
+            return `<li>${escapeHtml(other?.label || otherId)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}${removeButton}</li>`;
+          }).join("")
+        : `<li>No ${direction} links.</li>`;
+    }
+
+    function refreshGraph() {
+      const visibleNodeIds = getVisibleNodeIds();
+
+      graphNodesEl().innerHTML = graphData.nodes
+        .filter(node => visibleNodeIds.has(node.id))
+        .map(node => {
+          const isSelected = node.id === selectedNodeId;
+          return `
+            <div
+              class="node ${escapeHtml(getTypeClass(node.type))} ${isSelected ? "selected" : ""}"
+              data-node-id="${escapeHtml(node.id)}"
+              style="left:${node.x}px; top:${node.y}px;"
+            >
+              <div class="nodeHeader">
+                <div class="nodeDot"></div>
+                <div class="nodeTitle">${escapeHtml(node.label)}</div>
+              </div>
+              ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+              <div class="nodeStatusRow">
+                <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
+                <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
+              </div>
+              <div class="nodePorts">
+                <div class="port input"></div>
+                <div class="port output"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+      const svgParts = [];
+      const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
+
+      for (const edge of visibleEdges) {
+        const fromPort = getNodePortPosition(edge.from, "output");
+        const toPort = getNodePortPosition(edge.to, "input");
+        if (!fromPort || !toPort) continue;
+
+        const fromNode = getNodeById(edge.from);
+        const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
+        const isSelected = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+        const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
+
+        svgParts.push(`<path d="${path}" class="${isSelected ? "line-selected" : "line-base"} ${edgeTypeClass}"></path>`);
+
+        if (edge.label) {
+          const midX = (fromPort.x + toPort.x) / 2;
+          const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
+          svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
+        }
+      }
+
+      if (interaction.connectFromNodeId) {
+        const fromPort = getNodePortPosition(interaction.connectFromNodeId, "output");
+        if (fromPort) {
+          const preview = createCurvePath(
+            fromPort.x,
+            fromPort.y,
+            interaction.connectMouseSceneX,
+            interaction.connectMouseSceneY
+          );
+          svgParts.push(`<path d="${preview}" class="line-preview"></path>`);
+        }
+      }
+
+      graphSvg().innerHTML = svgParts.join("");
+      bindNodeEvents();
+    }
+
+    function bindNodeEvents() {
+      graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
+        const nodeId = nodeEl.dataset.nodeId;
+
+        nodeEl.addEventListener("pointerdown", (event) => {
+          event.stopPropagation();
+
+          if (event.shiftKey) {
+            interaction.connectFromNodeId = nodeId;
+            const scenePt = scenePointFromClient(event.clientX, event.clientY);
+            interaction.connectMouseSceneX = scenePt.x;
+            interaction.connectMouseSceneY = scenePt.y;
+            refreshGraph();
+            return;
           }
-          return `<li>${escapeHtml(other?.label || otherId)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-        }).join("")
-      : `<li>No ${direction} links.</li>`;
-  }
 
-  function refreshGraph() {
-    const visibleNodeIds = getVisibleNodeIds();
+          interaction.dragNodeId = nodeId;
+          interaction.dragStartMouseX = event.clientX;
+          interaction.dragStartMouseY = event.clientY;
 
-    graphNodesEl().innerHTML = graphData.nodes
-      .filter(node => visibleNodeIds.has(node.id))
-      .map(node => {
-        const isSelected = node.id === selectedNodeId;
-        return `
-          <div
-            class="node ${escapeHtml(getTypeClass(node.type))} ${isSelected ? "selected" : ""}"
-            data-node-id="${escapeHtml(node.id)}"
-            style="left:${node.x}px; top:${node.y}px;"
-          >
-            <div class="nodeHeader">
-              <div class="nodeDot"></div>
-              <div class="nodeTitle">${escapeHtml(node.label)}</div>
-            </div>
+          const node = getNodeById(nodeId);
+          if (!node) return;
 
-            ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+          interaction.dragStartNodeX = node.x;
+          interaction.dragStartNodeY = node.y;
+          interaction.movedDuringPointer = false;
 
-            <div class="nodeStatusRow">
-              <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
-              <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
-            </div>
+          selectedNodeId = nodeId;
+          updateSidebarForSelection();
+          updateStatsBar();
+          refreshGraph();
 
-            <div class="nodePorts">
-              <div class="port input"></div>
-              <div class="port output"></div>
-            </div>
+          if (isMobileLayout()) {
+            openMobileInspector();
+          } else if (isCompactEditorLayout()) {
+            openInspector();
+          }
+
+          nodeEl.classList.add("dragging");
+          try {
+            nodeEl.setPointerCapture(event.pointerId);
+          } catch {}
+        });
+
+        nodeEl.addEventListener("pointerup", () => {
+          nodeEl.classList.remove("dragging");
+        });
+      });
+    }
+
+    function updateDesktopSidebar(node) {
+      document.getElementById("selectedHint").textContent = node ? `Editing ${node.label || node.id}` : "Click a node in the graph to edit it.";
+
+      document.getElementById("nodeLabel").value = node?.label || "";
+      document.getElementById("nodeSubtitle").value = node?.subtitle || "";
+      document.getElementById("nodeType").value = node?.type || "stable";
+      document.getElementById("nodeStatus").value = node?.status || "draft";
+      document.getElementById("nodeX").value = node ? Math.round(node.x) : "";
+      document.getElementById("nodeY").value = node ? Math.round(node.y) : "";
+      document.getElementById("nodeTags").value = node?.tags?.join(", ") || "";
+      document.getElementById("nodeDescription").value = node?.description || "";
+      document.getElementById("nodeNotes").value = node?.notes || "";
+
+      const targetSelect = document.getElementById("linkTarget");
+      const currentTarget = targetSelect.value;
+      targetSelect.innerHTML = graphData.nodes
+        .filter(n => !node || n.id !== node.id)
+        .map(n => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.label)}</option>`)
+        .join("");
+      if ([...targetSelect.options].some(opt => opt.value === currentTarget)) {
+        targetSelect.value = currentTarget;
+      }
+
+      renderLinkList("outgoing", node?.id || null, "outgoingList");
+      renderLinkList("incoming", node?.id || null, "incomingList");
+    }
+
+    function updateMobileSidebar(node) {
+      document.getElementById("mobileInspectorTitle").textContent = node ? (node.label || node.id) : "No level selected";
+
+      document.getElementById("mobileNodeLabel").value = node?.label || "";
+      document.getElementById("mobileNodeSubtitle").value = node?.subtitle || "";
+      document.getElementById("mobileNodeType").value = node?.type || "stable";
+      document.getElementById("mobileNodeStatus").value = node?.status || "draft";
+      document.getElementById("mobileNodeX").value = node ? Math.round(node.x) : "";
+      document.getElementById("mobileNodeY").value = node ? Math.round(node.y) : "";
+      document.getElementById("mobileNodeTags").value = node?.tags?.join(", ") || "";
+      document.getElementById("mobileNodeDescription").value = node?.description || "";
+      document.getElementById("mobileNodeNotes").value = node?.notes || "";
+
+      const targetSelect = document.getElementById("mobileLinkTarget");
+      const currentTarget = targetSelect.value;
+      targetSelect.innerHTML = graphData.nodes
+        .filter(n => !node || n.id !== node.id)
+        .map(n => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.label)}</option>`)
+        .join("");
+      if ([...targetSelect.options].some(opt => opt.value === currentTarget)) {
+        targetSelect.value = currentTarget;
+      }
+
+      renderLinkList("outgoing", node?.id || null, "mobileOutgoingList");
+      renderLinkList("incoming", node?.id || null, "mobileIncomingList");
+    }
+
+    function updateSidebarForSelection() {
+      const node = getSelectedNode();
+      updateDesktopSidebar(node);
+      updateMobileSidebar(node);
+    }
+
+    function refreshAllUI() {
+      updateMetaBadges();
+      updateStatsBar();
+      updateSidebarForSelection();
+      refreshGraph();
+    }
+
+    function syncSearchInputs(value) {
+      document.getElementById("searchInput").value = value;
+      const mobile = mobileSearchInput();
+      if (mobile) mobile.value = value;
+    }
+
+    function setSearch(value) {
+      currentSearch = value || "";
+      syncSearchInputs(currentSearch);
+      refreshGraph();
+    }
+
+    function closeMobilePanels() {
+      mobileSearchPanel().classList.remove("show");
+      mobileControlsPanel().classList.remove("show");
+    }
+
+    function toggleMobileSearch() {
+      if (!isMobileLayout()) return;
+      const panel = mobileSearchPanel();
+      const willShow = !panel.classList.contains("show");
+      closeMobilePanels();
+      if (willShow) {
+        panel.classList.add("show");
+        setTimeout(() => mobileSearchInput().focus(), 30);
+      }
+    }
+
+    function toggleMobileControls() {
+      if (!isMobileLayout()) return;
+      const panel = mobileControlsPanel();
+      const willShow = !panel.classList.contains("show");
+      closeMobilePanels();
+      if (willShow) panel.classList.add("show");
+    }
+
+    function openInspector() {
+      const col = document.getElementById("desktopInspector");
+      const headerCard = document.getElementById("inspectorHeaderCard");
+      if (!isCompactEditorLayout()) return;
+      col.classList.add("open");
+      headerCard.style.display = "block";
+    }
+
+    function closeInspector() {
+      const col = document.getElementById("desktopInspector");
+      const headerCard = document.getElementById("inspectorHeaderCard");
+      col.classList.remove("open");
+      headerCard.style.display = "none";
+    }
+
+    function openMobileInspector() {
+      if (!isMobileLayout()) return;
+      mobileInspector().classList.add("show");
+      mobileInspectorOverlay().classList.add("show");
+    }
+
+    function closeMobileInspector() {
+      mobileInspector().classList.remove("show");
+      mobileInspectorOverlay().classList.remove("show");
+    }
+
+    function toggleMobileInspector() {
+      if (!isMobileLayout()) return;
+      if (mobileInspector().classList.contains("show")) {
+        closeMobileInspector();
+      } else {
+        openMobileInspector();
+      }
+    }
+
+    function getActiveNodeFormValues() {
+      if (isMobileLayout()) {
+        return {
+          label: document.getElementById("mobileNodeLabel").value,
+          subtitle: document.getElementById("mobileNodeSubtitle").value,
+          type: document.getElementById("mobileNodeType").value,
+          status: document.getElementById("mobileNodeStatus").value,
+          x: document.getElementById("mobileNodeX").value,
+          y: document.getElementById("mobileNodeY").value,
+          tags: document.getElementById("mobileNodeTags").value,
+          description: document.getElementById("mobileNodeDescription").value,
+          notes: document.getElementById("mobileNodeNotes").value
+        };
+      }
+
+      return {
+        label: document.getElementById("nodeLabel").value,
+        subtitle: document.getElementById("nodeSubtitle").value,
+        type: document.getElementById("nodeType").value,
+        status: document.getElementById("nodeStatus").value,
+        x: document.getElementById("nodeX").value,
+        y: document.getElementById("nodeY").value,
+        tags: document.getElementById("nodeTags").value,
+        description: document.getElementById("nodeDescription").value,
+        notes: document.getElementById("nodeNotes").value
+      };
+    }
+
+    function getActiveLinkFormValues() {
+      if (isMobileLayout()) {
+        return {
+          targetId: document.getElementById("mobileLinkTarget").value,
+          label: document.getElementById("mobileLinkLabel").value,
+          oneWay: document.getElementById("mobileLinkOneWay").value === "yes"
+        };
+      }
+
+      return {
+        targetId: document.getElementById("linkTarget").value,
+        label: document.getElementById("linkLabel").value,
+        oneWay: document.getElementById("linkOneWay").value === "yes"
+      };
+    }
+
+    function addNode() {
+      pushUndoState("Add node");
+
+      const nextId = generateNodeId();
+      const rect = graphViewport().getBoundingClientRect();
+      const center = scenePointFromClient(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      graphData.nodes.push({
+        id: nextId,
+        label: "New Level",
+        subtitle: "",
+        description: "",
+        notes: "",
+        x: Math.round(center.x),
+        y: Math.round(center.y),
+        type: "stable",
+        status: "draft",
+        tags: []
+      });
+
+      selectedNodeId = nextId;
+      refreshAllUI();
+
+      if (isMobileLayout()) openMobileInspector();
+      else if (isCompactEditorLayout()) openInspector();
+
+      markDirty("Added new node.");
+    }
+
+    function applySelectedNodeChanges() {
+      const node = getSelectedNode();
+      if (!node) return;
+
+      pushUndoState("Update node");
+      const values = getActiveNodeFormValues();
+
+      const oldLabel = node.label;
+      node.label = values.label.trim() || "Unnamed";
+      node.subtitle = values.subtitle.trim();
+      node.type = normalizeType(values.type);
+      node.status = values.status;
+      node.x = Number(values.x || 0);
+      node.y = Number(values.y || 0);
+      node.tags = values.tags.split(",").map(v => v.trim()).filter(Boolean);
+      node.description = values.description;
+      node.notes = values.notes;
+
+      if (oldLabel !== node.label) {
+        sanitizeGraphDataForSave();
+      }
+
+      refreshAllUI();
+      markDirty("Node updated.");
+    }
+
+    function deleteSelectedNode() {
+      const node = getSelectedNode();
+      if (!node) return;
+
+      const confirmed = confirm(`Delete ${node.label}?`);
+      if (!confirmed) return;
+
+      pushUndoState("Delete node");
+
+      graphData.nodes = graphData.nodes.filter(n => n.id !== node.id);
+      graphData.edges = graphData.edges.filter(e => e.from !== node.id && e.to !== node.id);
+      selectedNodeId = null;
+
+      refreshAllUI();
+      closeMobileInspector();
+      markDirty("Deleted node.");
+    }
+
+    function edgeExists(from, to, label = "") {
+      return graphData.edges.some(e => e.from === from && e.to === to && (e.label || "") === (label || ""));
+    }
+
+    function addEdge(from, to, label = "", oneWay = true) {
+      if (!from || !to || from === to) return;
+      if (!getNodeById(from) || !getNodeById(to)) return;
+      if (edgeExists(from, to, label)) return;
+
+      graphData.edges.push({
+        from,
+        to,
+        label: label || "",
+        oneWay: !!oneWay
+      });
+
+      if (!oneWay && !edgeExists(to, from, label)) {
+        graphData.edges.push({
+          from: to,
+          to: from,
+          label: label || "",
+          oneWay: !!oneWay
+        });
+      }
+    }
+
+    function addConnectionFromSidebar() {
+      const node = getSelectedNode();
+      if (!node) return;
+
+      const values = getActiveLinkFormValues();
+      if (!values.targetId) return;
+      if (!getNodeById(values.targetId)) {
+        showErrorPanel("Target level does not exist.");
+        return;
+      }
+
+      pushUndoState("Add link");
+      addEdge(node.id, values.targetId, values.label.trim(), values.oneWay);
+      refreshAllUI();
+      markDirty("Added link.");
+    }
+
+    function deleteEdge(from, to, label) {
+      pushUndoState("Delete link");
+      graphData.edges = graphData.edges.filter(
+        e => !(e.from === from && e.to === to && (e.label || "") === (label || ""))
+      );
+      refreshAllUI();
+      markDirty("Deleted link.");
+    }
+
+    function autoLayout() {
+      if (!graphData.nodes.length) return;
+
+      pushUndoState("Auto layout");
+
+      const nodeMap = new Map(graphData.nodes.map(n => [n.id, n]));
+      const incomingCount = new Map(graphData.nodes.map(n => [n.id, 0]));
+      const outgoingMap = new Map(graphData.nodes.map(n => [n.id, []]));
+
+      for (const edge of graphData.edges) {
+        if (incomingCount.has(edge.to)) incomingCount.set(edge.to, incomingCount.get(edge.to) + 1);
+        if (outgoingMap.has(edge.from)) outgoingMap.get(edge.from).push(edge.to);
+      }
+
+      const roots = graphData.nodes.filter(n => (incomingCount.get(n.id) || 0) === 0);
+      const startNodes = roots.length ? roots : [graphData.nodes[0]];
+
+      const levels = [];
+      const placed = new Set();
+      let frontier = startNodes.map(n => n.id);
+
+      let depth = 0;
+      while (frontier.length && depth < 20) {
+        levels[depth] = [...new Set(frontier)].filter(id => !placed.has(id));
+        levels[depth].forEach(id => placed.add(id));
+
+        const next = [];
+        for (const id of levels[depth]) {
+          for (const child of outgoingMap.get(id) || []) {
+            if (!placed.has(child)) next.push(child);
+          }
+        }
+        frontier = next;
+        depth++;
+      }
+
+      const unplaced = graphData.nodes.map(n => n.id).filter(id => !placed.has(id));
+      if (unplaced.length) levels.push(unplaced);
+
+      const spacingX = isMobileLayout() ? 190 : 260;
+      const spacingY = isMobileLayout() ? 140 : 170;
+      const startX = 140;
+      const startY = 140;
+
+      levels.forEach((row, rowIndex) => {
+        row.forEach((id, colIndex) => {
+          const node = nodeMap.get(id);
+          if (!node) return;
+          node.x = startX + colIndex * spacingX;
+          node.y = startY + rowIndex * spacingY;
+        });
+      });
+
+      refreshAllUI();
+      centerViewOnContent();
+      markDirty("Auto layout applied.");
+    }
+
+    function updateSaveButtonsDisabledState() {
+      const disabled = isSavingToGitHub || Date.now() < saveCooldownUntil;
+      document.querySelectorAll(".saveTrigger").forEach(btn => {
+        btn.disabled = disabled;
+      });
+    }
+
+    async function saveGraph(isAuto = false) {
+      try {
+        if (isSavingToGitHub) return;
+
+        const now = Date.now();
+        if (now < saveCooldownUntil) {
+          const seconds = Math.max(1, Math.ceil((saveCooldownUntil - now) / 1000));
+          setStatus(`Please wait ${seconds}s before saving again.`, true);
+          return;
+        }
+
+        if (!window.__EDITOR_SECURITY__?.hostOk) {
+          throw new Error("Blocked from saving on this host.");
+        }
+
+        isSavingToGitHub = true;
+        updateSaveButtonsDisabledState();
+        hideErrorPanel();
+        setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
+        if (!isMobileLayout()) setStatus(isAuto ? "Auto-saving graph..." : "Saving graph...");
+
+        const payload = getSerializableGraphData();
+        refreshAllUI();
+
+        const res = await fetch(SAVE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project: PROJECT,
+            data: payload
+          })
+        });
+
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(json?.error || "Save failed");
+        }
+
+        hasUnsavedChanges = false;
+        lastRemoteSaveAt = json?.savedAt ? (Date.parse(json.savedAt) || Date.now()) : Date.now();
+        lastVersionId = json?.version || null;
+        lastSnapshotPath = json?.snapshotPath || null;
+        saveCooldownUntil = Date.now() + SAVE_COOLDOWN_MS;
+
+        persistMetaToLocalStorage();
+        updateMetaBadges();
+        setSaveBadge("save-clean", "Saved to GitHub");
+        if (!isMobileLayout()) {
+          setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
+        }
+
+        saveDraftToLocal();
+        historyIndexCache = null;
+        snapshotCache = new Map();
+        scheduleDiffRefresh();
+      } catch (err) {
+        console.error(err);
+        setSaveBadge("save-error", "GitHub save failed");
+        if (!isMobileLayout()) setStatus("Save failed.", true);
+        showErrorPanel(err.message || "Save failed.");
+      } finally {
+        isSavingToGitHub = false;
+        updateSaveButtonsDisabledState();
+      }
+    }
+
+    function discardLocalDraft() {
+      const ok = confirm("Discard your local draft and reload from GitHub?");
+      if (!ok) return;
+      clearLocalDraft();
+      hasUnsavedChanges = false;
+      reloadGraph(true);
+    }
+
+    async function fetchRemoteGraph() {
+      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
+      return normalizeData(await res.json());
+    }
+
+    async function reloadGraph(force = false) {
+      try {
+        if (hasUnsavedChanges && !force) {
+          if (!isMobileLayout()) setStatus("Reload skipped because you have unsaved changes.");
+          return;
+        }
+
+        showLoading("Loading graph...");
+        if (!isMobileLayout()) setStatus("Loading latest graph...");
+
+        graphData = await fetchRemoteGraph();
+        selectedNodeId = graphData.nodes[0]?.id || null;
+        refreshAllUI();
+        centerViewOnContent();
+
+        hideLoading();
+        hideErrorPanel();
+        markClean("Loaded latest graph.");
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        if (!isMobileLayout()) setStatus("Failed to load graph.", true);
+        showErrorPanel(err.message || "Failed to load graph.");
+      }
+    }
+
+    function scheduleAutosave() {
+      clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        saveDraftToLocal();
+      }, 300);
+    }
+
+    function scheduleDiffRefresh() {
+      clearTimeout(diffTimer);
+      diffTimer = setTimeout(() => {
+        refreshChangeSummary();
+      }, 200);
+    }
+
+    async function fetchHistoryIndex() {
+      if (historyIndexCache) return historyIndexCache;
+      const res = await fetch(`${SAVE_URL}?project=${encodeURIComponent(PROJECT)}&action=history`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
+      historyIndexCache = json;
+      return json;
+    }
+
+    async function fetchSnapshotByPath(path) {
+      if (snapshotCache.has(path)) return snapshotCache.get(path);
+      const res = await fetch(`${SAVE_URL}?project=${encodeURIComponent(PROJECT)}&action=snapshot&path=${encodeURIComponent(path)}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
+      const normalized = normalizeData(json?.data || json);
+      snapshotCache.set(path, normalized);
+      return normalized;
+    }
+
+    function computeDiff(previousData, currentData) {
+      const prevNodes = new Map(previousData.nodes.map(n => [n.id, n]));
+      const currNodes = new Map(currentData.nodes.map(n => [n.id, n]));
+      const prevEdges = new Set(previousData.edges.map(e => `${e.from}|${e.to}|${e.label || ""}|${e.oneWay !== false}`));
+      const currEdges = new Set(currentData.edges.map(e => `${e.from}|${e.to}|${e.label || ""}|${e.oneWay !== false}`));
+
+      const addedNodes = [];
+      const deletedNodes = [];
+      const movedNodes = [];
+      const updatedNodes = [];
+      const addedLinks = [];
+      const deletedLinks = [];
+
+      for (const [id, curr] of currNodes.entries()) {
+        if (!prevNodes.has(id)) {
+          addedNodes.push({ id, label: curr.label });
+          continue;
+        }
+
+        const prev = prevNodes.get(id);
+        const moved = prev.x !== curr.x || prev.y !== curr.y;
+        const updated =
+          prev.label !== curr.label ||
+          prev.subtitle !== curr.subtitle ||
+          prev.description !== curr.description ||
+          prev.notes !== curr.notes ||
+          prev.type !== curr.type ||
+          prev.status !== curr.status ||
+          JSON.stringify(prev.tags || []) !== JSON.stringify(curr.tags || []);
+
+        if (moved) movedNodes.push({ label: curr.label, from: `${prev.x}, ${prev.y}`, to: `${curr.x}, ${curr.y}` });
+        if (updated) updatedNodes.push({ label: curr.label });
+      }
+
+      for (const [id, prev] of prevNodes.entries()) {
+        if (!currNodes.has(id)) {
+          deletedNodes.push({ id, label: prev.label });
+        }
+      }
+
+      for (const edge of currentData.edges) {
+        const key = `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay !== false}`;
+        if (!prevEdges.has(key)) {
+          addedLinks.push({
+            from: currNodes.get(edge.from)?.label || edge.from,
+            to: currNodes.get(edge.to)?.label || edge.to,
+            label: edge.label || ""
+          });
+        }
+      }
+
+      for (const edge of previousData.edges) {
+        const key = `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay !== false}`;
+        if (!currEdges.has(key)) {
+          deletedLinks.push({
+            from: prevNodes.get(edge.from)?.label || edge.from,
+            to: prevNodes.get(edge.to)?.label || edge.to,
+            label: edge.label || ""
+          });
+        }
+      }
+
+      return { addedNodes, deletedNodes, movedNodes, updatedNodes, addedLinks, deletedLinks };
+    }
+
+    function buildTextSummary(diff, context) {
+      const lines = [];
+      lines.push("Backrooms Update Log");
+      if (context) lines.push(context);
+      lines.push("");
+
+      const hasChanges =
+        diff.addedNodes.length ||
+        diff.deletedNodes.length ||
+        diff.movedNodes.length ||
+        diff.updatedNodes.length ||
+        diff.addedLinks.length ||
+        diff.deletedLinks.length;
+
+      if (!hasChanges) {
+        lines.push("- No changes detected");
+        return lines.join("\n");
+      }
+
+      diff.addedNodes.forEach(item => lines.push(`- Added node: ${item.label}`));
+      diff.deletedNodes.forEach(item => lines.push(`- Deleted node: ${item.label}`));
+      diff.movedNodes.forEach(item => lines.push(`- Moved node: ${item.label} (${item.from} -> ${item.to})`));
+      diff.updatedNodes.forEach(item => lines.push(`- Updated node: ${item.label}`));
+      diff.addedLinks.forEach(item => lines.push(`- Added link: ${item.from} -> ${item.to}${item.label ? ` (${item.label})` : ""}`));
+      diff.deletedLinks.forEach(item => lines.push(`- Deleted link: ${item.from} -> ${item.to}${item.label ? ` (${item.label})` : ""}`));
+
+      return lines.join("\n");
+    }
+
+    function buildDiscordSummary(diff, context) {
+      const lines = [];
+      lines.push("Backrooms Graph Update");
+      if (context) lines.push(context);
+      lines.push("");
+
+      const hasChanges =
+        diff.addedNodes.length ||
+        diff.deletedNodes.length ||
+        diff.movedNodes.length ||
+        diff.updatedNodes.length ||
+        diff.addedLinks.length ||
+        diff.deletedLinks.length;
+
+      if (!hasChanges) {
+        lines.push("- No changes detected");
+        return lines.join("\n");
+      }
+
+      if (diff.addedNodes.length) lines.push(`- Added nodes: ${diff.addedNodes.map(x => x.label).join(", ")}`);
+      if (diff.deletedNodes.length) lines.push(`- Deleted nodes: ${diff.deletedNodes.map(x => x.label).join(", ")}`);
+      if (diff.movedNodes.length) lines.push(`- Moved nodes: ${diff.movedNodes.map(x => x.label).join(", ")}`);
+      if (diff.updatedNodes.length) lines.push(`- Updated nodes: ${diff.updatedNodes.map(x => x.label).join(", ")}`);
+      if (diff.addedLinks.length) lines.push(`- Added links: ${diff.addedLinks.map(x => `${x.from} -> ${x.to}`).join("; ")}`);
+      if (diff.deletedLinks.length) lines.push(`- Deleted links: ${diff.deletedLinks.map(x => `${x.from} -> ${x.to}`).join("; ")}`);
+
+      return lines.join("\n");
+    }
+
+    function renderDiffBucket(title, items, formatter) {
+      return `
+        <div class="changeBucket">
+          <h3>${escapeHtml(title)}</h3>
+          ${
+            items.length
+              ? `<ul class="changeList">${items.map(item => `<li>${formatter(item)}</li>`).join("")}</ul>`
+              : `<div class="changeEmpty">No changes in this section.</div>`
+          }
+        </div>
+      `;
+    }
+
+    async function refreshChangeSummary() {
+      const panel = document.getElementById("changeSummaryPanel");
+      panel.innerHTML = `
+        <h2 class="changeTitle">Change Summary</h2>
+        <div class="changeSub">Checking history and current draft changes...</div>
+      `;
+
+      try {
+        const history = await fetchHistoryIndex();
+        const versions = Array.isArray(history?.versions) ? history.versions : [];
+
+        let diff;
+        let contextText = "";
+
+        if (!versions.length) {
+          diff = {
+            addedNodes: [],
+            deletedNodes: [],
+            movedNodes: [],
+            updatedNodes: [],
+            addedLinks: [],
+            deletedLinks: []
+          };
+          contextText = "No saved history found yet.";
+        } else if (hasUnsavedChanges || !lastSnapshotPath) {
+          const latest = await fetchSnapshotByPath(versions[0].path);
+          diff = computeDiff(latest, graphData);
+          contextText = "Comparing current draft to latest saved snapshot.";
+        } else if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
+          const previous = await fetchSnapshotByPath(versions[1].path);
+          const latest = await fetchSnapshotByPath(versions[0].path);
+          diff = computeDiff(previous, latest);
+          contextText = "Comparing latest saved snapshot to previous saved snapshot.";
+        } else {
+          const latest = await fetchSnapshotByPath(versions[0].path);
+          diff = computeDiff(latest, graphData);
+          contextText = "Comparing current draft to latest saved snapshot.";
+        }
+
+        latestDiffContext = { diff, contextText };
+
+        panel.innerHTML = `
+          <h2 class="changeTitle">Change Summary</h2>
+          <div class="changeSub">${escapeHtml(contextText)}</div>
+          <div class="changeToolbar">
+            <button onclick="copyChangeSummary()">Copy Summary</button>
+            <button onclick="copyDiscordLog()">Copy Discord Log</button>
           </div>
+          <div class="changeGrid">
+            ${renderDiffBucket("Added Nodes", diff.addedNodes, item => escapeHtml(item.label))}
+            ${renderDiffBucket("Deleted Nodes", diff.deletedNodes, item => escapeHtml(item.label))}
+            ${renderDiffBucket("Moved Nodes", diff.movedNodes, item => `${escapeHtml(item.label)} <span style="color:#8e8fa0;">(${escapeHtml(item.from)} → ${escapeHtml(item.to)})</span>`)}
+            ${renderDiffBucket("Updated Nodes", diff.updatedNodes, item => escapeHtml(item.label))}
+            ${renderDiffBucket("Added Links", diff.addedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span style="color:#8e8fa0;">(${escapeHtml(item.label)})</span>` : ""}`)}
+            ${renderDiffBucket("Deleted Links", diff.deletedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span style="color:#8e8fa0;">(${escapeHtml(item.label)})</span>` : ""}`)}
+          </div>
+          <textarea class="changeTextarea" readonly>${buildTextSummary(diff, contextText)}</textarea>
         `;
-      }).join("");
-
-    const svgParts = [];
-    const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
-
-    for (const edge of visibleEdges) {
-      const fromPort = getNodePortPosition(edge.from, "output");
-      const toPort = getNodePortPosition(edge.to, "input");
-      if (!fromPort || !toPort) continue;
-
-      const fromNode = getNodeById(edge.from);
-      const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
-      const isSelected = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-      const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
-
-      svgParts.push(`<path d="${path}" class="${isSelected ? "line-selected" : "line-base"} ${edgeTypeClass}"></path>`);
-
-      if (edge.label) {
-        const midX = (fromPort.x + toPort.x) / 2;
-        const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
-        svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
+      } catch (err) {
+        console.error(err);
+        panel.innerHTML = `
+          <h2 class="changeTitle">Change Summary</h2>
+          <div class="changeSub">Couldn’t load history diff yet.</div>
+          <div class="changeEmpty" style="margin-top:12px;">${escapeHtml(err.message || "Unknown diff error")}</div>
+        `;
       }
     }
 
-    if (interaction.connectFromNodeId) {
-      const fromPort = getNodePortPosition(interaction.connectFromNodeId, "output");
-      if (fromPort) {
-        const preview = createCurvePath(
-          fromPort.x,
-          fromPort.y,
-          interaction.connectMouseSceneX,
-          interaction.connectMouseSceneY
-        );
-        svgParts.push(`<path d="${preview}" class="line-preview"></path>`);
+    async function copyText(text, successMessage) {
+      try {
+        await navigator.clipboard.writeText(text);
+        if (!isMobileLayout()) setStatus(successMessage);
+      } catch (err) {
+        console.error(err);
+        if (!isMobileLayout()) setStatus("Copy failed.", true);
       }
     }
 
-    graphSvg().innerHTML = svgParts.join("");
-    bindNodeEvents();
-  }
+    function copyChangeSummary() {
+      if (!latestDiffContext) return;
+      copyText(buildTextSummary(latestDiffContext.diff, latestDiffContext.contextText), "Copied summary to clipboard.");
+    }
 
-  function bindNodeEvents() {
-    graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
-      const nodeId = nodeEl.dataset.nodeId;
+    function copyDiscordLog() {
+      if (!latestDiffContext) return;
+      copyText(buildDiscordSummary(latestDiffContext.diff, latestDiffContext.contextText), "Copied Discord log to clipboard.");
+    }
 
-      nodeEl.addEventListener("pointerdown", (event) => {
-        event.stopPropagation();
+    function bindViewportEvents() {
+      const viewport = graphViewport();
 
-        if (event.shiftKey) {
-          interaction.connectFromNodeId = nodeId;
+      viewport.addEventListener("wheel", (event) => {
+        if (isMobileLayout()) return;
+        event.preventDefault();
+        const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
+        zoomBy(factor, event.clientX, event.clientY);
+      }, { passive: false });
+
+      viewport.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".node")) return;
+        if (event.target.closest(".mobilePanel")) return;
+        if (event.target.closest(".mobileFab")) return;
+        if (event.target.closest(".mobileInspector")) return;
+
+        interaction.isPanning = true;
+        interaction.panMouseX = event.clientX;
+        interaction.panMouseY = event.clientY;
+        interaction.panStartX = viewportState.x;
+        interaction.panStartY = viewportState.y;
+        interaction.movedDuringPointer = false;
+
+        viewport.classList.add("panning");
+        try {
+          viewport.setPointerCapture(event.pointerId);
+        } catch {}
+      });
+
+      viewport.addEventListener("pointermove", (event) => {
+        if (interaction.dragNodeId) {
+          const node = getNodeById(interaction.dragNodeId);
+          if (!node) return;
+
+          const dx = (event.clientX - interaction.dragStartMouseX) / viewportState.scale;
+          const dy = (event.clientY - interaction.dragStartMouseY) / viewportState.scale;
+          node.x = Math.round(interaction.dragStartNodeX + dx);
+          node.y = Math.round(interaction.dragStartNodeY + dy);
+
+          interaction.movedDuringPointer = true;
+          refreshGraph();
+          updateSidebarForSelection();
+          return;
+        }
+
+        if (interaction.isPanning) {
+          viewportState.x = interaction.panStartX + (event.clientX - interaction.panMouseX);
+          viewportState.y = interaction.panStartY + (event.clientY - interaction.panMouseY);
+          interaction.movedDuringPointer = true;
+          applyViewportTransform();
+          return;
+        }
+
+        if (interaction.connectFromNodeId) {
           const scenePt = scenePointFromClient(event.clientX, event.clientY);
           interaction.connectMouseSceneX = scenePt.x;
           interaction.connectMouseSceneY = scenePt.y;
           refreshGraph();
+        }
+      });
+
+      viewport.addEventListener("pointerup", (event) => {
+        const targetNodeEl = event.target.closest(".node");
+        const targetNodeId = targetNodeEl?.dataset?.nodeId || null;
+
+        if (interaction.dragNodeId) {
+          if (interaction.movedDuringPointer) {
+            markDirtyNoHistory("Moved node.");
+            scheduleAutosave();
+          }
+          interaction.dragNodeId = null;
+        }
+
+        if (interaction.isPanning) {
+          interaction.isPanning = false;
+          viewport.classList.remove("panning");
+        }
+
+        if (interaction.connectFromNodeId) {
+          const fromId = interaction.connectFromNodeId;
+          interaction.connectFromNodeId = null;
+
+          if (targetNodeId && targetNodeId !== fromId) {
+            pushUndoState("Connect nodes");
+            addEdge(fromId, targetNodeId, "", true);
+            selectedNodeId = fromId;
+            refreshAllUI();
+            markDirty("Added link by dragging.");
+          } else {
+            refreshGraph();
+          }
+        }
+      });
+
+      viewport.addEventListener("pointerleave", () => {
+        if (interaction.connectFromNodeId) refreshGraph();
+      });
+
+      viewport.addEventListener("click", (event) => {
+        if (
+          !event.target.closest(".node") &&
+          !event.target.closest(".mobilePanel") &&
+          !event.target.closest(".mobileFab") &&
+          !event.target.closest(".mobileInspector")
+        ) {
+          closeMobilePanels();
+          clearSelection();
+        }
+      });
+    }
+
+    function clearSelection() {
+      selectedNodeId = null;
+      refreshAllUI();
+      closeMobileInspector();
+      if (!isMobileLayout()) setStatus("Selection cleared.");
+    }
+
+    window.addEventListener("keydown", (event) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const mod = isMac ? event.metaKey : event.ctrlKey;
+
+      if (mod && !event.shiftKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        undoAction();
+      }
+
+      if ((mod && event.shiftKey && event.key.toLowerCase() === "z") || (mod && event.key.toLowerCase() === "y")) {
+        event.preventDefault();
+        redoAction();
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) saveDraftToLocal();
+    });
+
+    window.addEventListener("beforeunload", (event) => {
+      if (!hasUnsavedChanges) return;
+      saveDraftToLocal();
+      event.preventDefault();
+      event.returnValue = "";
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      bindViewportEvents();
+
+      document.getElementById("searchInput").addEventListener("input", (event) => {
+        setSearch(event.target.value || "");
+      });
+
+      if (mobileSearchInput()) {
+        mobileSearchInput().addEventListener("input", (event) => {
+          setSearch(event.target.value || "");
+        });
+      }
+
+      window.addEventListener("resize", () => {
+        closeMobilePanels();
+        closeMobileInspector();
+
+        if (!isCompactEditorLayout()) closeInspector();
+
+        if (graphData.nodes.length) {
+          centerViewOnContent();
+          refreshAllUI();
+        }
+      });
+
+      setInterval(updateSaveButtonsDisabledState, 1000);
+    });
+
+    async function init() {
+      try {
+        showLoading("Loading graph...");
+        restoreMetaFromLocalStorage();
+
+        const localDraft = loadDraftFromLocal();
+        if (localDraft?.data) {
+          graphData = normalizeData(localDraft.data);
+          selectedNodeId = localDraft.selectedNodeId || graphData.nodes[0]?.id || null;
+          lastLocalSaveAt = localDraft.savedAt || null;
+
+          if (localDraft.viewportState) {
+            viewportState = {
+              x: typeof localDraft.viewportState.x === "number" ? localDraft.viewportState.x : 0,
+              y: typeof localDraft.viewportState.y === "number" ? localDraft.viewportState.y : 0,
+              scale: typeof localDraft.viewportState.scale === "number" ? localDraft.viewportState.scale : (isMobileLayout() ? 0.55 : 1)
+            };
+          }
+
+          applyViewportTransform();
+          refreshAllUI();
+          hideLoading();
+          hasUnsavedChanges = true;
+          setSaveBadge("save-dirty", "Recovered local draft");
+          if (!isMobileLayout()) setStatus("Recovered unsaved local draft.");
+          scheduleDiffRefresh();
+          updateSaveButtonsDisabledState();
           return;
         }
 
-        interaction.dragNodeId = nodeId;
-        interaction.dragStartMouseX = event.clientX;
-        interaction.dragStartMouseY = event.clientY;
-
-        const node = getNodeById(nodeId);
-        interaction.dragStartNodeX = node.x;
-        interaction.dragStartNodeY = node.y;
-        interaction.movedDuringPointer = false;
-
-        selectedNodeId = nodeId;
-        updateSidebarForSelection();
-        updateStatsBar();
-        refreshGraph();
-
-        if (isMobileLayout()) {
-          openMobileInspector();
-        } else if (isCompactEditorLayout()) {
-          openInspector();
-        }
-
-        nodeEl.classList.add("dragging");
-        nodeEl.setPointerCapture(event.pointerId);
-      });
-
-      nodeEl.addEventListener("pointerup", () => {
-        nodeEl.classList.remove("dragging");
-      });
-    });
-  }
-
-  function updateDesktopSidebar(node) {
-    document.getElementById("selectedHint").textContent =
-      node ? `Editing ${node.label || node.id}` : "Click a node in the graph to edit it.";
-
-    document.getElementById("nodeLabel").value = node?.label || "";
-    document.getElementById("nodeSubtitle").value = node?.subtitle || "";
-    document.getElementById("nodeType").value = node?.type || "stable";
-    document.getElementById("nodeStatus").value = node?.status || "draft";
-    document.getElementById("nodeX").value = node ? Math.round(node.x) : "";
-    document.getElementById("nodeY").value = node ? Math.round(node.y) : "";
-    document.getElementById("nodeTags").value = node?.tags?.join(", ") || "";
-    document.getElementById("nodeDescription").value = node?.description || "";
-    document.getElementById("nodeNotes").value = node?.notes || "";
-
-    const targetSelect = document.getElementById("linkTarget");
-    const currentTarget = targetSelect.value;
-    targetSelect.innerHTML = graphData.nodes
-      .filter(n => !node || n.id !== node.id)
-      .map(n => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.label)}</option>`)
-      .join("");
-    if ([...targetSelect.options].some(opt => opt.value === currentTarget)) {
-      targetSelect.value = currentTarget;
-    }
-
-    renderLinkList("outgoing", node?.id || null, "outgoingList");
-    renderLinkList("incoming", node?.id || null, "incomingList");
-  }
-
-  function updateMobileSidebar(node) {
-    document.getElementById("mobileInspectorTitle").textContent =
-      node ? (node.label || node.id) : "No level selected";
-
-    document.getElementById("mobileNodeLabel").value = node?.label || "";
-    document.getElementById("mobileNodeSubtitle").value = node?.subtitle || "";
-    document.getElementById("mobileNodeType").value = node?.type || "stable";
-    document.getElementById("mobileNodeStatus").value = node?.status || "draft";
-    document.getElementById("mobileNodeX").value = node ? Math.round(node.x) : "";
-    document.getElementById("mobileNodeY").value = node ? Math.round(node.y) : "";
-    document.getElementById("mobileNodeTags").value = node?.tags?.join(", ") || "";
-    document.getElementById("mobileNodeDescription").value = node?.description || "";
-    document.getElementById("mobileNodeNotes").value = node?.notes || "";
-
-    const targetSelect = document.getElementById("mobileLinkTarget");
-    const currentTarget = targetSelect.value;
-    targetSelect.innerHTML = graphData.nodes
-      .filter(n => !node || n.id !== node.id)
-      .map(n => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.label)}</option>`)
-      .join("");
-    if ([...targetSelect.options].some(opt => opt.value === currentTarget)) {
-      targetSelect.value = currentTarget;
-    }
-
-    renderLinkList("outgoing", node?.id || null, "mobileOutgoingList");
-    renderLinkList("incoming", node?.id || null, "mobileIncomingList");
-  }
-
-  function updateSidebarForSelection() {
-    const node = getSelectedNode();
-    updateDesktopSidebar(node);
-    updateMobileSidebar(node);
-  }
-
-  function refreshAllUI() {
-    updateMetaBadges();
-    updateStatsBar();
-    updateSidebarForSelection();
-    refreshGraph();
-  }
-
-  function syncSearchInputs(value) {
-    document.getElementById("searchInput").value = value;
-    const mobile = mobileSearchInput();
-    if (mobile) mobile.value = value;
-  }
-
-  function setSearch(value) {
-    currentSearch = value || "";
-    syncSearchInputs(currentSearch);
-    refreshGraph();
-  }
-
-  function closeMobilePanels() {
-    mobileSearchPanel().classList.remove("show");
-    mobileControlsPanel().classList.remove("show");
-  }
-
-  function toggleMobileSearch() {
-    if (!isMobileLayout()) return;
-    const panel = mobileSearchPanel();
-    const willShow = !panel.classList.contains("show");
-    closeMobilePanels();
-    if (willShow) {
-      panel.classList.add("show");
-      setTimeout(() => mobileSearchInput().focus(), 30);
-    }
-  }
-
-  function toggleMobileControls() {
-    if (!isMobileLayout()) return;
-    const panel = mobileControlsPanel();
-    const willShow = !panel.classList.contains("show");
-    closeMobilePanels();
-    if (willShow) {
-      panel.classList.add("show");
-    }
-  }
-
-  function openInspector() {
-    const col = document.getElementById("desktopInspector");
-    const headerCard = document.getElementById("inspectorHeaderCard");
-    if (!isCompactEditorLayout()) return;
-    col.classList.add("open");
-    headerCard.style.display = "block";
-  }
-
-  function closeInspector() {
-    const col = document.getElementById("desktopInspector");
-    const headerCard = document.getElementById("inspectorHeaderCard");
-    col.classList.remove("open");
-    headerCard.style.display = "none";
-  }
-
-  function openMobileInspector() {
-    if (!isMobileLayout()) return;
-    mobileInspector().classList.add("show");
-    mobileInspectorOverlay().classList.add("show");
-  }
-
-  function closeMobileInspector() {
-    mobileInspector().classList.remove("show");
-    mobileInspectorOverlay().classList.remove("show");
-  }
-
-  function toggleMobileInspector() {
-    if (!isMobileLayout()) return;
-    if (mobileInspector().classList.contains("show")) {
-      closeMobileInspector();
-    } else {
-      openMobileInspector();
-    }
-  }
-
-  function getActiveNodeFormValues() {
-    if (isMobileLayout()) {
-      return {
-        label: document.getElementById("mobileNodeLabel").value,
-        subtitle: document.getElementById("mobileNodeSubtitle").value,
-        type: document.getElementById("mobileNodeType").value,
-        status: document.getElementById("mobileNodeStatus").value,
-        x: document.getElementById("mobileNodeX").value,
-        y: document.getElementById("mobileNodeY").value,
-        tags: document.getElementById("mobileNodeTags").value,
-        description: document.getElementById("mobileNodeDescription").value,
-        notes: document.getElementById("mobileNodeNotes").value
-      };
-    }
-
-    return {
-      label: document.getElementById("nodeLabel").value,
-      subtitle: document.getElementById("nodeSubtitle").value,
-      type: document.getElementById("nodeType").value,
-      status: document.getElementById("nodeStatus").value,
-      x: document.getElementById("nodeX").value,
-      y: document.getElementById("nodeY").value,
-      tags: document.getElementById("nodeTags").value,
-      description: document.getElementById("nodeDescription").value,
-      notes: document.getElementById("nodeNotes").value
-    };
-  }
-
-  function getActiveLinkFormValues() {
-    if (isMobileLayout()) {
-      return {
-        targetId: document.getElementById("mobileLinkTarget").value,
-        label: document.getElementById("mobileLinkLabel").value,
-        oneWay: document.getElementById("mobileLinkOneWay").value === "yes"
-      };
-    }
-
-    return {
-      targetId: document.getElementById("linkTarget").value,
-      label: document.getElementById("linkLabel").value,
-      oneWay: document.getElementById("linkOneWay").value === "yes"
-    };
-  }
-
-  function addNode() {
-    pushUndoState("Add node");
-
-    const nextId = generateNodeId();
-    const rect = graphViewport().getBoundingClientRect();
-    const center = scenePointFromClient(rect.left + rect.width / 2, rect.top + rect.height / 2);
-
-    graphData.nodes.push({
-      id: nextId,
-      label: "New Level",
-      subtitle: "",
-      description: "",
-      notes: "",
-      x: Math.round(center.x),
-      y: Math.round(center.y),
-      type: "stable",
-      status: "draft",
-      tags: []
-    });
-
-    selectedNodeId = nextId;
-    refreshAllUI();
-
-    if (isMobileLayout()) {
-      openMobileInspector();
-    } else if (isCompactEditorLayout()) {
-      openInspector();
-    }
-
-    markDirty("Added new node.");
-  }
-
-  function applySelectedNodeChanges() {
-    const node = getSelectedNode();
-    if (!node) return;
-
-    pushUndoState("Update node");
-
-    const values = getActiveNodeFormValues();
-
-    node.label = values.label.trim() || "Unnamed";
-    node.subtitle = values.subtitle.trim();
-    node.type = normalizeType(values.type);
-    node.status = values.status;
-    node.x = Number(values.x || 0);
-    node.y = Number(values.y || 0);
-    node.tags = values.tags
-      .split(",")
-      .map(v => v.trim())
-      .filter(Boolean);
-    node.description = values.description;
-    node.notes = values.notes;
-
-    refreshAllUI();
-    markDirty("Node updated.");
-  }
-
-  function deleteSelectedNode() {
-    const node = getSelectedNode();
-    if (!node) return;
-
-    const confirmed = confirm(`Delete ${node.label}?`);
-    if (!confirmed) return;
-
-    pushUndoState("Delete node");
-
-    graphData.nodes = graphData.nodes.filter(n => n.id !== node.id);
-    graphData.edges = graphData.edges.filter(e => e.from !== node.id && e.to !== node.id);
-    selectedNodeId = null;
-
-    refreshAllUI();
-    closeMobileInspector();
-    markDirty("Deleted node.");
-  }
-
-  function edgeExists(from, to, label = "") {
-    return graphData.edges.some(e => e.from === from && e.to === to && (e.label || "") === (label || ""));
-  }
-
-  function addEdge(from, to, label = "", oneWay = true) {
-    if (!from || !to || from === to) return;
-    if (edgeExists(from, to, label)) return;
-
-    graphData.edges.push({
-      from,
-      to,
-      label: label || "",
-      oneWay: !!oneWay
-    });
-
-    if (!oneWay && !edgeExists(to, from, label)) {
-      graphData.edges.push({
-        from: to,
-        to: from,
-        label: label || "",
-        oneWay: !!oneWay
-      });
-    }
-  }
-
-  function addConnectionFromSidebar() {
-    const node = getSelectedNode();
-    if (!node) return;
-
-    const values = getActiveLinkFormValues();
-    if (!values.targetId) return;
-
-    pushUndoState("Add link");
-    addEdge(node.id, values.targetId, values.label.trim(), values.oneWay);
-    refreshAllUI();
-    markDirty("Added link.");
-  }
-
-  function deleteEdge(from, to, label) {
-    pushUndoState("Delete link");
-    graphData.edges = graphData.edges.filter(
-      e => !(e.from === from && e.to === to && (e.label || "") === (label || ""))
-    );
-    refreshAllUI();
-    markDirty("Deleted link.");
-  }
-
-  function autoLayout() {
-    if (!graphData.nodes.length) return;
-
-    pushUndoState("Auto layout");
-
-    const nodeMap = new Map(graphData.nodes.map(n => [n.id, n]));
-    const incomingCount = new Map(graphData.nodes.map(n => [n.id, 0]));
-    const outgoingMap = new Map(graphData.nodes.map(n => [n.id, []]));
-
-    for (const edge of graphData.edges) {
-      if (incomingCount.has(edge.to)) incomingCount.set(edge.to, incomingCount.get(edge.to) + 1);
-      if (outgoingMap.has(edge.from)) outgoingMap.get(edge.from).push(edge.to);
-    }
-
-    const roots = graphData.nodes.filter(n => (incomingCount.get(n.id) || 0) === 0);
-    const startNodes = roots.length ? roots : [graphData.nodes[0]];
-
-    const levels = [];
-    const placed = new Set();
-    let frontier = startNodes.map(n => n.id);
-
-    let depth = 0;
-    while (frontier.length && depth < 20) {
-      levels[depth] = [...new Set(frontier)].filter(id => !placed.has(id));
-      levels[depth].forEach(id => placed.add(id));
-
-      const next = [];
-      for (const id of levels[depth]) {
-        for (const child of outgoingMap.get(id) || []) {
-          if (!placed.has(child)) next.push(child);
-        }
-      }
-      frontier = next;
-      depth++;
-    }
-
-    const unplaced = graphData.nodes.map(n => n.id).filter(id => !placed.has(id));
-    if (unplaced.length) levels.push(unplaced);
-
-    const spacingX = isMobileLayout() ? 190 : 260;
-    const spacingY = isMobileLayout() ? 140 : 170;
-    const startX = 140;
-    const startY = 140;
-
-    levels.forEach((row, rowIndex) => {
-      row.forEach((id, colIndex) => {
-        const node = nodeMap.get(id);
-        if (!node) return;
-        node.x = startX + colIndex * spacingX;
-        node.y = startY + rowIndex * spacingY;
-      });
-    });
-
-    refreshAllUI();
-    centerViewOnContent();
-    markDirty("Auto layout applied.");
-  }
-
-  async function saveGraph(isAuto = false) {
-    try {
-      if (isSavingToGitHub) return;
-
-      if (!window.__EDITOR_SECURITY__?.hostOk) {
-        throw new Error("Blocked from saving on this host.");
-      }
-
-      isSavingToGitHub = true;
-      setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
-      if (!isMobileLayout()) setStatus(isAuto ? "Auto-saving graph..." : "Saving graph...");
-
-      const payload = getSerializableGraphData();
-      refreshAllUI();
-
-      const res = await fetch(SAVE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          project: PROJECT,
-          data: payload
-        })
-      });
-
-      const json = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(json?.error || "Save failed");
-      }
-
-      hasUnsavedChanges = false;
-      lastRemoteSaveAt = json?.savedAt ? (Date.parse(json.savedAt) || Date.now()) : Date.now();
-      lastVersionId = json?.version || null;
-      lastSnapshotPath = json?.snapshotPath || null;
-
-      persistMetaToLocalStorage();
-      updateMetaBadges();
-      setSaveBadge("save-clean", "Saved to GitHub");
-      if (!isMobileLayout()) {
-        setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
-      }
-      saveDraftToLocal();
-
-      historyIndexCache = null;
-      snapshotCache = new Map();
-      scheduleDiffRefresh();
-    } catch (err) {
-      console.error(err);
-      setSaveBadge("save-error", "GitHub save failed");
-      if (!isMobileLayout()) setStatus("Save failed.", true);
-      showErrorPanel(err.message || "Save failed.");
-    } finally {
-      isSavingToGitHub = false;
-    }
-  }
-
-  function discardLocalDraft() {
-    const ok = confirm("Discard your local draft and reload from GitHub?");
-    if (!ok) return;
-    clearLocalDraft();
-    hasUnsavedChanges = false;
-    reloadGraph(true);
-  }
-
-  async function fetchRemoteGraph() {
-    const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("Could not load backrooms-levels.json");
-    return normalizeData(await res.json());
-  }
-
-  async function reloadGraph(force = false) {
-    try {
-      if (hasUnsavedChanges && !force) {
-        if (!isMobileLayout()) setStatus("Reload skipped because you have unsaved changes.");
-        return;
-      }
-
-      showLoading("Loading graph...");
-      if (!isMobileLayout()) setStatus("Loading latest graph...");
-
-      graphData = await fetchRemoteGraph();
-      selectedNodeId = graphData.nodes[0]?.id || null;
-      refreshAllUI();
-      centerViewOnContent();
-
-      hideLoading();
-      hideErrorPanel();
-      markClean("Loaded latest graph.");
-    } catch (err) {
-      console.error(err);
-      hideLoading();
-      if (!isMobileLayout()) setStatus("Failed to load graph.", true);
-      showErrorPanel(err.message || "Failed to load graph.");
-    }
-  }
-
-  function scheduleAutosave() {
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(() => {
-      saveDraftToLocal();
-    }, 300);
-  }
-
-  function scheduleDiffRefresh() {
-    clearTimeout(diffTimer);
-    diffTimer = setTimeout(() => {
-      refreshChangeSummary();
-    }, 200);
-  }
-
-  async function fetchHistoryIndex() {
-    if (historyIndexCache) return historyIndexCache;
-    const res = await fetch(`${SAVE_URL}?project=${encodeURIComponent(PROJECT)}&action=history`);
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to fetch history");
-    historyIndexCache = json;
-    return json;
-  }
-
-  async function fetchSnapshotByPath(path) {
-    if (snapshotCache.has(path)) return snapshotCache.get(path);
-    const res = await fetch(`${SAVE_URL}?project=${encodeURIComponent(PROJECT)}&action=snapshot&path=${encodeURIComponent(path)}`);
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to fetch snapshot");
-    const normalized = normalizeData(json?.data || json);
-    snapshotCache.set(path, normalized);
-    return normalized;
-  }
-
-  function computeDiff(previousData, currentData) {
-    const prevNodes = new Map(previousData.nodes.map(n => [n.id, n]));
-    const currNodes = new Map(currentData.nodes.map(n => [n.id, n]));
-
-    const prevEdges = new Set(previousData.edges.map(e => `${e.from}|${e.to}|${e.label || ""}|${e.oneWay !== false}`));
-    const currEdges = new Set(currentData.edges.map(e => `${e.from}|${e.to}|${e.label || ""}|${e.oneWay !== false}`));
-
-    const addedNodes = [];
-    const deletedNodes = [];
-    const movedNodes = [];
-    const updatedNodes = [];
-    const addedLinks = [];
-    const deletedLinks = [];
-
-    for (const [id, curr] of currNodes.entries()) {
-      if (!prevNodes.has(id)) {
-        addedNodes.push({ id, label: curr.label });
-        continue;
-      }
-
-      const prev = prevNodes.get(id);
-      const moved = prev.x !== curr.x || prev.y !== curr.y;
-      const updated =
-        prev.label !== curr.label ||
-        prev.subtitle !== curr.subtitle ||
-        prev.description !== curr.description ||
-        prev.notes !== curr.notes ||
-        prev.type !== curr.type ||
-        prev.status !== curr.status ||
-        JSON.stringify(prev.tags || []) !== JSON.stringify(curr.tags || []);
-
-      if (moved) movedNodes.push({ label: curr.label, from: `${prev.x}, ${prev.y}`, to: `${curr.x}, ${curr.y}` });
-      if (updated) updatedNodes.push({ label: curr.label });
-    }
-
-    for (const [id, prev] of prevNodes.entries()) {
-      if (!currNodes.has(id)) {
-        deletedNodes.push({ id, label: prev.label });
-      }
-    }
-
-    for (const edge of currentData.edges) {
-      const key = `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay !== false}`;
-      if (!prevEdges.has(key)) {
-        addedLinks.push({
-          from: currNodes.get(edge.from)?.label || edge.from,
-          to: currNodes.get(edge.to)?.label || edge.to,
-          label: edge.label || ""
-        });
-      }
-    }
-
-    for (const edge of previousData.edges) {
-      const key = `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay !== false}`;
-      if (!currEdges.has(key)) {
-        deletedLinks.push({
-          from: prevNodes.get(edge.from)?.label || edge.from,
-          to: prevNodes.get(edge.to)?.label || edge.to,
-          label: edge.label || ""
-        });
-      }
-    }
-
-    return {
-      addedNodes,
-      deletedNodes,
-      movedNodes,
-      updatedNodes,
-      addedLinks,
-      deletedLinks
-    };
-  }
-
-  function buildTextSummary(diff, context) {
-    const lines = [];
-    lines.push("Backrooms Update Log");
-    if (context) lines.push(context);
-    lines.push("");
-
-    const hasChanges =
-      diff.addedNodes.length ||
-      diff.deletedNodes.length ||
-      diff.movedNodes.length ||
-      diff.updatedNodes.length ||
-      diff.addedLinks.length ||
-      diff.deletedLinks.length;
-
-    if (!hasChanges) {
-      lines.push("- No changes detected");
-      return lines.join("\n");
-    }
-
-    diff.addedNodes.forEach(item => lines.push(`- Added node: ${item.label}`));
-    diff.deletedNodes.forEach(item => lines.push(`- Deleted node: ${item.label}`));
-    diff.movedNodes.forEach(item => lines.push(`- Moved node: ${item.label} (${item.from} -> ${item.to})`));
-    diff.updatedNodes.forEach(item => lines.push(`- Updated node: ${item.label}`));
-    diff.addedLinks.forEach(item => lines.push(`- Added link: ${item.from} -> ${item.to}${item.label ? ` (${item.label})` : ""}`));
-    diff.deletedLinks.forEach(item => lines.push(`- Deleted link: ${item.from} -> ${item.to}${item.label ? ` (${item.label})` : ""}`));
-
-    return lines.join("\n");
-  }
-
-  function buildDiscordSummary(diff, context) {
-    const lines = [];
-    lines.push("Backrooms Graph Update");
-    if (context) lines.push(context);
-    lines.push("");
-
-    const hasChanges =
-      diff.addedNodes.length ||
-      diff.deletedNodes.length ||
-      diff.movedNodes.length ||
-      diff.updatedNodes.length ||
-      diff.addedLinks.length ||
-      diff.deletedLinks.length;
-
-    if (!hasChanges) {
-      lines.push("- No changes detected");
-      return lines.join("\n");
-    }
-
-    if (diff.addedNodes.length) lines.push(`- Added nodes: ${diff.addedNodes.map(x => x.label).join(", ")}`);
-    if (diff.deletedNodes.length) lines.push(`- Deleted nodes: ${diff.deletedNodes.map(x => x.label).join(", ")}`);
-    if (diff.movedNodes.length) lines.push(`- Moved nodes: ${diff.movedNodes.map(x => x.label).join(", ")}`);
-    if (diff.updatedNodes.length) lines.push(`- Updated nodes: ${diff.updatedNodes.map(x => x.label).join(", ")}`);
-    if (diff.addedLinks.length) lines.push(`- Added links: ${diff.addedLinks.map(x => `${x.from} -> ${x.to}`).join("; ")}`);
-    if (diff.deletedLinks.length) lines.push(`- Deleted links: ${diff.deletedLinks.map(x => `${x.from} -> ${x.to}`).join("; ")}`);
-
-    return lines.join("\n");
-  }
-
-  function renderDiffBucket(title, items, formatter) {
-    return `
-      <div class="changeBucket">
-        <h3>${escapeHtml(title)}</h3>
-        ${
-          items.length
-            ? `<ul class="changeList">${items.map(item => `<li>${formatter(item)}</li>`).join("")}</ul>`
-            : `<div class="changeEmpty">No changes in this section.</div>`
-        }
-      </div>
-    `;
-  }
-
-  async function refreshChangeSummary() {
-    const panel = document.getElementById("changeSummaryPanel");
-    panel.innerHTML = `
-      <h2 class="changeTitle">Change Summary</h2>
-      <div class="changeSub">Checking history and current draft changes...</div>
-    `;
-
-    try {
-      const history = await fetchHistoryIndex();
-      const versions = Array.isArray(history?.versions) ? history.versions : [];
-
-      let diff;
-      let contextText = "";
-
-      if (!versions.length) {
-        diff = {
-          addedNodes: [],
-          deletedNodes: [],
-          movedNodes: [],
-          updatedNodes: [],
-          addedLinks: [],
-          deletedLinks: []
-        };
-        contextText = "No saved history found yet.";
-      } else if (hasUnsavedChanges || !lastSnapshotPath) {
-        const latest = await fetchSnapshotByPath(versions[0].path);
-        diff = computeDiff(latest, graphData);
-        contextText = "Comparing current draft to latest saved snapshot.";
-      } else if (versions[0]?.path === lastSnapshotPath && versions.length > 1) {
-        const previous = await fetchSnapshotByPath(versions[1].path);
-        const latest = await fetchSnapshotByPath(versions[0].path);
-        diff = computeDiff(previous, latest);
-        contextText = "Comparing latest saved snapshot to previous saved snapshot.";
-      } else {
-        const latest = await fetchSnapshotByPath(versions[0].path);
-        diff = computeDiff(latest, graphData);
-        contextText = "Comparing current draft to latest saved snapshot.";
-      }
-
-      latestDiffContext = { diff, contextText };
-
-      panel.innerHTML = `
-        <h2 class="changeTitle">Change Summary</h2>
-        <div class="changeSub">${escapeHtml(contextText)}</div>
-
-        <div class="changeToolbar">
-          <button onclick="copyChangeSummary()">Copy Summary</button>
-          <button onclick="copyDiscordLog()">Copy Discord Log</button>
-        </div>
-
-        <div class="changeGrid">
-          ${renderDiffBucket("Added Nodes", diff.addedNodes, item => escapeHtml(item.label))}
-          ${renderDiffBucket("Deleted Nodes", diff.deletedNodes, item => escapeHtml(item.label))}
-          ${renderDiffBucket("Moved Nodes", diff.movedNodes, item => `${escapeHtml(item.label)} <span style="color:#8e8fa0;">(${escapeHtml(item.from)} → ${escapeHtml(item.to)})</span>`)}
-          ${renderDiffBucket("Updated Nodes", diff.updatedNodes, item => escapeHtml(item.label))}
-          ${renderDiffBucket("Added Links", diff.addedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span style="color:#8e8fa0;">(${escapeHtml(item.label)})</span>` : ""}`)}
-          ${renderDiffBucket("Deleted Links", diff.deletedLinks, item => `${escapeHtml(item.from)} → ${escapeHtml(item.to)}${item.label ? ` <span style="color:#8e8fa0;">(${escapeHtml(item.label)})</span>` : ""}`)}
-        </div>
-
-        <textarea class="changeTextarea" readonly>${buildTextSummary(diff, contextText)}</textarea>
-      `;
-    } catch (err) {
-      console.error(err);
-      panel.innerHTML = `
-        <h2 class="changeTitle">Change Summary</h2>
-        <div class="changeSub">Couldn’t load history diff yet.</div>
-        <div class="changeEmpty" style="margin-top:12px;">${escapeHtml(err.message || "Unknown diff error")}</div>
-      `;
-    }
-  }
-
-  async function copyText(text, successMessage) {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (!isMobileLayout()) setStatus(successMessage);
-    } catch (err) {
-      console.error(err);
-      if (!isMobileLayout()) setStatus("Copy failed.", true);
-    }
-  }
-
-  function copyChangeSummary() {
-    if (!latestDiffContext) return;
-    copyText(buildTextSummary(latestDiffContext.diff, latestDiffContext.contextText), "Copied summary to clipboard.");
-  }
-
-  function copyDiscordLog() {
-    if (!latestDiffContext) return;
-    copyText(buildDiscordSummary(latestDiffContext.diff, latestDiffContext.contextText), "Copied Discord log to clipboard.");
-  }
-
-  function bindViewportEvents() {
-    const viewport = graphViewport();
-
-    viewport.addEventListener("wheel", (event) => {
-      if (isMobileLayout()) return;
-      event.preventDefault();
-      const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
-      zoomBy(factor, event.clientX, event.clientY);
-    }, { passive: false });
-
-    viewport.addEventListener("pointerdown", (event) => {
-      if (event.target.closest(".node")) return;
-      if (event.target.closest(".mobilePanel")) return;
-      if (event.target.closest(".mobileFab")) return;
-      if (event.target.closest(".mobileInspector")) return;
-
-      interaction.isPanning = true;
-      interaction.panMouseX = event.clientX;
-      interaction.panMouseY = event.clientY;
-      interaction.panStartX = viewportState.x;
-      interaction.panStartY = viewportState.y;
-      interaction.movedDuringPointer = false;
-
-      viewport.classList.add("panning");
-      viewport.setPointerCapture(event.pointerId);
-    });
-
-    viewport.addEventListener("pointermove", (event) => {
-      if (interaction.dragNodeId) {
-        const node = getNodeById(interaction.dragNodeId);
-        if (!node) return;
-
-        const dx = (event.clientX - interaction.dragStartMouseX) / viewportState.scale;
-        const dy = (event.clientY - interaction.dragStartMouseY) / viewportState.scale;
-        node.x = Math.round(interaction.dragStartNodeX + dx);
-        node.y = Math.round(interaction.dragStartNodeY + dy);
-
-        interaction.movedDuringPointer = true;
-        refreshGraph();
-        updateSidebarForSelection();
-        return;
-      }
-
-      if (interaction.isPanning) {
-        viewportState.x = interaction.panStartX + (event.clientX - interaction.panMouseX);
-        viewportState.y = interaction.panStartY + (event.clientY - interaction.panMouseY);
-        interaction.movedDuringPointer = true;
-        applyViewportTransform();
-        return;
-      }
-
-      if (interaction.connectFromNodeId) {
-        const scenePt = scenePointFromClient(event.clientX, event.clientY);
-        interaction.connectMouseSceneX = scenePt.x;
-        interaction.connectMouseSceneY = scenePt.y;
-        refreshGraph();
-      }
-    });
-
-    viewport.addEventListener("pointerup", (event) => {
-      const targetNodeEl = event.target.closest(".node");
-      const targetNodeId = targetNodeEl?.dataset?.nodeId || null;
-
-      if (interaction.dragNodeId) {
-        if (interaction.movedDuringPointer) {
-          markDirtyNoHistory("Moved node.");
-          scheduleAutosave();
-        }
-        interaction.dragNodeId = null;
-      }
-
-      if (interaction.isPanning) {
-        interaction.isPanning = false;
-        viewport.classList.remove("panning");
-      }
-
-      if (interaction.connectFromNodeId) {
-        const fromId = interaction.connectFromNodeId;
-        interaction.connectFromNodeId = null;
-
-        if (targetNodeId && targetNodeId !== fromId) {
-          pushUndoState("Connect nodes");
-          addEdge(fromId, targetNodeId, "", true);
-          selectedNodeId = fromId;
-          refreshAllUI();
-          markDirty("Added link by dragging.");
-        } else {
-          refreshGraph();
-        }
-      }
-    });
-
-    viewport.addEventListener("pointerleave", () => {
-      if (interaction.connectFromNodeId) {
-        refreshGraph();
-      }
-    });
-
-    viewport.addEventListener("click", (event) => {
-      if (
-        !event.target.closest(".node") &&
-        !event.target.closest(".mobilePanel") &&
-        !event.target.closest(".mobileFab") &&
-        !event.target.closest(".mobileInspector")
-      ) {
-        closeMobilePanels();
-        clearSelection();
-      }
-    });
-  }
-
-  function clearSelection() {
-    selectedNodeId = null;
-    refreshAllUI();
-    closeMobileInspector();
-    if (!isMobileLayout()) {
-      setStatus("Selection cleared.");
-    }
-  }
-
-  window.addEventListener("keydown", (event) => {
-    const isMac = navigator.platform.toUpperCase().includes("MAC");
-    const mod = isMac ? event.metaKey : event.ctrlKey;
-
-    if (mod && !event.shiftKey && event.key.toLowerCase() === "z") {
-      event.preventDefault();
-      undoAction();
-    }
-
-    if ((mod && event.shiftKey && event.key.toLowerCase() === "z") || (mod && event.key.toLowerCase() === "y")) {
-      event.preventDefault();
-      redoAction();
-    }
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      saveDraftToLocal();
-    }
-  });
-
-  window.addEventListener("beforeunload", (event) => {
-    if (!hasUnsavedChanges) return;
-    saveDraftToLocal();
-    event.preventDefault();
-    event.returnValue = "";
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    bindViewportEvents();
-
-    document.getElementById("searchInput").addEventListener("input", (event) => {
-      setSearch(event.target.value || "");
-    });
-
-    if (mobileSearchInput()) {
-      mobileSearchInput().addEventListener("input", (event) => {
-        setSearch(event.target.value || "");
-      });
-    }
-
-    window.addEventListener("resize", () => {
-      closeMobilePanels();
-      closeMobileInspector();
-
-      if (!isCompactEditorLayout()) {
-        closeInspector();
-      }
-
-      if (graphData.nodes.length) {
+        graphData = await fetchRemoteGraph();
+        selectedNodeId = graphData.nodes[0]?.id || null;
+        refreshAllUI();
         centerViewOnContent();
-        refreshAllUI();
-      }
-    });
-  });
-
-  async function init() {
-    try {
-      showLoading("Loading graph...");
-      restoreMetaFromLocalStorage();
-
-      const localDraft = loadDraftFromLocal();
-      if (localDraft?.data) {
-        graphData = normalizeData(localDraft.data);
-        selectedNodeId = localDraft.selectedNodeId || graphData.nodes[0]?.id || null;
-        lastLocalSaveAt = localDraft.savedAt || null;
-
-        if (localDraft.viewportState) {
-          viewportState = {
-            x: typeof localDraft.viewportState.x === "number" ? localDraft.viewportState.x : 0,
-            y: typeof localDraft.viewportState.y === "number" ? localDraft.viewportState.y : 0,
-            scale: typeof localDraft.viewportState.scale === "number" ? localDraft.viewportState.scale : (isMobileLayout() ? 0.55 : 1)
-          };
-        }
-
-        applyViewportTransform();
-        refreshAllUI();
         hideLoading();
-        hasUnsavedChanges = true;
-        setSaveBadge("save-dirty", "Recovered local draft");
-        if (!isMobileLayout()) setStatus("Recovered unsaved local draft.");
+        markClean("Loaded latest graph.");
         scheduleDiffRefresh();
-        return;
+        updateSaveButtonsDisabledState();
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        showErrorPanel(err.message || "Failed to load graph.");
+        if (!isMobileLayout()) setStatus("Initial load failed.", true);
+        setSaveBadge("save-error", "Load failed");
       }
-
-      graphData = await fetchRemoteGraph();
-      selectedNodeId = graphData.nodes[0]?.id || null;
-      refreshAllUI();
-      centerViewOnContent();
-      hideLoading();
-      markClean("Loaded latest graph.");
-      scheduleDiffRefresh();
-    } catch (err) {
-      console.error(err);
-      hideLoading();
-      showErrorPanel(err.message || "Failed to load graph.");
-      if (!isMobileLayout()) setStatus("Initial load failed.", true);
-      setSaveBadge("save-error", "Load failed");
     }
-  }
 
-  window.zoomBy = zoomBy;
-  window.resetView = resetView;
-  window.addNode = addNode;
-  window.applySelectedNodeChanges = applySelectedNodeChanges;
-  window.deleteSelectedNode = deleteSelectedNode;
-  window.addConnectionFromSidebar = addConnectionFromSidebar;
-  window.deleteEdge = deleteEdge;
-  window.saveGraph = saveGraph;
-  window.discardLocalDraft = discardLocalDraft;
-  window.autoLayout = autoLayout;
-  window.undoAction = undoAction;
-  window.redoAction = redoAction;
-  window.refreshChangeSummary = refreshChangeSummary;
-  window.copyChangeSummary = copyChangeSummary;
-  window.copyDiscordLog = copyDiscordLog;
-  window.openInspector = openInspector;
-  window.closeInspector = closeInspector;
-  window.toggleMobileSearch = toggleMobileSearch;
-  window.toggleMobileControls = toggleMobileControls;
-  window.toggleMobileInspector = toggleMobileInspector;
-  window.closeMobileInspector = closeMobileInspector;
-  window.clearSelection = clearSelection;
+    window.zoomBy = zoomBy;
+    window.resetView = resetView;
+    window.addNode = addNode;
+    window.applySelectedNodeChanges = applySelectedNodeChanges;
+    window.deleteSelectedNode = deleteSelectedNode;
+    window.addConnectionFromSidebar = addConnectionFromSidebar;
+    window.deleteEdge = deleteEdge;
+    window.saveGraph = saveGraph;
+    window.discardLocalDraft = discardLocalDraft;
+    window.autoLayout = autoLayout;
+    window.undoAction = undoAction;
+    window.redoAction = redoAction;
+    window.refreshChangeSummary = refreshChangeSummary;
+    window.copyChangeSummary = copyChangeSummary;
+    window.copyDiscordLog = copyDiscordLog;
+    window.openInspector = openInspector;
+    window.closeInspector = closeInspector;
+    window.toggleMobileSearch = toggleMobileSearch;
+    window.toggleMobileControls = toggleMobileControls;
+    window.toggleMobileInspector = toggleMobileInspector;
+    window.closeMobileInspector = closeMobileInspector;
+    window.clearSelection = clearSelection;
 
-  init();
-</script>
+    init();
+  </script>
 </body>
 </html>
