@@ -45,8 +45,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 854,
-      "y": 308
+      "x": 856,
+      "y": 306
     },
     {
       "id": null,
@@ -133,96 +133,5 @@
       "y": 374
     }
   ],
-  "edges": [
-    {
-      "from": 0,
-      "to": 1,
-      "label": "",
-      "oneWay": false
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": 0,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": 1,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": null,
-      "label": "",
-      "oneWay": true
-    },
-    {
-      "from": null,
-      "to": 1,
-      "label": "",
-      "oneWay": true
-    }
-  ]
+  "edges": []
 }
