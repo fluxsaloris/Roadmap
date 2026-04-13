@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Backrooms Graph Editor</title>
+
+  <link rel="stylesheet" href="editor.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="heroTop">
+      <div class="heroTitle">
+        <div class="eyebrow">Backrooms Editor</div>
+        <h1>Graph Editor</h1>
+        <p>Edit nodes, connections, and layout visually.</p>
+      </div>
+
+      <div class="heroMeta">
+        <div id="saveStateBadge" class="saveBadge save-clean">Ready</div>
+        <div id="lastRemoteSaveBadge" class="infoBadge">GitHub: not saved yet</div>
+        <div id="lastSnapshotBadge" class="infoBadge">No snapshot yet</div>
+      </div>
+    </div>
+
+    <div class="heroControls">
+      <input id="searchInput" placeholder="Search nodes..." />
+
+      <div class="toolbar">
+        <button onclick="addNode()">+ Node</button>
+        <button onclick="autoLayout()">Auto Layout</button>
+        <button onclick="fitToGraph()">Fit</button>
+        <button onclick="resetView()">Reset</button>
+        <button onclick="saveGraph()" class="primaryBtn">Save</button>
+      </div>
+    </div>
+
+    <div id="statusLine">Ready.</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="workspaceRow">
+
+    <!-- LEFT -->
+    <div class="leftColumn">
+
+      <div class="panel canvasPanel">
+        <div class="graphViewport" id="graphViewport">
+          <div class="graphScene" id="graphScene">
+
+            <svg class="graphSvg" id="graphSvg"></svg>
+            <div class="graphNodes" id="graphNodes"></div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="rightColumn" id="desktopInspector">
+
+      <div class="sidebarCard">
+        <h3 class="sidebarTitle">Node Editor</h3>
+        <div id="selectedHint" class="sidebarSub">Select a node</div>
+
+        <input id="nodeLabel" placeholder="Label"/>
+        <input id="nodeSubtitle" placeholder="Subtitle"/>
+
+        <select id="nodeType">
+          <option value="stable">Stable</option>
+          <option value="dangerous">Dangerous</option>
+          <option value="corrupted">Corrupted</option>
+          <option value="anomalous">Anomalous</option>
+        </select>
+
+        <select id="nodeStatus">
+          <option value="draft">Draft</option>
+          <option value="complete">Complete</option>
+        </select>
+
+        <input id="nodeX" placeholder="X"/>
+        <input id="nodeY" placeholder="Y"/>
+
+        <textarea id="nodeDescription" placeholder="Description"></textarea>
+
+        <div class="actionRow">
+          <button onclick="applySelectedNodeChanges()">Apply</button>
+          <button onclick="deleteSelectedNode()" class="dangerBtn">Delete</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div id="loadingCard">
+    <div class="spinner"></div>
+    <div id="loadingText">Loading graph...</div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div id="errorPanel">
+  <div id="errorPanelTitle">Error</div>
+  <div id="errorPanelText"></div>
+</div>
+
+<!-- SCRIPTS (ORDER MATTERS) -->
+<script src="editor-config.js"></script>
+<script src="editor-state.js"></script>
+<script src="editor-utils.js"></script>
+<script src="editor-render.js"></script>
+<script src="editor-actions.js"></script>
+<script src="editor-save.js"></script>
+<script src="editor-init.js"></script>
+
+</body>
+</html>
