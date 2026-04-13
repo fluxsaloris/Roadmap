@@ -282,20 +282,6 @@
       padding: 14px;
     }
 
-    .statsBar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .metaChip {
-      padding: 6px 10px;
-      font-size: 11px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
-    }
-
     .canvasPanel {
       padding: 10px;
     }
@@ -343,13 +329,18 @@
     .graphScene {
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
       transform-origin: 0 0;
       will-change: transform;
     }
 
     .graphSvg {
       position: absolute;
-      inset: 0;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       overflow: visible;
       pointer-events: none;
     }
@@ -1193,6 +1184,18 @@
       };
     }
 
+    function syncSvgSize() {
+      const viewport = graphViewport();
+      const svg = graphSvg();
+
+      const width = viewport.clientWidth || 1;
+      const height = viewport.clientHeight || 1;
+
+      svg.setAttribute("width", String(width));
+      svg.setAttribute("height", String(height));
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    }
+
     function updateStats() {
       document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
       document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
@@ -1275,19 +1278,25 @@
     }
 
     function refreshGraph() {
+      syncSvgSize();
+
       const visibleNodeIds = getVisibleNodeIds();
       const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
 
       graphNodesEl().innerHTML = graphData.nodes
         .filter(node => visibleNodeIds.has(node.id))
-        .map(node => {
+              .map(node => {
           const isSelected = node.id === selectedNodeId;
           const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
           const isDimmed = relatedNodeIds ? !isRelated : false;
           const typeClass = getTypeClass(node.type);
 
           return `
-            <div class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}" data-node-id="${escapeHtml(node.id)}" style="left:${node.x}px; top:${node.y}px;">
+            <div
+              class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+              data-node-id="${escapeHtml(node.id)}"
+              style="left:${node.x}px; top:${node.y}px;"
+            >
               <div class="nodeHeader">
                 <div class="nodeDot"></div>
                 <div class="nodeTitle">${escapeHtml(node.label)}</div>
@@ -1302,7 +1311,9 @@
         }).join("");
 
       const svgParts = [];
-      const visibleEdges = graphData.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
+      const visibleEdges = graphData.edges.filter(
+        edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+      );
 
       for (const edge of visibleEdges) {
         const fromPort = getNodePortPosition(edge.from, "output");
@@ -1315,12 +1326,16 @@
         const dimmed = selectedNodeId && !related;
         const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
 
-        svgParts.push(`<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`);
+        svgParts.push(
+          `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
+        );
 
         if (edge.label) {
           const midX = (fromPort.x + toPort.x) / 2;
           const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
-          svgParts.push(`<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`);
+          svgParts.push(
+            `<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
+          );
         }
       }
 
@@ -1330,183 +1345,3 @@
       updateSidebar();
       updateMobileInspector();
     }
-
-    function bindNodeEvents() {
-      graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
-        const nodeId = nodeEl.dataset.nodeId;
-        nodeEl.addEventListener("click", (event) => {
-          event.stopPropagation();
-          selectedNodeId = nodeId;
-          closeMobilePanels();
-          refreshGraph();
-          if (isMobileLayout()) {
-            openMobileInspector();
-          } else {
-            setStatus(`Selected ${getNodeById(nodeId)?.label || nodeId}.`);
-          }
-        });
-      });
-    }
-
-    function clearSelection() {
-      selectedNodeId = null;
-      refreshGraph();
-      closeMobileInspector();
-      if (!isMobileLayout()) setStatus("Selection cleared.");
-    }
-
-    function syncSearchInputs(value) {
-      if (desktopSearchInput()) desktopSearchInput().value = value;
-      if (mobileSearchInput()) mobileSearchInput().value = value;
-    }
-
-    function setSearch(value) {
-      currentSearch = value || "";
-      syncSearchInputs(currentSearch);
-      refreshGraph();
-    }
-
-    function closeMobilePanels() {
-      mobileSearchPanel().classList.remove("show");
-      mobileControlsPanel().classList.remove("show");
-    }
-
-    function toggleMobileSearch() {
-      if (!isMobileLayout()) return;
-      const panel = mobileSearchPanel();
-      const willShow = !panel.classList.contains("show");
-      closeMobilePanels();
-      if (willShow) {
-        panel.classList.add("show");
-        setTimeout(() => mobileSearchInput().focus(), 30);
-      }
-    }
-
-    function toggleMobileControls() {
-      if (!isMobileLayout()) return;
-      const panel = mobileControlsPanel();
-      const willShow = !panel.classList.contains("show");
-      closeMobilePanels();
-      if (willShow) panel.classList.add("show");
-    }
-
-    async function fetchRemoteGraph() {
-      const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), { cache: "no-store" });
-      if (!res.ok) throw new Error("Could not load backrooms-levels.json");
-      return normalizeData(await res.json());
-    }
-
-    async function reloadGraph() {
-      try {
-        showLoading("Loading graph...");
-        setStatus("Loading latest graph...");
-        graphData = await fetchRemoteGraph();
-        hideErrorPanel();
-        hideLoading();
-        refreshGraph();
-        fitToGraph();
-        setStatus("Loaded latest graph.");
-      } catch (err) {
-        console.error(err);
-        hideLoading();
-        setStatus("Failed to load graph.", true);
-        showErrorPanel(err.message || "Failed to load graph.");
-      }
-    }
-
-    function bindViewportEvents() {
-      const viewport = graphViewport();
-
-      viewport.addEventListener("wheel", (event) => {
-        if (isMobileLayout()) return;
-        event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
-        zoomBy(factor, event.clientX, event.clientY);
-      }, { passive: false });
-
-      viewport.addEventListener("pointerdown", (event) => {
-        if (event.target.closest(".node")) return;
-        if (event.target.closest(".mobilePanel")) return;
-        if (event.target.closest(".mobileFab")) return;
-        if (event.target.closest(".mobileInspector")) return;
-
-        interaction.isPanning = true;
-        interaction.panStartMouseX = event.clientX;
-        interaction.panStartMouseY = event.clientY;
-        interaction.panStartX = viewportState.x;
-        interaction.panStartY = viewportState.y;
-
-        viewport.classList.add("panning");
-        viewport.setPointerCapture(event.pointerId);
-      });
-
-      viewport.addEventListener("pointermove", (event) => {
-        if (!interaction.isPanning) return;
-        viewportState.x = interaction.panStartX + (event.clientX - interaction.panStartMouseX);
-        viewportState.y = interaction.panStartY + (event.clientY - interaction.panStartMouseY);
-        applyViewportTransform();
-      });
-
-      function endPan() {
-        interaction.isPanning = false;
-        viewport.classList.remove("panning");
-      }
-
-      viewport.addEventListener("pointerup", endPan);
-      viewport.addEventListener("pointercancel", endPan);
-
-      viewport.addEventListener("click", (event) => {
-        if (
-          !event.target.closest(".node") &&
-          !event.target.closest(".mobilePanel") &&
-          !event.target.closest(".mobileFab") &&
-          !event.target.closest(".mobileInspector")
-        ) {
-          closeMobilePanels();
-          clearSelection();
-        }
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      bindViewportEvents();
-
-      if (desktopSearchInput()) {
-        desktopSearchInput().addEventListener("input", (event) => {
-          setSearch(event.target.value || "");
-        });
-      }
-
-      if (mobileSearchInput()) {
-        mobileSearchInput().addEventListener("input", (event) => {
-          setSearch(event.target.value || "");
-        });
-      }
-
-      window.addEventListener("resize", () => {
-        closeMobilePanels();
-        closeMobileInspector();
-        if (graphData.nodes.length) {
-          fitToGraph();
-          refreshGraph();
-        }
-      });
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) reloadGraph();
-    });
-
-    window.zoomBy = zoomBy;
-    window.resetView = resetView;
-    window.fitToGraph = fitToGraph;
-    window.clearSelection = clearSelection;
-    window.reloadGraph = reloadGraph;
-    window.toggleMobileSearch = toggleMobileSearch;
-    window.toggleMobileControls = toggleMobileControls;
-    window.closeMobileInspector = closeMobileInspector;
-
-    reloadGraph();
-  </script>
-</body>
-</html>
