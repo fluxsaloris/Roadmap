@@ -1022,32 +1022,83 @@
     document.getElementById("errorPanel").classList.remove("show");
   }
 
-  function normalizeData(raw) {
-    return {
-      nodes: Array.isArray(raw?.nodes)
-        ? raw.nodes.map((n) => ({
-            id: String(n.id ?? ""),
-            label: typeof n.label === "string" ? n.label : "Unnamed",
-            subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-            description: typeof n.description === "string" ? n.description : "",
-            notes: typeof n.notes === "string" ? n.notes : "",
-            x: typeof n.x === "number" ? n.x : 0,
-            y: typeof n.y === "number" ? n.y : 0,
-            type: normalizeType(n.type),
-            status: typeof n.status === "string" ? n.status : "draft",
-            tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
-          }))
-        : [],
-      edges: Array.isArray(raw?.edges)
-        ? raw.edges.map((e) => ({
-            from: String(e.from ?? ""),
-            to: String(e.to ?? ""),
-            label: typeof e.label === "string" ? e.label : "",
-            oneWay: e.oneWay === false ? false : true
-          }))
-        : []
-    };
+function normalizeData(raw) {
+  const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+
+  const nodes = rawNodes.map((n, index) => ({
+    id: String(n.id ?? n.key ?? n.name ?? n.label ?? `node-${index}`),
+    label: typeof n.label === "string" ? n.label : (typeof n.title === "string" ? n.title : "Unnamed"),
+    subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+    description: typeof n.description === "string" ? n.description : "",
+    notes: typeof n.notes === "string" ? n.notes : "",
+    x: typeof n.x === "number" ? n.x : (typeof n.position?.x === "number" ? n.position.x : 0),
+    y: typeof n.y === "number" ? n.y : (typeof n.position?.y === "number" ? n.position.y : 0),
+    type: normalizeType(n.type),
+    status: typeof n.status === "string" ? n.status : "draft",
+    tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+  }));
+
+  const idLookup = new Map();
+  for (const node of nodes) {
+    idLookup.set(String(node.id), node.id);
+    idLookup.set(String(node.label), node.id);
   }
+
+  function resolveNodeRef(ref) {
+    if (ref == null) return null;
+    const key = String(ref).trim();
+    return idLookup.get(key) || null;
+  }
+
+  const rawTopLevelEdges = [
+    ...(Array.isArray(raw?.edges) ? raw.edges : []),
+    ...(Array.isArray(raw?.links) ? raw.links : []),
+    ...(Array.isArray(raw?.connections) ? raw.connections : [])
+  ];
+
+  const embeddedEdges = [];
+  for (const n of rawNodes) {
+    const fromRef = n.id ?? n.key ?? n.name ?? n.label;
+    const outgoing =
+      Array.isArray(n?.edges) ? n.edges :
+      Array.isArray(n?.links) ? n.links :
+      Array.isArray(n?.connections) ? n.connections :
+      Array.isArray(n?.outgoing) ? n.outgoing :
+      [];
+
+    for (const edge of outgoing) {
+      embeddedEdges.push({
+        from: fromRef,
+        to: edge?.to ?? edge?.target ?? edge?.destination ?? edge?.id,
+        label: edge?.label ?? edge?.name ?? "",
+        oneWay: edge?.oneWay
+      });
+    }
+  }
+
+  const allRawEdges = [...rawTopLevelEdges, ...embeddedEdges];
+
+  const seen = new Set();
+  const edges = [];
+
+  for (const e of allRawEdges) {
+    const from = resolveNodeRef(e?.from ?? e?.source ?? e?.start ?? e?.parent);
+    const to = resolveNodeRef(e?.to ?? e?.target ?? e?.end ?? e?.child);
+
+    if (!from || !to) continue;
+
+    const label = typeof e?.label === "string" ? e.label : (typeof e?.name === "string" ? e.name : "");
+    const oneWay = e?.oneWay === false ? false : true;
+
+    const key = `${from}→${to}|${label}|${oneWay}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    edges.push({ from, to, label, oneWay });
+  }
+
+  return { nodes, edges };
+}
 
   function escapeHtml(value) {
     return String(value ?? "")
