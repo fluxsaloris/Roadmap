@@ -933,415 +933,631 @@
       </div>
     </div>
   </div>
-
   <script>
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
+  const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-    const TYPE_META = {
-      stable: { className: "stable", label: "Stable", edgeClass: "edge-stable" },
-      dangerous: { className: "dangerous", label: "Dangerous", edgeClass: "edge-dangerous" },
-      corrupted: { className: "corrupted", label: "Corrupted", edgeClass: "edge-corrupted" },
-      anomalous: { className: "anomalous", label: "Anomalous", edgeClass: "edge-anomalous" }
+  const TYPE_META = {
+    stable: { className: "stable", label: "Stable", edgeClass: "edge-stable" },
+    dangerous: { className: "dangerous", label: "Dangerous", edgeClass: "edge-dangerous" },
+    corrupted: { className: "corrupted", label: "Corrupted", edgeClass: "edge-corrupted" },
+    anomalous: { className: "anomalous", label: "Anomalous", edgeClass: "edge-anomalous" }
+  };
+
+  let graphData = { nodes: [], edges: [] };
+  let selectedNodeId = null;
+  let currentSearch = "";
+
+  let viewportState = {
+    x: 0,
+    y: 0,
+    scale: window.innerWidth <= 700 ? 0.55 : 1
+  };
+
+  let interaction = {
+    isPanning: false,
+    panStartMouseX: 0,
+    panStartMouseY: 0,
+    panStartX: 0,
+    panStartY: 0
+  };
+
+  const graphViewport = () => document.getElementById("graphViewport");
+  const graphScene = () => document.getElementById("graphScene");
+  const graphSvg = () => document.getElementById("graphSvg");
+  const graphNodesEl = () => document.getElementById("graphNodes");
+  const desktopSearchInput = () => document.getElementById("searchInput");
+  const mobileSearchInput = () => document.getElementById("mobileSearchInput");
+  const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
+  const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
+  const mobileInspector = () => document.getElementById("mobileInspector");
+  const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
+
+  function normalizeType(type) {
+    const value = String(type || "").trim().toLowerCase();
+    if (value === "stable" || value === "start") return "stable";
+    if (value === "dangerous" || value === "progression") return "dangerous";
+    if (value === "corrupted" || value === "danger") return "corrupted";
+    if (value === "anomalous" || value === "weird") return "anomalous";
+    return "stable";
+  }
+
+  function getTypeLabel(type) {
+    return TYPE_META[normalizeType(type)].label;
+  }
+
+  function getTypeClass(type) {
+    return TYPE_META[normalizeType(type)].className;
+  }
+
+  function getTypeEdgeClass(type) {
+    return TYPE_META[normalizeType(type)].edgeClass;
+  }
+
+  function isMobileLayout() {
+    return window.innerWidth <= 700;
+  }
+
+  function showLoading(text = "Loading graph...") {
+    document.getElementById("loadingText").textContent = text;
+    document.getElementById("loadingOverlay").style.display = "flex";
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+
+  function setStatus(text, isError = false) {
+    const el = document.getElementById("statusLine");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+  }
+
+  function showErrorPanel(message) {
+    document.getElementById("errorPanelText").textContent = message;
+    document.getElementById("errorPanel").classList.add("show");
+  }
+
+  function hideErrorPanel() {
+    document.getElementById("errorPanel").classList.remove("show");
+  }
+
+  function normalizeData(raw) {
+    return {
+      nodes: Array.isArray(raw?.nodes)
+        ? raw.nodes.map((n) => ({
+            id: String(n.id ?? ""),
+            label: typeof n.label === "string" ? n.label : "Unnamed",
+            subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+            description: typeof n.description === "string" ? n.description : "",
+            notes: typeof n.notes === "string" ? n.notes : "",
+            x: typeof n.x === "number" ? n.x : 0,
+            y: typeof n.y === "number" ? n.y : 0,
+            type: normalizeType(n.type),
+            status: typeof n.status === "string" ? n.status : "draft",
+            tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+          }))
+        : [],
+      edges: Array.isArray(raw?.edges)
+        ? raw.edges.map((e) => ({
+            from: String(e.from ?? ""),
+            to: String(e.to ?? ""),
+            label: typeof e.label === "string" ? e.label : "",
+            oneWay: e.oneWay === false ? false : true
+          }))
+        : []
     };
+  }
 
-    let graphData = { nodes: [], edges: [] };
-    let selectedNodeId = null;
-    let currentSearch = "";
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
-    let viewportState = {
-      x: 0,
-      y: 0,
-      scale: window.innerWidth <= 700 ? 0.55 : 1
+  function getNodeById(id) {
+    return graphData.nodes.find(n => n.id === String(id)) || null;
+  }
+
+  function getSelectedNode() {
+    return selectedNodeId ? getNodeById(selectedNodeId) : null;
+  }
+
+  function getOutgoingEdges(id) {
+    return graphData.edges.filter(edge => edge.from === String(id));
+  }
+
+  function getIncomingEdges(id) {
+    return graphData.edges.filter(edge => edge.to === String(id));
+  }
+
+  function nodeMatchesSearch(node, search) {
+    if (!search) return true;
+    const hay = [
+      node.id,
+      node.label,
+      node.subtitle,
+      node.description,
+      node.notes,
+      getTypeLabel(node.type),
+      ...(Array.isArray(node.tags) ? node.tags : [])
+    ].join(" ").toLowerCase();
+    return hay.includes(search);
+  }
+
+  function getVisibleNodeIds() {
+    const search = currentSearch.trim().toLowerCase();
+    if (!search) return new Set(graphData.nodes.map(n => n.id));
+    return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
+  }
+
+  function getRelatedNodeIds(nodeId) {
+    const related = new Set([String(nodeId)]);
+    for (const edge of graphData.edges) {
+      if (edge.from === String(nodeId)) related.add(edge.to);
+      if (edge.to === String(nodeId)) related.add(edge.from);
+    }
+    return related;
+  }
+
+  function scenePointFromClient(clientX, clientY) {
+    const rect = graphViewport().getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - viewportState.x) / viewportState.scale,
+      y: (clientY - rect.top - viewportState.y) / viewportState.scale
     };
+  }
 
-    let interaction = {
-      isPanning: false,
-      panStartMouseX: 0,
-      panStartMouseY: 0,
-      panStartX: 0,
-      panStartY: 0
+  function applyViewportTransform() {
+    graphScene().style.transform = `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+  }
+
+  function getGraphBounds(nodes) {
+    if (!nodes.length) {
+      return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
+    }
+
+    const minX = Math.min(...nodes.map(n => n.x));
+    const maxX = Math.max(...nodes.map(n => n.x));
+    const minY = Math.min(...nodes.map(n => n.y));
+    const maxY = Math.max(...nodes.map(n => n.y));
+    return { minX, maxX, minY, maxY };
+  }
+
+  function fitToGraph() {
+    const visibleNodeIds = getVisibleNodeIds();
+    const visibleNodes = graphData.nodes.filter(node => visibleNodeIds.has(node.id));
+    const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
+    const bounds = getGraphBounds(nodesToFit);
+    const mobile = isMobileLayout();
+    const width = Math.max(mobile ? 320 : 500, bounds.maxX - bounds.minX + (mobile ? 170 : 340));
+    const height = Math.max(mobile ? 220 : 320, bounds.maxY - bounds.minY + (mobile ? 150 : 240));
+    const rect = graphViewport().getBoundingClientRect();
+    const fitScale = Math.min(mobile ? 0.82 : 1.2, Math.max(0.22, Math.min(rect.width / width, rect.height / height)));
+
+    viewportState.scale = fitScale;
+    viewportState.x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * fitScale;
+    viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
+    applyViewportTransform();
+
+    if (!mobile) setStatus("Fitted graph to view.");
+  }
+
+  function resetView() {
+    viewportState = {
+      x: isMobileLayout() ? 20 : 80,
+      y: isMobileLayout() ? 20 : 80,
+      scale: isMobileLayout() ? 0.55 : 1
     };
+    applyViewportTransform();
+    if (!isMobileLayout()) setStatus("View reset.");
+  }
 
-    const graphViewport = () => document.getElementById("graphViewport");
-    const graphScene = () => document.getElementById("graphScene");
-    const graphSvg = () => document.getElementById("graphSvg");
-    const graphNodesEl = () => document.getElementById("graphNodes");
-    const desktopSearchInput = () => document.getElementById("searchInput");
-    const mobileSearchInput = () => document.getElementById("mobileSearchInput");
-    const mobileSearchPanel = () => document.getElementById("mobileSearchPanel");
-    const mobileControlsPanel = () => document.getElementById("mobileControlsPanel");
-    const mobileInspector = () => document.getElementById("mobileInspector");
-    const mobileInspectorOverlay = () => document.getElementById("mobileInspectorOverlay");
+  function zoomBy(factor, clientX = null, clientY = null) {
+    const rect = graphViewport().getBoundingClientRect();
+    const px = clientX ?? (rect.left + rect.width / 2);
+    const py = clientY ?? (rect.top + rect.height / 2);
+    const before = scenePointFromClient(px, py);
 
-    function normalizeType(type) {
-      const value = String(type || "").trim().toLowerCase();
-      if (value === "stable" || value === "start") return "stable";
-      if (value === "dangerous" || value === "progression") return "dangerous";
-      if (value === "corrupted" || value === "danger") return "corrupted";
-      if (value === "anomalous" || value === "weird") return "anomalous";
-      return "stable";
+    viewportState.scale = Math.max(0.22, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
+    viewportState.x = px - rect.left - before.x * viewportState.scale;
+    viewportState.y = py - rect.top - before.y * viewportState.scale;
+    applyViewportTransform();
+  }
+
+  function createCurvePath(x1, y1, x2, y2) {
+    const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
+    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+  }
+
+  function getNodePortPosition(nodeId, side) {
+    const node = getNodeById(nodeId);
+    if (!node) return null;
+    const width = isMobileLayout() ? 118 : 170;
+    return {
+      x: node.x + (side === "output" ? width / 2 : -width / 2),
+      y: node.y
+    };
+  }
+
+  function syncSvgSize() {
+    const viewport = graphViewport();
+    const svg = graphSvg();
+    const width = viewport.clientWidth || 1;
+    const height = viewport.clientHeight || 1;
+
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  }
+
+  function updateStats() {
+    document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+    document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+    const selected = getSelectedNode();
+    document.getElementById("statSelected").textContent = selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
+  }
+
+  function renderLinkListHTML(edges, direction) {
+    return edges.length
+      ? edges.map(edge => {
+          const other = getNodeById(direction === "outgoing" ? edge.to : edge.from);
+          return `<li>${escapeHtml(other?.label || (direction === "outgoing" ? edge.to : edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
+        }).join("")
+      : `<li>No ${direction} links.</li>`;
+  }
+
+  function updateSidebar() {
+    const node = getSelectedNode();
+    document.getElementById("selectedHint").textContent = node ? `Inspecting ${node.label || node.id}` : "Click a node in the graph to inspect it.";
+    document.getElementById("infoLabel").textContent = node?.label || "—";
+    document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
+    document.getElementById("infoType").textContent = node ? getTypeLabel(node.type) : "—";
+    document.getElementById("infoStatus").textContent = node?.status || "—";
+    document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
+    document.getElementById("infoDescription").textContent = node?.description || "—";
+    document.getElementById("infoNotes").textContent = node?.notes || "—";
+
+    const outgoingList = document.getElementById("outgoingList");
+    const incomingList = document.getElementById("incomingList");
+
+    if (!node) {
+      outgoingList.innerHTML = "<li>No level selected.</li>";
+      incomingList.innerHTML = "<li>No level selected.</li>";
+      return;
     }
 
-    function getTypeLabel(type) {
-      return TYPE_META[normalizeType(type)].label;
+    outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
+    incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
+  }
+
+  function closeMobileInspector() {
+    mobileInspector().classList.remove("show");
+    mobileInspectorOverlay().classList.remove("show");
+  }
+
+  function openMobileInspector() {
+    if (!isMobileLayout()) return;
+    mobileInspector().classList.add("show");
+    mobileInspectorOverlay().classList.add("show");
+  }
+
+  function updateMobileInspector() {
+    if (!isMobileLayout()) {
+      closeMobileInspector();
+      return;
     }
 
-    function getTypeClass(type) {
-      return TYPE_META[normalizeType(type)].className;
+    const node = getSelectedNode();
+    document.getElementById("mobileInspectorTitle").textContent = node ? (node.label || node.id) : "No level selected";
+    document.getElementById("mobileInfoLabel").textContent = node?.label || "—";
+    document.getElementById("mobileInfoSubtitle").textContent = node?.subtitle || "—";
+    document.getElementById("mobileInfoType").textContent = node ? getTypeLabel(node.type) : "—";
+    document.getElementById("mobileInfoStatus").textContent = node?.status || "—";
+    document.getElementById("mobileInfoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
+    document.getElementById("mobileInfoDescription").textContent = node?.description || "—";
+    document.getElementById("mobileInfoNotes").textContent = node?.notes || "—";
+
+    const outgoingList = document.getElementById("mobileOutgoingList");
+    const incomingList = document.getElementById("mobileIncomingList");
+
+    if (!node) {
+      outgoingList.innerHTML = "<li>No outgoing links.</li>";
+      incomingList.innerHTML = "<li>No incoming links.</li>";
+      closeMobileInspector();
+      return;
     }
 
-    function getTypeEdgeClass(type) {
-      return TYPE_META[normalizeType(type)].edgeClass;
-    }
+    outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
+    incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
+  }
 
-    function isMobileLayout() {
-      return window.innerWidth <= 700;
-    }
+  function refreshGraph() {
+    syncSvgSize();
 
-    function showLoading(text = "Loading graph...") {
-      document.getElementById("loadingText").textContent = text;
-      document.getElementById("loadingOverlay").style.display = "flex";
-    }
+    const visibleNodeIds = getVisibleNodeIds();
+    const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
 
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
+    graphNodesEl().innerHTML = graphData.nodes
+      .filter(node => visibleNodeIds.has(node.id))
+      .map(node => {
+        const isSelected = node.id === selectedNodeId;
+        const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
+        const isDimmed = relatedNodeIds ? !isRelated : false;
+        const typeClass = getTypeClass(node.type);
 
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      if (!el) return;
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
-    }
-
-    function showErrorPanel(message) {
-      document.getElementById("errorPanelText").textContent = message;
-      document.getElementById("errorPanel").classList.add("show");
-    }
-
-    function hideErrorPanel() {
-      document.getElementById("errorPanel").classList.remove("show");
-    }
-
-    function normalizeData(raw) {
-      return {
-        nodes: Array.isArray(raw?.nodes)
-          ? raw.nodes.map((n) => ({
-              id: String(n.id ?? ""),
-              label: typeof n.label === "string" ? n.label : "Unnamed",
-              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-              description: typeof n.description === "string" ? n.description : "",
-              notes: typeof n.notes === "string" ? n.notes : "",
-              x: typeof n.x === "number" ? n.x : 0,
-              y: typeof n.y === "number" ? n.y : 0,
-              type: normalizeType(n.type),
-              status: typeof n.status === "string" ? n.status : "draft",
-              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
-            }))
-          : [],
-        edges: Array.isArray(raw?.edges)
-          ? raw.edges.map((e) => ({
-              from: String(e.from ?? ""),
-              to: String(e.to ?? ""),
-              label: typeof e.label === "string" ? e.label : "",
-              oneWay: e.oneWay === false ? false : true
-            }))
-          : []
-      };
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function getNodeById(id) {
-      return graphData.nodes.find(n => n.id === String(id)) || null;
-    }
-
-    function getSelectedNode() {
-      return selectedNodeId ? getNodeById(selectedNodeId) : null;
-    }
-
-    function getOutgoingEdges(id) {
-      return graphData.edges.filter(edge => edge.from === String(id));
-    }
-
-    function getIncomingEdges(id) {
-      return graphData.edges.filter(edge => edge.to === String(id));
-    }
-
-    function nodeMatchesSearch(node, search) {
-      if (!search) return true;
-      const hay = [
-        node.id,
-        node.label,
-        node.subtitle,
-        node.description,
-        node.notes,
-        getTypeLabel(node.type),
-        ...(Array.isArray(node.tags) ? node.tags : [])
-      ].join(" ").toLowerCase();
-      return hay.includes(search);
-    }
-
-    function getVisibleNodeIds() {
-      const search = currentSearch.trim().toLowerCase();
-      if (!search) return new Set(graphData.nodes.map(n => n.id));
-      return new Set(graphData.nodes.filter(n => nodeMatchesSearch(n, search)).map(n => n.id));
-    }
-
-    function getRelatedNodeIds(nodeId) {
-      const related = new Set([String(nodeId)]);
-      for (const edge of graphData.edges) {
-        if (edge.from === String(nodeId)) related.add(edge.to);
-        if (edge.to === String(nodeId)) related.add(edge.from);
-      }
-      return related;
-    }
-
-    function scenePointFromClient(clientX, clientY) {
-      const rect = graphViewport().getBoundingClientRect();
-      return {
-        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
-        y: (clientY - rect.top - viewportState.y) / viewportState.scale
-      };
-    }
-
-    function applyViewportTransform() {
-      graphScene().style.transform = `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
-    }
-
-    function getGraphBounds(nodes) {
-      if (!nodes.length) {
-        return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
-      }
-
-      const minX = Math.min(...nodes.map(n => n.x));
-      const maxX = Math.max(...nodes.map(n => n.x));
-      const minY = Math.min(...nodes.map(n => n.y));
-      const maxY = Math.max(...nodes.map(n => n.y));
-      return { minX, maxX, minY, maxY };
-    }
-
-    function fitToGraph() {
-      const visibleNodeIds = getVisibleNodeIds();
-      const visibleNodes = graphData.nodes.filter(node => visibleNodeIds.has(node.id));
-      const nodesToFit = visibleNodes.length ? visibleNodes : graphData.nodes;
-      const bounds = getGraphBounds(nodesToFit);
-      const mobile = isMobileLayout();
-      const width = Math.max(mobile ? 320 : 500, bounds.maxX - bounds.minX + (mobile ? 170 : 340));
-      const height = Math.max(mobile ? 220 : 320, bounds.maxY - bounds.minY + (mobile ? 150 : 240));
-      const rect = graphViewport().getBoundingClientRect();
-      const fitScale = Math.min(mobile ? 0.82 : 1.2, Math.max(0.22, Math.min(rect.width / width, rect.height / height)));
-
-      viewportState.scale = fitScale;
-      viewportState.x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * fitScale;
-      viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
-      applyViewportTransform();
-
-      if (!mobile) setStatus("Fitted graph to view.");
-    }
-
-    function resetView() {
-      viewportState = {
-        x: isMobileLayout() ? 20 : 80,
-        y: isMobileLayout() ? 20 : 80,
-        scale: isMobileLayout() ? 0.55 : 1
-      };
-      applyViewportTransform();
-      if (!isMobileLayout()) setStatus("View reset.");
-    }
-
-    function zoomBy(factor, clientX = null, clientY = null) {
-      const rect = graphViewport().getBoundingClientRect();
-      const px = clientX ?? (rect.left + rect.width / 2);
-      const py = clientY ?? (rect.top + rect.height / 2);
-      const before = scenePointFromClient(px, py);
-
-      viewportState.scale = Math.max(0.22, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
-      viewportState.x = px - rect.left - before.x * viewportState.scale;
-      viewportState.y = py - rect.top - before.y * viewportState.scale;
-      applyViewportTransform();
-    }
-
-    function createCurvePath(x1, y1, x2, y2) {
-      const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
-      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-    }
-
-    function getNodePortPosition(nodeId, side) {
-      const node = getNodeById(nodeId);
-      if (!node) return null;
-      const width = isMobileLayout() ? 118 : 170;
-      return {
-        x: node.x + (side === "output" ? width / 2 : -width / 2),
-        y: node.y
-      };
-    }
-
-    function syncSvgSize() {
-      const viewport = graphViewport();
-      const svg = graphSvg();
-
-      const width = viewport.clientWidth || 1;
-      const height = viewport.clientHeight || 1;
-
-      svg.setAttribute("width", String(width));
-      svg.setAttribute("height", String(height));
-      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-    }
-
-    function updateStats() {
-      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-      const selected = getSelectedNode();
-      document.getElementById("statSelected").textContent = selected ? `Selected: ${selected.label || selected.id}` : "No level selected";
-    }
-
-    function renderLinkListHTML(edges, direction) {
-      return edges.length
-        ? edges.map(edge => {
-            const other = getNodeById(direction === "outgoing" ? edge.to : edge.from);
-            return `<li>${escapeHtml(other?.label || (direction === "outgoing" ? edge.to : edge.from))}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}</li>`;
-          }).join("")
-        : `<li>No ${direction} links.</li>`;
-    }
-
-    function updateSidebar() {
-      const node = getSelectedNode();
-      document.getElementById("selectedHint").textContent = node ? `Inspecting ${node.label || node.id}` : "Click a node in the graph to inspect it.";
-      document.getElementById("infoLabel").textContent = node?.label || "—";
-      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("infoType").textContent = node ? getTypeLabel(node.type) : "—";
-      document.getElementById("infoStatus").textContent = node?.status || "—";
-      document.getElementById("infoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("infoDescription").textContent = node?.description || "—";
-      document.getElementById("infoNotes").textContent = node?.notes || "—";
-
-      const outgoingList = document.getElementById("outgoingList");
-      const incomingList = document.getElementById("incomingList");
-
-      if (!node) {
-        outgoingList.innerHTML = "<li>No level selected.</li>";
-        incomingList.innerHTML = "<li>No level selected.</li>";
-        return;
-      }
-
-      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
-      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
-    }
-
-    function closeMobileInspector() {
-      mobileInspector().classList.remove("show");
-      mobileInspectorOverlay().classList.remove("show");
-    }
-
-    function openMobileInspector() {
-      if (!isMobileLayout()) return;
-      mobileInspector().classList.add("show");
-      mobileInspectorOverlay().classList.add("show");
-    }
-
-    function updateMobileInspector() {
-      if (!isMobileLayout()) {
-        closeMobileInspector();
-        return;
-      }
-
-      const node = getSelectedNode();
-      document.getElementById("mobileInspectorTitle").textContent = node ? (node.label || node.id) : "No level selected";
-      document.getElementById("mobileInfoLabel").textContent = node?.label || "—";
-      document.getElementById("mobileInfoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("mobileInfoType").textContent = node ? getTypeLabel(node.type) : "—";
-      document.getElementById("mobileInfoStatus").textContent = node?.status || "—";
-      document.getElementById("mobileInfoTags").textContent = node?.tags?.length ? node.tags.join(", ") : "—";
-      document.getElementById("mobileInfoDescription").textContent = node?.description || "—";
-      document.getElementById("mobileInfoNotes").textContent = node?.notes || "—";
-
-      const outgoingList = document.getElementById("mobileOutgoingList");
-      const incomingList = document.getElementById("mobileIncomingList");
-
-      if (!node) {
-        outgoingList.innerHTML = "<li>No outgoing links.</li>";
-        incomingList.innerHTML = "<li>No incoming links.</li>";
-        closeMobileInspector();
-        return;
-      }
-
-      outgoingList.innerHTML = renderLinkListHTML(getOutgoingEdges(node.id), "outgoing");
-      incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
-    }
-
-    function refreshGraph() {
-      syncSvgSize();
-
-      const visibleNodeIds = getVisibleNodeIds();
-      const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
-
-      graphNodesEl().innerHTML = graphData.nodes
-        .filter(node => visibleNodeIds.has(node.id))
-              .map(node => {
-          const isSelected = node.id === selectedNodeId;
-          const isRelated = relatedNodeIds ? relatedNodeIds.has(node.id) : false;
-          const isDimmed = relatedNodeIds ? !isRelated : false;
-          const typeClass = getTypeClass(node.type);
-
-          return `
-            <div
-              class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
-              data-node-id="${escapeHtml(node.id)}"
-              style="left:${node.x}px; top:${node.y}px;"
-            >
-              <div class="nodeHeader">
-                <div class="nodeDot"></div>
-                <div class="nodeTitle">${escapeHtml(node.label)}</div>
-              </div>
-              ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
-              <div class="nodeStatusRow">
-                <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
-                <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
-              </div>
+        return `
+          <div
+            class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
+            data-node-id="${escapeHtml(node.id)}"
+            style="left:${node.x}px; top:${node.y}px;"
+          >
+            <div class="nodeHeader">
+              <div class="nodeDot"></div>
+              <div class="nodeTitle">${escapeHtml(node.label)}</div>
             </div>
-          `;
-        }).join("");
+            ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+            <div class="nodeStatusRow">
+              <span class="nodeBadge">${escapeHtml(getTypeLabel(node.type))}</span>
+              <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
 
-      const svgParts = [];
-      const visibleEdges = graphData.edges.filter(
-        edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+    const svgParts = [];
+    const visibleEdges = graphData.edges.filter(
+      edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+    );
+
+    for (const edge of visibleEdges) {
+      const fromPort = getNodePortPosition(edge.from, "output");
+      const toPort = getNodePortPosition(edge.to, "input");
+      if (!fromPort || !toPort) continue;
+
+      const fromNode = getNodeById(edge.from);
+      const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
+      const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+      const dimmed = selectedNodeId && !related;
+      const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
+
+      svgParts.push(
+        `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
       );
 
-      for (const edge of visibleEdges) {
-        const fromPort = getNodePortPosition(edge.from, "output");
-        const toPort = getNodePortPosition(edge.to, "input");
-        if (!fromPort || !toPort) continue;
-
-        const fromNode = getNodeById(edge.from);
-        const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
-        const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-        const dimmed = selectedNodeId && !related;
-        const path = createCurvePath(fromPort.x, fromPort.y, toPort.x, toPort.y);
-
+      if (edge.label) {
+        const midX = (fromPort.x + toPort.x) / 2;
+        const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
         svgParts.push(
-          `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
+          `<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
         );
+      }
+    }
 
-        if (edge.label) {
-          const midX = (fromPort.x + toPort.x) / 2;
-          const midY = (fromPort.y + toPort.y) / 2 - (isMobileLayout() ? 8 : 10);
-          svgParts.push(
-            `<text x="${midX}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
-          );
-        }
+    graphSvg().innerHTML = svgParts.join("");
+    bindNodeEvents();
+    updateStats();
+    updateSidebar();
+    updateMobileInspector();
+  }
+
+  function bindNodeEvents() {
+    graphNodesEl().querySelectorAll(".node").forEach(nodeEl => {
+      nodeEl.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nodeId = nodeEl.getAttribute("data-node-id");
+        selectNode(nodeId);
+      });
+    });
+  }
+
+  function selectNode(nodeId) {
+    const exists = getNodeById(nodeId);
+    if (!exists) return;
+    selectedNodeId = String(nodeId);
+    refreshGraph();
+    if (!isMobileLayout()) {
+      setStatus(`Selected ${exists.label || exists.id}.`);
+    } else {
+      openMobileInspector();
+    }
+  }
+
+  function clearSelection() {
+    selectedNodeId = null;
+    refreshGraph();
+    closeMobileInspector();
+    if (!isMobileLayout()) setStatus("Selection cleared.");
+  }
+
+  function applySearch(value) {
+    currentSearch = String(value || "").trim().toLowerCase();
+
+    if (desktopSearchInput() && desktopSearchInput().value !== value) {
+      desktopSearchInput().value = value;
+    }
+    if (mobileSearchInput() && mobileSearchInput().value !== value) {
+      mobileSearchInput().value = value;
+    }
+
+    const visibleNodeIds = getVisibleNodeIds();
+    if (selectedNodeId && !visibleNodeIds.has(selectedNodeId)) {
+      selectedNodeId = null;
+      closeMobileInspector();
+    }
+
+    refreshGraph();
+
+    const count = visibleNodeIds.size;
+    if (!isMobileLayout()) {
+      setStatus(currentSearch ? `Search matched ${count} level${count === 1 ? "" : "s"}.` : "Showing all levels.");
+    }
+  }
+
+  function toggleMobileSearch() {
+    mobileSearchPanel().classList.toggle("show");
+    mobileControlsPanel().classList.remove("show");
+    if (mobileSearchPanel().classList.contains("show")) {
+      setTimeout(() => mobileSearchInput().focus(), 30);
+    }
+  }
+
+  function toggleMobileControls() {
+    mobileControlsPanel().classList.toggle("show");
+    mobileSearchPanel().classList.remove("show");
+  }
+
+  function startPan(clientX, clientY) {
+    interaction.isPanning = true;
+    interaction.panStartMouseX = clientX;
+    interaction.panStartMouseY = clientY;
+    interaction.panStartX = viewportState.x;
+    interaction.panStartY = viewportState.y;
+    graphViewport().classList.add("panning");
+  }
+
+  function movePan(clientX, clientY) {
+    if (!interaction.isPanning) return;
+    viewportState.x = interaction.panStartX + (clientX - interaction.panStartMouseX);
+    viewportState.y = interaction.panStartY + (clientY - interaction.panStartMouseY);
+    applyViewportTransform();
+  }
+
+  function endPan() {
+    interaction.isPanning = false;
+    graphViewport().classList.remove("panning");
+  }
+
+  function setupViewportInteractions() {
+    const viewport = graphViewport();
+
+    viewport.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+      zoomBy(factor, event.clientX, event.clientY);
+    }, { passive: false });
+
+    viewport.addEventListener("pointerdown", (event) => {
+      const targetNode = event.target.closest(".node");
+      if (targetNode) return;
+
+      startPan(event.clientX, event.clientY);
+      try {
+        viewport.setPointerCapture(event.pointerId);
+      } catch (_) {}
+    });
+
+    viewport.addEventListener("pointermove", (event) => {
+      movePan(event.clientX, event.clientY);
+    });
+
+    viewport.addEventListener("pointerup", () => {
+      endPan();
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      endPan();
+    });
+
+    viewport.addEventListener("click", (event) => {
+      if (!event.target.closest(".node")) {
+        closeMobileInspector();
+      }
+    });
+  }
+
+  async function loadGraph() {
+    showLoading("Loading graph...");
+    hideErrorPanel();
+
+    try {
+      const response = await fetch(RAW_JSON_URL, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      graphSvg().innerHTML = svgParts.join("");
-      bindNodeEvents();
-      updateStats();
-      updateSidebar();
-      updateMobileInspector();
+      const raw = await response.json();
+      graphData = normalizeData(raw);
+
+      if (!graphData.nodes.length) {
+        throw new Error("No nodes found in graph data.");
+      }
+
+      refreshGraph();
+      fitToGraph();
+      refreshGraph();
+
+      setStatus(`Loaded ${graphData.nodes.length} nodes and ${graphData.edges.length} links.`);
+      hideLoading();
+    } catch (error) {
+      console.error(error);
+      hideLoading();
+      showErrorPanel(`Failed to load graph data. ${error.message || ""}`.trim());
+      setStatus("Failed to load graph.", true);
     }
+  }
+
+  function reloadGraph() {
+    selectedNodeId = null;
+    currentSearch = "";
+
+    if (desktopSearchInput()) desktopSearchInput().value = "";
+    if (mobileSearchInput()) mobileSearchInput().value = "";
+
+    closeMobileInspector();
+    mobileSearchPanel().classList.remove("show");
+    mobileControlsPanel().classList.remove("show");
+
+    loadGraph();
+  }
+
+  function handleResize() {
+    syncSvgSize();
+    applyViewportTransform();
+    refreshGraph();
+  }
+
+  function setupSearch() {
+    desktopSearchInput()?.addEventListener("input", (e) => {
+      applySearch(e.target.value);
+    });
+
+    mobileSearchInput()?.addEventListener("input", (e) => {
+      applySearch(e.target.value);
+    });
+  }
+
+  function init() {
+    setupSearch();
+    setupViewportInteractions();
+    resetView();
+    loadGraph();
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        if (selectedNodeId) {
+          clearSelection();
+        } else {
+          mobileSearchPanel().classList.remove("show");
+          mobileControlsPanel().classList.remove("show");
+          closeMobileInspector();
+        }
+      }
+    });
+  }
+
+  window.zoomBy = zoomBy;
+  window.resetView = resetView;
+  window.fitToGraph = fitToGraph;
+  window.clearSelection = clearSelection;
+  window.reloadGraph = reloadGraph;
+  window.toggleMobileSearch = toggleMobileSearch;
+  window.toggleMobileControls = toggleMobileControls;
+  window.closeMobileInspector = closeMobileInspector;
+
+  document.addEventListener("DOMContentLoaded", init);
+</script>
