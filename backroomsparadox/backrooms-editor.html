@@ -1895,17 +1895,20 @@ function normalizeData(raw) {
       return cloneData(graphData);
     }
 
-function generateNodeId() {
-  let i = 1;
-  let id = `level-${i}`;
-  const used = new Set(graphData.nodes.map(n => String(n.id)));
-
-  while (used.has(id)) {
-    i++;
-    id = `level-${i}`;
-  }
+    function generateNodeId() {
+      let i = 1;
+      let id = `level-${i}`;
+      const used = new Set(graphData.nodes.map(n => String(n.id)));
+    
+      while (used.has(id)) {
+        i++;
+        id = `level-${i}`;
+      }
 
   return id;
+}
+    function getNodeById(id) {
+  return graphData.nodes.find(n => n.id === String(id)) || null;
 }
 
     function getSelectedNode() {
