@@ -1775,40 +1775,138 @@
       return JSON.parse(JSON.stringify(data));
     }
 
-    function normalizeData(raw) {
-      return {
-        nodes: Array.isArray(raw?.nodes)
-          ? raw.nodes.map((n) => ({
-              id: String(n.id ?? ""),
-              label: typeof n.label === "string" ? n.label : "Unnamed",
-              subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
-              description: typeof n.description === "string" ? n.description : "",
-              notes: typeof n.notes === "string" ? n.notes : "",
-              x: typeof n.x === "number" ? n.x : 0,
-              y: typeof n.y === "number" ? n.y : 0,
-              type: normalizeType(n.type),
-              status: typeof n.status === "string" ? n.status : "draft",
-              tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
-            }))
-          : [],
-        edges: Array.isArray(raw?.edges)
-          ? raw.edges.map((e) => ({
-              from: String(e.from ?? ""),
-              to: String(e.to ?? ""),
-              label: typeof e.label === "string" ? e.label : "",
-              oneWay: e.oneWay === false ? false : true
-            }))
-          : []
-      };
+function slugifyLabel(label) {
+  return String(label || "node")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "node";
+}
+
+function makeUniqueId(base, used) {
+  let id = base;
+  let i = 2;
+  while (used.has(id)) {
+    id = `${base}-${i}`;
+    i++;
+  }
+  used.add(id);
+  return id;
+}
+
+function sanitizeGraphDataForSave() {
+  const usedIds = new Set();
+
+  for (const node of graphData.nodes) {
+    let id = String(node.id || "").trim();
+
+    if (!id) {
+      id = slugifyLabel(node.label || "node");
     }
+
+    if (usedIds.has(id)) {
+      id = makeUniqueId(id, usedIds);
+    } else {
+      usedIds.add(id);
+    }
+
+    node.id = id;
+  }
+
+  const validIds = new Set(graphData.nodes.map(n => n.id));
+
+  graphData.edges = graphData.edges.filter(edge => {
+    return validIds.has(edge.from) && validIds.has(edge.to) && edge.from !== edge.to;
+  });
+}
+
+function normalizeData(raw) {
+  const usedIds = new Set();
+
+  const nodes = Array.isArray(raw?.nodes)
+    ? raw.nodes.map((n, index) => {
+        const rawId = n?.id;
+        const safeBase =
+          rawId !== null && rawId !== undefined && String(rawId).trim() !== ""
+            ? String(rawId).trim()
+            : slugifyLabel(n?.label || `node-${index + 1}`);
+
+        const id = makeUniqueId(safeBase, usedIds);
+
+        return {
+          id,
+          label: typeof n.label === "string" ? n.label : "Unnamed",
+          subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+          description: typeof n.description === "string" ? n.description : "",
+          notes: typeof n.notes === "string" ? n.notes : "",
+          x: typeof n.x === "number" ? n.x : 0,
+          y: typeof n.y === "number" ? n.y : 0,
+          type: normalizeType(n.type),
+          status: typeof n.status === "string" ? n.status : "draft",
+          tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+        };
+      })
+    : [];
+
+  const originalNodeRefs = Array.isArray(raw?.nodes)
+    ? raw.nodes.map((n, index) => ({
+        originalId: n?.id,
+        label: typeof n?.label === "string" ? n.label : "",
+        normalizedId: nodes[index]?.id
+      }))
+    : [];
+
+  const idMap = new Map();
+
+  for (const ref of originalNodeRefs) {
+    if (ref.originalId !== null && ref.originalId !== undefined && String(ref.originalId).trim() !== "") {
+      idMap.set(String(ref.originalId), ref.normalizedId);
+    }
+    if (ref.label) {
+      idMap.set(ref.label, ref.normalizedId);
+    }
+  }
+
+  const edges = Array.isArray(raw?.edges)
+    ? raw.edges
+        .map((e) => {
+          const fromKey = e?.from !== null && e?.from !== undefined ? String(e.from) : null;
+          const toKey = e?.to !== null && e?.to !== undefined ? String(e.to) : null;
+
+          const from = fromKey ? (idMap.get(fromKey) || null) : null;
+          const to = toKey ? (idMap.get(toKey) || null) : null;
+
+          if (!from || !to) return null;
+
+          return {
+            from,
+            to,
+            label: typeof e.label === "string" ? e.label : "",
+            oneWay: e.oneWay === false ? false : true
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  return { nodes, edges };
+}
 
     function getSerializableGraphData() {
       return cloneData(graphData);
     }
 
-    function getNodeById(id) {
-      return graphData.nodes.find(n => n.id === String(id)) || null;
-    }
+function generateNodeId() {
+  let i = 1;
+  let id = `level-${i}`;
+  const used = new Set(graphData.nodes.map(n => String(n.id)));
+
+  while (used.has(id)) {
+    i++;
+    id = `level-${i}`;
+  }
+
+  return id;
+}
 
     function getSelectedNode() {
       return selectedNodeId ? getNodeById(selectedNodeId) : null;
