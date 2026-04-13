@@ -1234,16 +1234,21 @@ function normalizeData(raw) {
     };
   }
 
-  function syncSvgSize() {
-    const viewport = graphViewport();
-    const svg = graphSvg();
-    const width = viewport.clientWidth || 1;
-    const height = viewport.clientHeight || 1;
+ function syncSvgSize() {
+  const svg = graphSvg();
 
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  }
+  const bounds = getGraphBounds(graphData.nodes);
+  const padding = isMobileLayout() ? 220 : 320;
+
+  const minX = bounds.minX - padding;
+  const minY = bounds.minY - padding;
+  const width = Math.max(1000, (bounds.maxX - bounds.minX) + padding * 2);
+  const height = Math.max(800, (bounds.maxY - bounds.minY) + padding * 2);
+
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+}
 
   function updateStats() {
     document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
