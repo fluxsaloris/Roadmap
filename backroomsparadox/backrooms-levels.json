@@ -105,8 +105,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 2304,
-      "y": -9
+      "x": 2306,
+      "y": -11
     },
     {
       "id": "level-1-2",
@@ -203,6 +203,18 @@
     {
       "from": "level-1-3",
       "to": "level-1-2",
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": "level-0-a",
+      "to": "level-1-3",
+      "label": "",
+      "oneWay": true
+    },
+    {
+      "from": "level-0-b",
+      "to": "level-1-1",
       "label": "",
       "oneWay": true
     }
