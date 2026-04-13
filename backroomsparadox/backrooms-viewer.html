@@ -339,6 +339,8 @@
   position: absolute;
   left: 0;
   top: 0;
+  width: 1px;
+  height: 1px;
   overflow: visible;
   pointer-events: none;
 }
@@ -1234,18 +1236,18 @@ function normalizeData(raw) {
 
  function syncSvgSize() {
   const svg = graphSvg();
-
   const bounds = getGraphBounds(graphData.nodes);
   const padding = isMobileLayout() ? 220 : 320;
 
-  const minX = bounds.minX - padding;
-  const minY = bounds.minY - padding;
-  const width = Math.max(1000, (bounds.maxX - bounds.minX) + padding * 2);
-  const height = Math.max(800, (bounds.maxY - bounds.minY) + padding * 2);
+  const width = Math.max(2000, bounds.maxX + padding);
+  const height = Math.max(1400, bounds.maxY + padding);
 
+  svg.style.left = "0px";
+  svg.style.top = "0px";
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
-  svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("preserveAspectRatio", "none");
 }
 
   function updateStats() {
