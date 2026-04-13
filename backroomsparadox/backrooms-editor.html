@@ -1771,9 +1771,9 @@
       document.getElementById("statRedo").textContent = `Redo: ${redoStack.length}`;
     }
 
-    function cloneData(data) {
-      return JSON.parse(JSON.stringify(data));
-    }
+   function cloneData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
 
 function slugifyLabel(label) {
   return String(label || "node")
@@ -1786,36 +1786,52 @@ function slugifyLabel(label) {
 function makeUniqueId(base, used) {
   let id = base;
   let i = 2;
+
   while (used.has(id)) {
     id = `${base}-${i}`;
     i++;
   }
+
   used.add(id);
   return id;
 }
 
 function sanitizeGraphDataForSave() {
   const usedIds = new Set();
+  const oldToNewId = new Map();
 
   for (const node of graphData.nodes) {
-    let id = String(node.id || "").trim();
+    const oldId = String(node.id ?? "").trim();
+    let newId = oldId;
 
-    if (!id) {
-      id = slugifyLabel(node.label || "node");
+    if (!newId) {
+      newId = slugifyLabel(node.label || "node");
     }
 
-    if (usedIds.has(id)) {
-      id = makeUniqueId(id, usedIds);
+    if (!newId || usedIds.has(newId)) {
+      newId = makeUniqueId(newId || "node", usedIds);
     } else {
-      usedIds.add(id);
+      usedIds.add(newId);
     }
 
-    node.id = id;
+    node.id = newId;
+    oldToNewId.set(oldId, newId);
   }
 
-  const validIds = new Set(graphData.nodes.map(n => n.id));
+  graphData.edges = graphData.edges.map((edge) => {
+    const oldFrom = String(edge.from ?? "").trim();
+    const oldTo = String(edge.to ?? "").trim();
 
-  graphData.edges = graphData.edges.filter(edge => {
+    return {
+      ...edge,
+      from: oldToNewId.get(oldFrom) || oldFrom,
+      to: oldToNewId.get(oldTo) || oldTo
+    };
+  });
+
+  const validIds = new Set(graphData.nodes.map((n) => n.id));
+
+  graphData.edges = graphData.edges.filter((edge) => {
     return validIds.has(edge.from) && validIds.has(edge.to) && edge.from !== edge.to;
   });
 }
@@ -1843,7 +1859,7 @@ function normalizeData(raw) {
           y: typeof n.y === "number" ? n.y : 0,
           type: normalizeType(n.type),
           status: typeof n.status === "string" ? n.status : "draft",
-          tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+          tags: Array.isArray(n.tags) ? n.tags.map((tag) => String(tag)) : []
         };
       })
     : [];
@@ -1891,29 +1907,30 @@ function normalizeData(raw) {
   return { nodes, edges };
 }
 
-    function getSerializableGraphData() {
-      return cloneData(graphData);
-    }
+function getSerializableGraphData() {
+  return cloneData(graphData);
+}
 
-    function generateNodeId() {
-      let i = 1;
-      let id = `level-${i}`;
-      const used = new Set(graphData.nodes.map(n => String(n.id)));
-    
-      while (used.has(id)) {
-        i++;
-        id = `level-${i}`;
-      }
+function generateNodeId() {
+  let i = 1;
+  let id = `level-${i}`;
+  const used = new Set(graphData.nodes.map((n) => String(n.id)));
+
+  while (used.has(id)) {
+    i++;
+    id = `level-${i}`;
+  }
 
   return id;
 }
-    function getNodeById(id) {
-  return graphData.nodes.find(n => n.id === String(id)) || null;
+
+function getNodeById(id) {
+  return graphData.nodes.find((n) => n.id === String(id)) || null;
 }
 
-    function getSelectedNode() {
-      return selectedNodeId ? getNodeById(selectedNodeId) : null;
-    }
+function getSelectedNode() {
+  return selectedNodeId ? getNodeById(selectedNodeId) : null;
+}
 
     function escapeHtml(value) {
       return String(value ?? "")
