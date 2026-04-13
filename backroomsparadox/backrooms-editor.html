@@ -2541,16 +2541,6 @@ function getSelectedNode() {
       markDirty("Added new node.");
     }
 
-    function generateNodeId() {
-      let i = graphData.nodes.length + 1;
-      let id = `level-${i}`;
-      while (getNodeById(id)) {
-        i++;
-        id = `level-${i}`;
-      }
-      return id;
-    }
-
     function applySelectedNodeChanges() {
       const node = getSelectedNode();
       if (!node) return;
