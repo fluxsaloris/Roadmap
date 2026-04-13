@@ -2679,59 +2679,60 @@ function generateNodeId() {
       markDirty("Auto layout applied.");
     }
 
-    async function saveGraph(isAuto = false) {
-      try {
-        if (isSavingToGitHub) return;
+async function saveGraph(isAuto = false) {
+  try {
+    if (isSavingToGitHub) return;
 
-        if (!window.__EDITOR_SECURITY__?.hostOk) {
-          throw new Error("Blocked from saving on this host.");
-        }
-
-        isSavingToGitHub = true;
-        setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
-        if (!isMobileLayout()) setStatus(isAuto ? "Auto-saving graph..." : "Saving graph...");
-
-        const payload = getSerializableGraphData();
-
-        const res = await fetch(SAVE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            project: PROJECT,
-            data: payload
-          })
-        });
-
-        const json = await res.json().catch(() => null);
-        if (!res.ok) {
-          throw new Error(json?.error || "Save failed");
-        }
-
-        hasUnsavedChanges = false;
-        lastRemoteSaveAt = json?.savedAt ? (Date.parse(json.savedAt) || Date.now()) : Date.now();
-        lastVersionId = json?.version || null;
-        lastSnapshotPath = json?.snapshotPath || null;
-
-        persistMetaToLocalStorage();
-        updateMetaBadges();
-        setSaveBadge("save-clean", "Saved to GitHub");
-        if (!isMobileLayout()) {
-          setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
-        }
-        saveDraftToLocal();
-
-        historyIndexCache = null;
-        snapshotCache = new Map();
-        scheduleDiffRefresh();
-      } catch (err) {
-        console.error(err);
-        setSaveBadge("save-error", "GitHub save failed");
-        if (!isMobileLayout()) setStatus("Save failed.", true);
-        showErrorPanel(err.message || "Save failed.");
-      } finally {
-        isSavingToGitHub = false;
-      }
+    if (!window.__EDITOR_SECURITY__?.hostOk) {
+      throw new Error("Blocked from saving on this host.");
     }
+
+    isSavingToGitHub = true;
+    setSaveBadge("save-saving", isAuto ? "Auto-saving..." : "Saving to GitHub...");
+    if (!isMobileLayout()) setStatus(isAuto ? "Auto-saving graph..." : "Saving graph...");
+
+    sanitizeGraphDataForSave();
+    const payload = getSerializableGraphData();
+
+    const res = await fetch(SAVE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        project: PROJECT,
+        data: payload
+      })
+    });
+
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(json?.error || "Save failed");
+    }
+
+    hasUnsavedChanges = false;
+    lastRemoteSaveAt = json?.savedAt ? (Date.parse(json.savedAt) || Date.now()) : Date.now();
+    lastVersionId = json?.version || null;
+    lastSnapshotPath = json?.snapshotPath || null;
+
+    persistMetaToLocalStorage();
+    updateMetaBadges();
+    setSaveBadge("save-clean", "Saved to GitHub");
+    if (!isMobileLayout()) {
+      setStatus(lastVersionId ? `Saved. Snapshot ${lastVersionId} created.` : "Saved to GitHub.");
+    }
+    saveDraftToLocal();
+
+    historyIndexCache = null;
+    snapshotCache = new Map();
+    scheduleDiffRefresh();
+  } catch (err) {
+    console.error(err);
+    setSaveBadge("save-error", "GitHub save failed");
+    if (!isMobileLayout()) setStatus("Save failed.", true);
+    showErrorPanel(err.message || "Save failed.");
+  } finally {
+    isSavingToGitHub = false;
+  }
+}
 
     function discardLocalDraft() {
       const ok = confirm("Discard your local draft and reload from GitHub?");
