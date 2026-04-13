@@ -1327,7 +1327,7 @@ function syncSvgSize() {
     incomingList.innerHTML = renderLinkListHTML(getIncomingEdges(node.id), "incoming");
   }
 
-  function refreshGraph() {
+function refreshGraph() {
   syncSvgSize();
 
   const visibleNodeIds = getVisibleNodeIds();
@@ -1370,15 +1370,16 @@ function syncSvgSize() {
     const toPort = getNodePortPosition(edge.to, "input");
     if (!fromPort || !toPort) continue;
 
-    const fromSceneX = fromPort.x * viewportState.scale + viewportState.x;
-    const fromSceneY = fromPort.y * viewportState.scale + viewportState.y;
-    const toSceneX = toPort.x * viewportState.scale + viewportState.x;
-    const toSceneY = toPort.y * viewportState.scale + viewportState.y;
+    const fromSceneX = fromPort.x;
+    const fromSceneY = fromPort.y;
+    const toSceneX = toPort.x;
+    const toSceneY = toPort.y;
 
     const fromNode = getNodeById(edge.from);
     const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
     const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
     const dimmed = selectedNodeId && !related;
+
     const path = createCurvePath(fromSceneX, fromSceneY, toSceneX, toSceneY);
 
     svgParts.push(
