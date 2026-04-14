@@ -2,125 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Backrooms Graph Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph Editor</title>
 
+  <!-- Styles -->
   <link rel="stylesheet" href="editor.css" />
+
+  <!-- Basic styling fallback (in case CSS fails to load) -->
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      background: #0f1115;
+      color: #e6e6e6;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #topbar {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      background: #1a1d24;
+      border-bottom: 1px solid #2a2f3a;
+      flex-wrap: wrap;
+    }
+
+    #topbar button {
+      background: #2b3140;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    #topbar button:hover {
+      background: #3a4255;
+    }
+
+    #graphViewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0c0e13;
+    }
+
+    #graphCanvas {
+      position: absolute;
+      transform-origin: 0 0;
+    }
+
+    .node {
+      position: absolute;
+      padding: 6px 10px;
+      background: #2b3140;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
+
 <body>
+  <div id="app">
 
-<div id="app">
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <button onclick="addNode()">+ Node</button>
+      <button onclick="autoLayout()">Auto Layout</button>
+      <button onclick="fitToGraph()">Fit</button>
+      <button onclick="resetView()">Reset</button>
 
-  <!-- HERO -->
-  <div class="hero">
-    <div class="heroTop">
-      <div class="heroTitle">
-        <div class="eyebrow">Backrooms Editor</div>
-        <h1>Graph Editor</h1>
-        <p>Edit nodes, connections, and layout visually.</p>
-      </div>
+      <button onclick="undoAction()">Undo</button>
+      <button onclick="redoAction()">Redo</button>
 
-      <div class="heroMeta">
-        <div id="saveStateBadge" class="saveBadge save-clean">Ready</div>
-        <div id="lastRemoteSaveBadge" class="infoBadge">GitHub: not saved yet</div>
-        <div id="lastSnapshotBadge" class="infoBadge">No snapshot yet</div>
-      </div>
+      <button onclick="saveGraph()">💾 Save</button>
+      <button onclick="discardLocalDraft()">Discard Draft</button>
+
+      <button onclick="previewLatestSnapshot()">Preview Snapshot</button>
+
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Search nodes..."
+        style="margin-left:auto; padding:6px; border-radius:6px; border:none;"
+      />
     </div>
 
-    <div class="heroControls">
-      <input id="searchInput" placeholder="Search nodes..." />
+    <!-- GRAPH VIEWPORT -->
+    <div id="graphViewport">
+      <div id="graphCanvas">
 
-      <div class="toolbar">
-        <button onclick="addNode()">+ Node</button>
-        <button onclick="autoLayout()">Auto Layout</button>
-        <button onclick="fitToGraph()">Fit</button>
-        <button onclick="resetView()">Reset</button>
-        <button onclick="saveGraph()" class="primaryBtn">Save</button>
+        <!-- SVG edges layer -->
+        <svg id="edgesLayer"></svg>
+
+        <!-- Nodes container -->
+        <div id="nodesLayer"></div>
+
       </div>
-    </div>
-
-    <div id="statusLine">Ready.</div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="workspaceRow">
-
-    <!-- LEFT -->
-    <div class="leftColumn">
-
-      <div class="panel canvasPanel">
-        <div class="graphViewport" id="graphViewport">
-          <div class="graphScene" id="graphScene">
-
-            <svg class="graphSvg" id="graphSvg"></svg>
-            <div class="graphNodes" id="graphNodes"></div>
-
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- RIGHT -->
-    <div class="rightColumn" id="desktopInspector">
-
-      <div class="sidebarCard">
-        <h3 class="sidebarTitle">Node Editor</h3>
-        <div id="selectedHint" class="sidebarSub">Select a node</div>
-
-        <input id="nodeLabel" placeholder="Label"/>
-        <input id="nodeSubtitle" placeholder="Subtitle"/>
-
-        <select id="nodeType">
-          <option value="stable">Stable</option>
-          <option value="dangerous">Dangerous</option>
-          <option value="corrupted">Corrupted</option>
-          <option value="anomalous">Anomalous</option>
-        </select>
-
-        <select id="nodeStatus">
-          <option value="draft">Draft</option>
-          <option value="complete">Complete</option>
-        </select>
-
-        <input id="nodeX" placeholder="X"/>
-        <input id="nodeY" placeholder="Y"/>
-
-        <textarea id="nodeDescription" placeholder="Description"></textarea>
-
-        <div class="actionRow">
-          <button onclick="applySelectedNodeChanges()">Apply</button>
-          <button onclick="deleteSelectedNode()" class="dangerBtn">Delete</button>
-        </div>
-      </div>
-
     </div>
 
   </div>
-</div>
 
-<!-- LOADING -->
-<div id="loadingOverlay">
-  <div id="loadingCard">
-    <div class="spinner"></div>
-    <div id="loadingText">Loading graph...</div>
+  <!-- ERROR PANEL -->
+  <div id="errorPanel" style="display:none; position:fixed; bottom:10px; left:10px; background:#aa3333; padding:10px; border-radius:6px;">
+    <span id="errorText"></span>
   </div>
-</div>
 
-<!-- ERROR -->
-<div id="errorPanel">
-  <div id="errorPanelTitle">Error</div>
-  <div id="errorPanelText"></div>
-</div>
+  <!-- STATUS BAR -->
+  <div id="statusBar" style="position:fixed; bottom:10px; right:10px; background:#1a1d24; padding:8px 12px; border-radius:6px;">
+    Ready
+  </div>
 
-<!-- SCRIPTS (ORDER MATTERS) -->
-<script src="editor-config.js"></script>
-<script src="editor-state.js"></script>
-<script src="editor-utils.js"></script>
-<script src="editor-render.js"></script>
-<script src="editor-actions.js"></script>
-<script src="editor-save.js"></script>
-<script src="editor-init.js"></script>
+  <!-- LOADING -->
+  <div id="loadingScreen" style="position:fixed; inset:0; background:#0f1115; display:flex; align-items:center; justify-content:center;">
+    Loading editor...
+  </div>
+
+  <!-- SCRIPTS (ORDER MATTERS) -->
+  <script src="editor-config.js"></script>
+  <script src="editor-state.js"></script>
+  <script src="editor-ui.js"></script>
+  <script src="editor-graph.js"></script>
+  <script src="editor-actions.js"></script>
+  <script src="editor-init.js"></script>
 
 </body>
 </html>
