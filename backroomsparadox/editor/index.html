@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Graph Editor</title>
 
-  <!-- Styles -->
   <link rel="stylesheet" href="editor.css" />
 
-  <!-- Basic styling fallback (in case CSS fails to load) -->
   <style>
     body {
       margin: 0;
@@ -52,45 +50,38 @@
       background: #0c0e13;
     }
 
-    #graphCanvas {
+    #graphScene {
       position: absolute;
+      inset: 0;
       transform-origin: 0 0;
     }
 
-    .node {
-      position: absolute;
-      padding: 6px 10px;
-      background: #2b3140;
-      border-radius: 6px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    svg {
+    #graphSvg {
       position: absolute;
       top: 0;
       left: 0;
+      overflow: visible;
       pointer-events: none;
+    }
+
+    #graphNodes {
+      position: absolute;
+      inset: 0;
     }
   </style>
 </head>
-
 <body>
   <div id="app">
 
-    <!-- TOP BAR -->
     <div id="topbar">
       <button onclick="addNode()">+ Node</button>
       <button onclick="autoLayout()">Auto Layout</button>
       <button onclick="fitToGraph()">Fit</button>
       <button onclick="resetView()">Reset</button>
-
       <button onclick="undoAction()">Undo</button>
       <button onclick="redoAction()">Redo</button>
-
       <button onclick="saveGraph()">💾 Save</button>
       <button onclick="discardLocalDraft()">Discard Draft</button>
-
       <button onclick="previewLatestSnapshot()">Preview Snapshot</button>
 
       <input
@@ -101,43 +92,31 @@
       />
     </div>
 
-    <!-- GRAPH VIEWPORT -->
     <div id="graphViewport">
-      <div id="graphCanvas">
-
-        <!-- SVG edges layer -->
-        <svg id="edgesLayer"></svg>
-
-        <!-- Nodes container -->
-        <div id="nodesLayer"></div>
-
+      <div id="graphScene">
+        <svg id="graphSvg"></svg>
+        <div id="graphNodes"></div>
       </div>
     </div>
-
   </div>
 
-  <!-- ERROR PANEL -->
-  <div id="errorPanel" style="display:none; position:fixed; bottom:10px; left:10px; background:#aa3333; padding:10px; border-radius:6px;">
-    <span id="errorText"></span>
+  <div id="errorPanel" style="display:none; position:fixed; bottom:10px; left:10px; background:#aa3333; padding:10px; border-radius:6px; z-index:10000;">
+    <div id="errorPanelText"></div>
   </div>
 
-  <!-- STATUS BAR -->
-  <div id="statusBar" style="position:fixed; bottom:10px; right:10px; background:#1a1d24; padding:8px 12px; border-radius:6px;">
+  <div id="statusLine" style="position:fixed; bottom:10px; right:10px; background:#1a1d24; padding:8px 12px; border-radius:6px; z-index:10000;">
     Ready
   </div>
 
-  <!-- LOADING -->
-  <div id="loadingScreen" style="position:fixed; inset:0; background:#0f1115; display:flex; align-items:center; justify-content:center;">
-    Loading editor...
+  <div id="loadingOverlay" style="position:fixed; inset:0; background:#0f1115; display:flex; align-items:center; justify-content:center; z-index:9999;">
+    <div id="loadingText">Loading editor...</div>
   </div>
 
-  <!-- SCRIPTS (ORDER MATTERS) -->
   <script src="editor-config.js"></script>
   <script src="editor-state.js"></script>
   <script src="editor-ui.js"></script>
   <script src="editor-graph.js"></script>
   <script src="editor-actions.js"></script>
   <script src="editor-init.js"></script>
-
 </body>
 </html>
