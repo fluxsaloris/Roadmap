@@ -1,76 +1,123 @@
 (function () {
-  function requireEl(id) {
-    const el = document.getElementById(id);
-    if (!el) {
-      throw new Error(`Missing required element: #${id}`);
-    }
-    return el;
-  }
-
   function graphViewport() {
-    return requireEl("graphViewport");
+    return document.getElementById("graphViewport");
   }
 
-  function graphScene() {
-    return requireEl("graphScene");
+  function graphCanvas() {
+    return document.getElementById("graphCanvas");
   }
 
-  function graphSvg() {
-    return requireEl("graphSvg");
+  function edgesLayer() {
+    return document.getElementById("edgesLayer");
   }
 
-  function graphNodesEl() {
-    return requireEl("graphNodes");
+  function nodesLayer() {
+    return document.getElementById("nodesLayer");
+  }
+
+  if (!window.viewportState) {
+    window.viewportState = {
+      x: 80,
+      y: 80,
+      scale: window.innerWidth <= 700 ? 0.55 : 1
+    };
+  }
+
+  if (!window.interaction) {
+    window.interaction = {
+      isPanning: false,
+      panMouseX: 0,
+      panMouseY: 0,
+      panStartX: 0,
+      panStartY: 0,
+      movedDuringPointer: false,
+
+      dragNodeId: null,
+      dragStartMouseX: 0,
+      dragStartMouseY: 0,
+      dragStartNodeX: 0,
+      dragStartNodeY: 0,
+
+      connectFromNodeId: null,
+      connectMouseSceneX: 0,
+      connectMouseSceneY: 0
+    };
+  }
+
+  if (!window.graphData) {
+    window.graphData = { nodes: [], edges: [] };
+  }
+
+  if (typeof window.selectedNodeId === "undefined") {
+    window.selectedNodeId = null;
+  }
+
+  if (typeof window.selectedEdgeKey === "undefined") {
+    window.selectedEdgeKey = null;
+  }
+
+  if (typeof window.currentSearch === "undefined") {
+    window.currentSearch = "";
+  }
+
+  function normalizeType(type) {
+    const value = String(type || "").trim().toLowerCase();
+    if (value === "stable" || value === "start") return "stable";
+    if (value === "dangerous" || value === "progression") return "dangerous";
+    if (value === "corrupted" || value === "danger") return "corrupted";
+    if (value === "anomalous" || value === "weird") return "anomalous";
+    return "stable";
+  }
+
+  function getTypeLabel(type) {
+    const meta = window.TYPE_META || {};
+    return (meta[normalizeType(type)] && meta[normalizeType(type)].label) || "Stable";
+  }
+
+  function getTypeEdgeClass(type) {
+    const meta = window.TYPE_META || {};
+    return (meta[normalizeType(type)] && meta[normalizeType(type)].edgeClass) || "edge-stable";
+  }
+
+  function getNodeById(id) {
+    return (window.graphData.nodes || []).find(n => n.id === String(id)) || null;
+  }
+
+  function getSelectedNode() {
+    return window.selectedNodeId ? getNodeById(window.selectedNodeId) : null;
+  }
+
+  function getEdgeByKey(key) {
+    return (window.graphData.edges || []).find(edge => window.edgeKeyOf(edge) === key) || null;
+  }
+
+  function getVisibleNodeIds() {
+    const search = String(window.currentSearch || "").trim().toLowerCase();
+    if (!search) {
+      return new Set((window.graphData.nodes || []).map(n => n.id));
+    }
+
+    return new Set(
+      (window.graphData.nodes || [])
+        .filter(node => {
+          const hay = [
+            node.id,
+            node.label,
+            node.subtitle,
+            node.description,
+            node.notes,
+            getTypeLabel(node.type),
+            ...(Array.isArray(node.tags) ? node.tags : [])
+          ].join(" ").toLowerCase();
+
+          return hay.includes(search);
+        })
+        .map(n => n.id)
+    );
   }
 
   function graphViewportRect() {
     return graphViewport().getBoundingClientRect();
-  }
-
-  function getNodeWidth() {
-    return typeof isMobileLayout === "function" && isMobileLayout() ? 118 : 170;
-  }
-
-  function getNodeHeightApprox() {
-    return typeof isMobileLayout === "function" && isMobileLayout() ? 58 : 74;
-  }
-
-  function getGraphBounds(nodes) {
-    if (!Array.isArray(nodes) || !nodes.length) {
-      return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
-    }
-
-    const allX = [];
-    const allY = [];
-
-    for (const node of nodes) {
-      if (!node) continue;
-      if (typeof node.x === "number") allX.push(node.x);
-      if (typeof node.y === "number") allY.push(node.y);
-    }
-
-    if (Array.isArray(window.graphData?.edges)) {
-      for (const edge of window.graphData.edges) {
-        const waypoints = typeof normalizeWaypoints === "function"
-          ? normalizeWaypoints(edge?.waypoints)
-          : [];
-        for (const point of waypoints) {
-          if (typeof point.x === "number") allX.push(point.x);
-          if (typeof point.y === "number") allY.push(point.y);
-        }
-      }
-    }
-
-    if (!allX.length || !allY.length) {
-      return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
-    }
-
-    return {
-      minX: Math.min(...allX),
-      maxX: Math.max(...allX),
-      minY: Math.min(...allY),
-      maxY: Math.max(...allY)
-    };
   }
 
   function scenePointFromClient(clientX, clientY) {
@@ -82,14 +129,48 @@
   }
 
   function applyViewportTransform() {
-    graphScene().style.transform =
-      `translate(${window.viewportState.x}px, ${window.viewportState.y}px) scale(${window.viewportState.scale})`;
+    const canvas = graphCanvas();
+    if (!canvas) return;
+    canvas.style.transform = `translate(${window.viewportState.x}px, ${window.viewportState.y}px) scale(${window.viewportState.scale})`;
+  }
+
+  function getGraphBounds(nodes) {
+    if (!nodes.length) {
+      return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
+    }
+
+    const allX = [];
+    const allY = [];
+
+    for (const node of nodes) {
+      allX.push(node.x);
+      allY.push(node.y);
+    }
+
+    for (const edge of window.graphData.edges || []) {
+      const waypoints = typeof window.normalizeWaypoints === "function"
+        ? window.normalizeWaypoints(edge.waypoints)
+        : [];
+      for (const point of waypoints) {
+        allX.push(point.x);
+        allY.push(point.y);
+      }
+    }
+
+    return {
+      minX: Math.min(...allX),
+      maxX: Math.max(...allX),
+      minY: Math.min(...allY),
+      maxY: Math.max(...allY)
+    };
   }
 
   function syncSvgSize() {
-    const svg = graphSvg();
-    const bounds = getGraphBounds(window.graphData?.nodes || []);
-    const padding = typeof isMobileLayout === "function" && isMobileLayout() ? 240 : 360;
+    const svg = edgesLayer();
+    if (!svg) return;
+
+    const bounds = getGraphBounds(window.graphData.nodes || []);
+    const padding = window.innerWidth <= 700 ? 240 : 360;
 
     const minX = bounds.minX - padding;
     const minY = bounds.minY - padding;
@@ -101,16 +182,23 @@
     svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
   }
 
-  function fitToGraph() {
-    const visibleNodeIds = typeof getVisibleNodeIds === "function"
-      ? getVisibleNodeIds()
-      : new Set((window.graphData?.nodes || []).map(n => n.id));
+  function resetView() {
+    window.viewportState = {
+      x: window.innerWidth <= 700 ? 20 : 80,
+      y: window.innerWidth <= 700 ? 20 : 80,
+      scale: window.innerWidth <= 700 ? 0.55 : 1
+    };
+    applyViewportTransform();
+    if (window.setStatus) window.setStatus("View reset.");
+  }
 
-    const visibleNodes = (window.graphData?.nodes || []).filter(node => visibleNodeIds.has(node.id));
-    const nodesToFit = visibleNodes.length ? visibleNodes : (window.graphData?.nodes || []);
+  function fitToGraph() {
+    const visibleNodeIds = getVisibleNodeIds();
+    const visibleNodes = (window.graphData.nodes || []).filter(node => visibleNodeIds.has(node.id));
+    const nodesToFit = visibleNodes.length ? visibleNodes : (window.graphData.nodes || []);
     const bounds = getGraphBounds(nodesToFit);
 
-    const mobile = typeof isMobileLayout === "function" && isMobileLayout();
+    const mobile = window.innerWidth <= 700;
     const width = Math.max(mobile ? 340 : 540, bounds.maxX - bounds.minX + (mobile ? 220 : 420));
     const height = Math.max(mobile ? 260 : 360, bounds.maxY - bounds.minY + (mobile ? 220 : 340));
 
@@ -125,24 +213,7 @@
     window.viewportState.y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * fitScale;
 
     applyViewportTransform();
-
-    if (typeof setStatus === "function" && !mobile) {
-      setStatus("Fitted graph to view.");
-    }
-  }
-
-  function resetView() {
-    window.viewportState = {
-      x: typeof isMobileLayout === "function" && isMobileLayout() ? 20 : 80,
-      y: typeof isMobileLayout === "function" && isMobileLayout() ? 20 : 80,
-      scale: typeof isMobileLayout === "function" && isMobileLayout() ? 0.55 : 1
-    };
-
-    applyViewportTransform();
-
-    if (typeof setStatus === "function" && !(typeof isMobileLayout === "function" && isMobileLayout())) {
-      setStatus("View reset.");
-    }
+    if (window.setStatus) window.setStatus("Fitted graph to view.");
   }
 
   function zoomBy(factor, clientX = null, clientY = null) {
@@ -152,24 +223,20 @@
 
     const before = scenePointFromClient(px, py);
 
-    const mobile = typeof isMobileLayout === "function" && isMobileLayout();
     window.viewportState.scale = Math.max(
       0.22,
-      Math.min(mobile ? 1.8 : 2.4, window.viewportState.scale * factor)
+      Math.min(window.innerWidth <= 700 ? 1.8 : 2.4, window.viewportState.scale * factor)
     );
 
     window.viewportState.x = px - rect.left - before.x * window.viewportState.scale;
     window.viewportState.y = py - rect.top - before.y * window.viewportState.scale;
-
     applyViewportTransform();
   }
 
   function getNodePortPosition(nodeId, side) {
-    const node = typeof getNodeById === "function" ? getNodeById(nodeId) : null;
+    const node = getNodeById(nodeId);
     if (!node) return null;
-
-    const width = getNodeWidth();
-
+    const width = window.innerWidth <= 700 ? 118 : 170;
     return {
       x: node.x + (side === "output" ? width / 2 : -width / 2),
       y: node.y
@@ -181,18 +248,11 @@
     const toPort = getNodePortPosition(edge.to, "input");
     if (!fromPort || !toPort) return null;
 
-    const points = [fromPort];
-
-    const waypoints = typeof normalizeWaypoints === "function"
-      ? normalizeWaypoints(edge.waypoints)
+    const waypoints = typeof window.normalizeWaypoints === "function"
+      ? window.normalizeWaypoints(edge.waypoints)
       : [];
 
-    for (const point of waypoints) {
-      points.push(point);
-    }
-
-    points.push(toPort);
-    return points;
+    return [fromPort, ...waypoints, toPort];
   }
 
   function createSegmentPath(points) {
@@ -211,10 +271,6 @@
     return path;
   }
 
-  function createEdgePath(points) {
-    return createSegmentPath(points);
-  }
-
   function getEdgeMidpoint(points) {
     if (!points || points.length < 2) return { x: 0, y: 0 };
 
@@ -230,7 +286,6 @@
     }
 
     let target = total / 2;
-
     for (let i = 0; i < lengths.length; i++) {
       if (target <= lengths[i]) {
         const ratio = lengths[i] === 0 ? 0 : target / lengths[i];
@@ -246,14 +301,116 @@
   }
 
   function getEdgeTypeClass(edge) {
-    const fromNode = typeof getNodeById === "function" ? getNodeById(edge.from) : null;
-    return typeof getTypeEdgeClass === "function"
-      ? getTypeEdgeClass(fromNode?.type || "stable")
-      : "edge-stable";
+    const fromNode = getNodeById(edge.from);
+    return getTypeEdgeClass(fromNode?.type || "stable");
+  }
+
+  function refreshGraph() {
+    syncSvgSize();
+
+    const visibleNodeIds = getVisibleNodeIds();
+    const nodeLayer = nodesLayer();
+    const svg = edgesLayer();
+    if (!nodeLayer || !svg) return;
+
+    nodeLayer.innerHTML = (window.graphData.nodes || [])
+      .filter(node => visibleNodeIds.has(node.id))
+      .map(node => {
+        const isSelected = node.id === window.selectedNodeId;
+        const typeClass = normalizeType(node.type);
+
+        return `
+          <div
+            class="node ${window.escapeHtml ? window.escapeHtml(typeClass) : typeClass} ${isSelected ? "selected" : ""}"
+            data-node-id="${window.escapeHtml ? window.escapeHtml(node.id) : node.id}"
+            style="left:${node.x}px; top:${node.y}px;"
+          >
+            <div class="nodeHeader">
+              <div class="nodeDot"></div>
+              <div class="nodeTitle">${window.escapeHtml ? window.escapeHtml(node.label) : node.label}</div>
+            </div>
+            ${node.subtitle ? `<div class="nodeSubtitle">${window.escapeHtml ? window.escapeHtml(node.subtitle) : node.subtitle}</div>` : ""}
+            <div class="nodeStatusRow">
+              <span class="nodeBadge">${window.escapeHtml ? window.escapeHtml(getTypeLabel(node.type)) : getTypeLabel(node.type)}</span>
+              <span class="nodeBadge">${window.escapeHtml ? window.escapeHtml(node.status || "draft") : (node.status || "draft")}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    const svgParts = [];
+    const visibleEdges = (window.graphData.edges || []).filter(edge =>
+      visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
+    );
+
+    for (const edge of visibleEdges) {
+      const points = buildEdgePoints(edge);
+      if (!points) continue;
+
+      const path = createSegmentPath(points);
+      if (!path) continue;
+
+      const edgeClass = getEdgeTypeClass(edge);
+      const isSelected = window.selectedEdgeKey === window.edgeKeyOf(edge);
+      const isRelatedToSelectedNode = window.selectedNodeId && (edge.from === window.selectedNodeId || edge.to === window.selectedNodeId);
+      const lineClass = isSelected || isRelatedToSelectedNode ? "line-selected" : "line-base";
+
+      svgParts.push(`
+        <path
+          d="${path}"
+          class="${lineClass} ${edgeClass}"
+          data-edge-key="${window.escapeHtml ? window.escapeHtml(window.edgeKeyOf(edge)) : window.edgeKeyOf(edge)}"
+        ></path>
+      `);
+
+      if (edge.label) {
+        const mid = getEdgeMidpoint(points);
+        svgParts.push(`
+          <text x="${mid.x}" y="${mid.y - (window.innerWidth <= 700 ? 8 : 10)}" text-anchor="middle" class="edgeLabel">
+            ${window.escapeHtml ? window.escapeHtml(edge.label) : edge.label}
+          </text>
+        `);
+      }
+
+      if (Array.isArray(edge.waypoints)) {
+        edge.waypoints.forEach((point, index) => {
+          svgParts.push(`
+            <circle
+              cx="${point.x}"
+              cy="${point.y}"
+              r="${window.innerWidth <= 700 ? 5 : 6}"
+              class="waypoint ${isSelected ? "selected" : ""}"
+              data-edge-key="${window.escapeHtml ? window.escapeHtml(window.edgeKeyOf(edge)) : window.edgeKeyOf(edge)}"
+              data-waypoint-index="${index}"
+            ></circle>
+          `);
+        });
+      }
+    }
+
+    if (window.interaction.connectFromNodeId) {
+      const fromPort = getNodePortPosition(window.interaction.connectFromNodeId, "output");
+      if (fromPort) {
+        const previewPath = createSegmentPath([
+          fromPort,
+          { x: window.interaction.connectMouseSceneX, y: window.interaction.connectMouseSceneY }
+        ]);
+        svgParts.push(`<path d="${previewPath}" class="line-preview"></path>`);
+      }
+    }
+
+    svg.innerHTML = svgParts.join("");
+
+    bindNodeEvents();
+    bindSvgEvents();
+
+    if (window.updateStatsBar) window.updateStatsBar();
+    if (window.updateSidebarForSelection) window.updateSidebarForSelection();
   }
 
   function bindNodeEvents() {
-    graphNodesEl().querySelectorAll(".node").forEach((nodeEl) => {
+    nodesLayer().querySelectorAll(".node").forEach(nodeEl => {
       const nodeId = nodeEl.dataset.nodeId;
 
       nodeEl.addEventListener("pointerdown", (event) => {
@@ -272,7 +429,7 @@
         window.interaction.dragStartMouseX = event.clientX;
         window.interaction.dragStartMouseY = event.clientY;
 
-        const node = typeof getNodeById === "function" ? getNodeById(nodeId) : null;
+        const node = getNodeById(nodeId);
         if (!node) return;
 
         window.interaction.dragStartNodeX = node.x;
@@ -282,17 +439,7 @@
         window.selectedNodeId = nodeId;
         window.selectedEdgeKey = null;
 
-        if (typeof refreshAllUI === "function") {
-          refreshAllUI();
-        } else {
-          refreshGraph();
-        }
-
-        if (typeof isMobileLayout === "function" && isMobileLayout()) {
-          if (typeof openMobileInspector === "function") openMobileInspector();
-        } else if (typeof isCompactEditorLayout === "function" && isCompactEditorLayout()) {
-          if (typeof openInspector === "function") openInspector();
-        }
+        if (window.refreshAllUI) window.refreshAllUI();
 
         nodeEl.classList.add("dragging");
         try {
@@ -308,44 +455,33 @@
         event.stopPropagation();
         window.selectedNodeId = nodeId;
         window.selectedEdgeKey = null;
-
-        if (typeof refreshAllUI === "function") {
-          refreshAllUI();
-        } else {
-          refreshGraph();
-        }
+        if (window.refreshAllUI) window.refreshAllUI();
       });
     });
   }
 
   function bindSvgEvents() {
-    graphSvg().querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
+    edgesLayer().querySelectorAll("path[data-edge-key]").forEach(pathEl => {
       pathEl.style.pointerEvents = "auto";
       pathEl.style.cursor = "pointer";
 
       pathEl.addEventListener("click", (event) => {
         event.stopPropagation();
-        const key = pathEl.getAttribute("data-edge-key");
-        window.selectedEdgeKey = key;
-
-        if (typeof refreshAllUI === "function") {
-          refreshAllUI();
-        } else {
-          refreshGraph();
-        }
+        window.selectedEdgeKey = pathEl.getAttribute("data-edge-key");
+        if (window.refreshAllUI) window.refreshAllUI();
       });
     });
 
-    graphSvg().querySelectorAll("circle[data-waypoint-index]").forEach((circle) => {
+    edgesLayer().querySelectorAll("circle[data-waypoint-index]").forEach(circle => {
       circle.addEventListener("pointerdown", (event) => {
         event.stopPropagation();
 
         const edgeKey = circle.getAttribute("data-edge-key");
         const index = Number(circle.getAttribute("data-waypoint-index"));
-
         if (!edgeKey || Number.isNaN(index)) return;
 
         window.selectedEdgeKey = edgeKey;
+        window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
         window.waypointDrag.edgeKey = edgeKey;
         window.waypointDrag.index = index;
         window.waypointDrag.active = true;
@@ -354,135 +490,9 @@
           circle.setPointerCapture(event.pointerId);
         } catch (_) {}
 
-        if (typeof refreshAllUI === "function") {
-          refreshAllUI();
-        } else {
-          refreshGraph();
-        }
+        if (window.refreshAllUI) window.refreshAllUI();
       });
     });
-  }
-
-  function refreshGraph() {
-    syncSvgSize();
-
-    const visibleNodeIds = typeof getVisibleNodeIds === "function"
-      ? getVisibleNodeIds()
-      : new Set((window.graphData?.nodes || []).map(n => n.id));
-
-    const nodesHtml = (window.graphData?.nodes || [])
-      .filter(node => visibleNodeIds.has(node.id))
-      .map(node => {
-        const isSelected = node.id === window.selectedNodeId;
-        const typeClass = typeof normalizeType === "function"
-          ? normalizeType(node.type)
-          : "stable";
-
-        return `
-          <div
-            class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""}"
-            data-node-id="${escapeHtml(node.id)}"
-            style="left:${node.x}px; top:${node.y}px;"
-          >
-            <div class="nodeHeader">
-              <div class="nodeDot"></div>
-              <div class="nodeTitle">${escapeHtml(node.label)}</div>
-            </div>
-            ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
-            <div class="nodeStatusRow">
-              <span class="nodeBadge">${escapeHtml(typeof getTypeLabel === "function" ? getTypeLabel(node.type) : node.type)}</span>
-              <span class="nodeBadge">${escapeHtml(node.status || "draft")}</span>
-            </div>
-            <div class="nodePorts">
-              <div class="port input"></div>
-              <div class="port output"></div>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-
-    graphNodesEl().innerHTML = nodesHtml;
-
-    const svgParts = [];
-    const visibleEdges = (window.graphData?.edges || []).filter(edge =>
-      visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)
-    );
-
-    for (const edge of visibleEdges) {
-      const points = buildEdgePoints(edge);
-      if (!points) continue;
-
-      const path = createEdgePath(points);
-      if (!path) continue;
-
-      const edgeClass = getEdgeTypeClass(edge);
-      const edgeKey = typeof edgeKeyOf === "function" ? edgeKeyOf(edge) : "";
-      const isSelected = window.selectedEdgeKey === edgeKey;
-      const isRelatedToSelectedNode =
-        !!window.selectedNodeId &&
-        (edge.from === window.selectedNodeId || edge.to === window.selectedNodeId);
-
-      const lineClass = isSelected || isRelatedToSelectedNode ? "line-selected" : "line-base";
-
-      svgParts.push(`
-        <path
-          d="${path}"
-          class="${lineClass} ${edgeClass}"
-          data-edge-key="${escapeHtml(edgeKey)}"
-        ></path>
-      `);
-
-      if (edge.label) {
-        const mid = getEdgeMidpoint(points);
-        svgParts.push(`
-          <text
-            x="${mid.x}"
-            y="${mid.y - ((typeof isMobileLayout === "function" && isMobileLayout()) ? 8 : 10)}"
-            text-anchor="middle"
-            class="edgeLabel"
-          >${escapeHtml(edge.label)}</text>
-        `);
-      }
-
-      if (Array.isArray(edge.waypoints)) {
-        edge.waypoints.forEach((point, index) => {
-          svgParts.push(`
-            <circle
-              cx="${point.x}"
-              cy="${point.y}"
-              r="${(typeof isMobileLayout === "function" && isMobileLayout()) ? 5 : 6}"
-              class="waypoint ${isSelected ? "selected" : ""}"
-              data-edge-key="${escapeHtml(edgeKey)}"
-              data-waypoint-index="${index}"
-            ></circle>
-          `);
-        });
-      }
-    }
-
-    if (window.interaction?.connectFromNodeId) {
-      const fromPort = getNodePortPosition(window.interaction.connectFromNodeId, "output");
-      if (fromPort) {
-        const previewPath = createEdgePath([
-          fromPort,
-          {
-            x: window.interaction.connectMouseSceneX,
-            y: window.interaction.connectMouseSceneY
-          }
-        ]);
-
-        svgParts.push(`<path d="${previewPath}" class="line-preview"></path>`);
-      }
-    }
-
-    graphSvg().innerHTML = svgParts.join("");
-
-    bindNodeEvents();
-    bindSvgEvents();
-
-    if (typeof updateStatsBar === "function") updateStatsBar();
-    if (typeof updateSidebarForSelection === "function") updateSidebarForSelection();
   }
 
   function startPan(clientX, clientY) {
@@ -497,11 +507,9 @@
 
   function movePan(clientX, clientY) {
     if (!window.interaction.isPanning) return;
-
     window.viewportState.x = window.interaction.panStartX + (clientX - window.interaction.panMouseX);
     window.viewportState.y = window.interaction.panStartY + (clientY - window.interaction.panMouseY);
     window.interaction.movedDuringPointer = true;
-
     applyViewportTransform();
   }
 
@@ -514,7 +522,7 @@
     const viewport = graphViewport();
 
     viewport.addEventListener("wheel", (event) => {
-      if (typeof isMobileLayout === "function" && isMobileLayout()) return;
+      if (window.innerWidth <= 700) return;
       event.preventDefault();
       const factor = event.deltaY < 0 ? 1.08 : (1 / 1.08);
       zoomBy(factor, event.clientX, event.clientY);
@@ -523,53 +531,35 @@
     viewport.addEventListener("pointerdown", (event) => {
       if (event.target.closest(".node")) return;
       if (event.target.closest(".waypoint")) return;
-
       startPan(event.clientX, event.clientY);
-
-      try {
-        viewport.setPointerCapture(event.pointerId);
-      } catch (_) {}
+      try { viewport.setPointerCapture(event.pointerId); } catch (_) {}
     });
 
     viewport.addEventListener("pointermove", (event) => {
-      if (window.waypointDrag?.active) {
-        const edge = typeof getEdgeByKey === "function"
-          ? getEdgeByKey(window.waypointDrag.edgeKey)
-          : null;
+      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
 
+      if (window.waypointDrag.active) {
+        const edge = getEdgeByKey(window.waypointDrag.edgeKey);
         if (edge && edge.waypoints && edge.waypoints[window.waypointDrag.index]) {
           const pt = scenePointFromClient(event.clientX, event.clientY);
           edge.waypoints[window.waypointDrag.index].x = Math.round(pt.x);
           edge.waypoints[window.waypointDrag.index].y = Math.round(pt.y);
-
-          if (typeof refreshAllUI === "function") {
-            refreshAllUI();
-          } else {
-            refreshGraph();
-          }
+          if (window.refreshAllUI) window.refreshAllUI();
         }
         return;
       }
 
       if (window.interaction.dragNodeId) {
-        const node = typeof getNodeById === "function"
-          ? getNodeById(window.interaction.dragNodeId)
-          : null;
-
+        const node = getNodeById(window.interaction.dragNodeId);
         if (!node) return;
 
         const dx = (event.clientX - window.interaction.dragStartMouseX) / window.viewportState.scale;
         const dy = (event.clientY - window.interaction.dragStartMouseY) / window.viewportState.scale;
-
         node.x = Math.round(window.interaction.dragStartNodeX + dx);
         node.y = Math.round(window.interaction.dragStartNodeY + dy);
-        window.interaction.movedDuringPointer = true;
 
-        if (typeof refreshAllUI === "function") {
-          refreshAllUI();
-        } else {
-          refreshGraph();
-        }
+        window.interaction.movedDuringPointer = true;
+        if (window.refreshAllUI) window.refreshAllUI();
         return;
       }
 
@@ -590,17 +580,19 @@
       const targetNodeEl = event.target.closest(".node");
       const targetNodeId = targetNodeEl?.dataset?.nodeId || null;
 
-      if (window.waypointDrag?.active) {
+      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
+
+      if (window.waypointDrag.active) {
         window.waypointDrag.active = false;
-        if (typeof markDirty === "function") markDirty("Moved bend point.");
-        if (typeof scheduleAutosave === "function") scheduleAutosave();
+        if (window.markDirty) window.markDirty("Moved bend point.");
+        if (window.scheduleAutosave) window.scheduleAutosave();
         return;
       }
 
       if (window.interaction.dragNodeId) {
         if (window.interaction.movedDuringPointer) {
-          if (typeof markDirtyNoHistory === "function") markDirtyNoHistory("Moved node.");
-          if (typeof scheduleAutosave === "function") scheduleAutosave();
+          if (window.markDirtyNoHistory) window.markDirtyNoHistory("Moved node.");
+          if (window.scheduleAutosave) window.scheduleAutosave();
         }
         window.interaction.dragNodeId = null;
       }
@@ -614,17 +606,11 @@
         window.interaction.connectFromNodeId = null;
 
         if (targetNodeId && targetNodeId !== fromId) {
-          if (typeof pushUndoState === "function") pushUndoState("Connect nodes");
-          if (typeof addEdge === "function") addEdge(fromId, targetNodeId, "", true);
+          if (window.pushUndoState) window.pushUndoState("Connect nodes");
+          if (window.addEdge) window.addEdge(fromId, targetNodeId, "", true);
           window.selectedNodeId = fromId;
-
-          if (typeof refreshAllUI === "function") {
-            refreshAllUI();
-          } else {
-            refreshGraph();
-          }
-
-          if (typeof markDirty === "function") markDirty("Added link by dragging.");
+          if (window.refreshAllUI) window.refreshAllUI();
+          if (window.markDirty) window.markDirty("Added link by dragging.");
         } else {
           refreshGraph();
         }
@@ -632,11 +618,10 @@
     });
 
     viewport.addEventListener("pointercancel", () => {
-      if (window.waypointDrag) window.waypointDrag.active = false;
-      if (window.interaction) {
-        window.interaction.dragNodeId = null;
-        window.interaction.connectFromNodeId = null;
-      }
+      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
+      window.waypointDrag.active = false;
+      window.interaction.dragNodeId = null;
+      window.interaction.connectFromNodeId = null;
       endPan();
       refreshGraph();
     });
@@ -650,33 +635,42 @@
         !event.target.closest("path[data-edge-key]") &&
         !event.target.closest(".waypoint")
       ) {
-        if (typeof closeMobilePanels === "function") closeMobilePanels();
-        if (typeof clearSelection === "function") clearSelection();
+        if (window.closeMobilePanels) window.closeMobilePanels();
+        if (window.clearSelection) window.clearSelection();
       }
     });
   }
 
   window.graphViewport = graphViewport;
-  window.graphScene = graphScene;
-  window.graphSvg = graphSvg;
-  window.graphNodesEl = graphNodesEl;
+  window.graphCanvas = graphCanvas;
+  window.edgesLayer = edgesLayer;
+  window.nodesLayer = nodesLayer;
+
+  window.normalizeType = normalizeType;
+  window.getTypeLabel = getTypeLabel;
+  window.getTypeEdgeClass = getTypeEdgeClass;
+  window.getNodeById = getNodeById;
+  window.getSelectedNode = getSelectedNode;
+  window.getEdgeByKey = getEdgeByKey;
+  window.getVisibleNodeIds = getVisibleNodeIds;
   window.graphViewportRect = graphViewportRect;
   window.scenePointFromClient = scenePointFromClient;
   window.applyViewportTransform = applyViewportTransform;
   window.getGraphBounds = getGraphBounds;
   window.syncSvgSize = syncSvgSize;
-  window.fitToGraph = fitToGraph;
   window.resetView = resetView;
+  window.fitToGraph = fitToGraph;
   window.zoomBy = zoomBy;
   window.getNodePortPosition = getNodePortPosition;
   window.buildEdgePoints = buildEdgePoints;
   window.createSegmentPath = createSegmentPath;
-  window.createEdgePath = createEdgePath;
   window.getEdgeMidpoint = getEdgeMidpoint;
   window.getEdgeTypeClass = getEdgeTypeClass;
   window.refreshGraph = refreshGraph;
-  window.setupViewportInteractions = setupViewportInteractions;
+  window.bindNodeEvents = bindNodeEvents;
+  window.bindSvgEvents = bindSvgEvents;
   window.startPan = startPan;
   window.movePan = movePan;
   window.endPan = endPan;
+  window.setupViewportInteractions = setupViewportInteractions;
 })();
