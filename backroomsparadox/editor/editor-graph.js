@@ -415,7 +415,20 @@
         <path
           d="${path}"
           class="${lineClass} ${edgeClass}"
+          pointer-events="none"
+        ></path>
+      `);
+
+      svgParts.push(`
+        <path
+          d="${path}"
           data-edge-key="${safeEdgeKey}"
+          class="edge-hit-area"
+          fill="none"
+          stroke="rgba(0,0,0,0)"
+          stroke-width="22"
+          stroke-linecap="round"
+          stroke-linejoin="round"
           style="pointer-events:auto;cursor:pointer;"
         ></path>
       `);
@@ -430,6 +443,7 @@
             y="${mid.y - (isMobile() ? 8 : 10)}"
             text-anchor="middle"
             class="edgeLabel"
+            pointer-events="none"
           >
             ${safeLabel}
           </text>
@@ -445,7 +459,7 @@
           <circle
             cx="${point.x}"
             cy="${point.y}"
-            r="${isMobile() ? 5 : 6}"
+            r="${isMobile() ? 7 : 8}"
             class="waypoint ${isSelected ? "selected" : ""}"
             data-edge-key="${safeEdgeKey}"
             data-waypoint-index="${index}"
@@ -467,7 +481,7 @@
         ]);
 
         if (previewPath) {
-          svgParts.push(`<path d="${previewPath}" class="line-preview"></path>`);
+          svgParts.push(`<path d="${previewPath}" class="line-preview" pointer-events="none"></path>`);
         }
       }
     }
