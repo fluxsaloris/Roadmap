@@ -14,12 +14,12 @@
     const panel = el("errorPanel");
     const text = el("errorText") || el("errorPanelText");
     if (text) text.textContent = message || "Unknown error";
-    if (panel) panel.style.display = "block";
+    if (panel) panel.classList.add("show");
   }
 
   function hideErrorPanel() {
     const panel = el("errorPanel");
-    if (panel) panel.style.display = "none";
+    if (panel) panel.classList.remove("show");
   }
 
   function showLoading(text = "Loading editor...") {
@@ -542,14 +542,14 @@
     }
   }
 
-function refreshAllUI() {
-  updateMetaBadges();
-  updateStatsBar();
-  if (typeof window.refreshGraph === "function") {
-    window.refreshGraph();
+  function refreshAllUI() {
+    updateMetaBadges();
+    updateStatsBar();
+    updateSidebarForSelection();
+    if (typeof window.refreshGraph === "function") {
+      window.refreshGraph();
+    }
   }
-  updateSidebarForSelection();
-}
 
   window.setStatus = setStatus;
   window.showErrorPanel = showErrorPanel;
