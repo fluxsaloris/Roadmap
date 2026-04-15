@@ -31,13 +31,11 @@
       panStartX: 0,
       panStartY: 0,
       movedDuringPointer: false,
-
       dragNodeId: null,
       dragStartMouseX: 0,
       dragStartMouseY: 0,
       dragStartNodeX: 0,
       dragStartNodeY: 0,
-
       connectFromNodeId: null,
       connectMouseSceneX: 0,
       connectMouseSceneY: 0
@@ -139,7 +137,7 @@
     svg.style.left = "0";
     svg.style.top = "0";
     svg.style.overflow = "visible";
-    svg.style.pointerEvents = "none";
+    svg.style.pointerEvents = "auto";
 
     nodes.style.position = "absolute";
     nodes.style.left = "0";
@@ -430,7 +428,7 @@
           class="edge-hit-area"
           fill="none"
           stroke="rgba(0,0,0,0)"
-          stroke-width="22"
+          stroke-width="30"
           stroke-linecap="round"
           stroke-linejoin="round"
           style="pointer-events:auto;cursor:pointer;"
