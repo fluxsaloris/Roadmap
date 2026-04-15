@@ -33,8 +33,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 821,
-      "y": -13
+      "x": 808,
+      "y": -15
     },
     {
       "id": "level-0-3",
@@ -57,8 +57,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1087,
-      "y": -14
+      "x": 1103,
+      "y": -26
     },
     {
       "id": "level-0-b",
@@ -70,7 +70,7 @@
       "notes": "[WIP]",
       "tags": [],
       "x": 1086,
-      "y": 298
+      "y": 307
     },
     {
       "id": "level-0-4",
@@ -81,8 +81,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 817,
-      "y": 464
+      "x": 809,
+      "y": 470
     },
     {
       "id": "level-1",
@@ -105,8 +105,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1662,
-      "y": -193
+      "x": 1665,
+      "y": -190
     },
     {
       "id": "level-1-2",
@@ -117,7 +117,7 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1667,
+      "x": 1665,
       "y": -20
     },
     {
@@ -167,121 +167,55 @@
       "tags": [],
       "x": 1972,
       "y": 288
-    },
-    {
-      "id": "level-4",
-      "label": "New Level",
-      "subtitle": "",
-      "type": "stable",
-      "status": "draft",
-      "description": "",
-      "notes": "",
-      "tags": [],
-      "x": 1070,
-      "y": 132
-    },
-    {
-      "id": "level-5",
-      "label": "New Level",
-      "subtitle": "",
-      "type": "stable",
-      "status": "draft",
-      "description": "",
-      "notes": "",
-      "tags": [],
-      "x": 1070,
-      "y": 132
     }
   ],
   "edges": [
     {
-      "from": "level-0-4",
-      "to": "level-0-a",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-3",
-      "to": "level-0-b",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-b",
-      "to": "level-1",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-1",
-      "to": "level-1-1",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-1",
-      "to": "level-3",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-2",
-      "to": "level-1-1",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-2",
-      "to": "level-1",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-1",
-      "to": "level-0-b",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
       "from": "level-0",
       "to": "level-1",
-      "label": "Broken Wall | Structure",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0",
-      "to": "level-0-1",
-      "label": "Trapdoor Puzzle",
+      "label": "",
       "oneWay": true,
       "waypoints": []
     },
     {
       "from": "level-0",
       "to": "level-0-2",
-      "label": "Corridor Of Doors",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0",
+      "to": "level-0-1",
+      "label": "",
       "oneWay": true,
       "waypoints": []
     },
     {
       "from": "level-0",
       "to": "level-0-3",
-      "label": "Exploration",
+      "label": "",
       "oneWay": true,
       "waypoints": []
     },
     {
       "from": "level-0",
       "to": "level-0-4",
-      "label": "No-Clip",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-3",
+      "to": "level-0-a",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-4",
+      "to": "level-1",
+      "label": "",
       "oneWay": true,
       "waypoints": []
     }
