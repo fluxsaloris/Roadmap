@@ -15,6 +15,46 @@
     return document.getElementById("nodesLayer");
   }
 
+  function ensureInteraction() {
+    if (!window.interaction) {
+      window.interaction = {};
+    }
+
+    if (typeof window.interaction.isPanning !== "boolean") window.interaction.isPanning = false;
+    if (typeof window.interaction.panMouseX !== "number") window.interaction.panMouseX = 0;
+    if (typeof window.interaction.panMouseY !== "number") window.interaction.panMouseY = 0;
+    if (typeof window.interaction.panStartX !== "number") window.interaction.panStartX = 0;
+    if (typeof window.interaction.panStartY !== "number") window.interaction.panStartY = 0;
+    if (typeof window.interaction.movedDuringPointer !== "boolean") window.interaction.movedDuringPointer = false;
+
+    if (typeof window.interaction.dragNodeId === "undefined") window.interaction.dragNodeId = null;
+    if (typeof window.interaction.dragStartMouseX !== "number") window.interaction.dragStartMouseX = 0;
+    if (typeof window.interaction.dragStartMouseY !== "number") window.interaction.dragStartMouseY = 0;
+    if (typeof window.interaction.dragStartNodeX !== "number") window.interaction.dragStartNodeX = 0;
+    if (typeof window.interaction.dragStartNodeY !== "number") window.interaction.dragStartNodeY = 0;
+
+    if (typeof window.interaction.connectFromNodeId === "undefined") window.interaction.connectFromNodeId = null;
+    if (typeof window.interaction.connectMouseSceneX !== "number") window.interaction.connectMouseSceneX = 0;
+    if (typeof window.interaction.connectMouseSceneY !== "number") window.interaction.connectMouseSceneY = 0;
+
+    return window.interaction;
+  }
+
+  function ensureWaypointDrag() {
+    if (!window.waypointDrag) {
+      window.waypointDrag = {
+        edgeKey: null,
+        index: -1,
+        active: false
+      };
+    } else {
+      if (typeof window.waypointDrag.edgeKey === "undefined") window.waypointDrag.edgeKey = null;
+      if (typeof window.waypointDrag.index !== "number") window.waypointDrag.index = -1;
+      if (typeof window.waypointDrag.active !== "boolean") window.waypointDrag.active = false;
+    }
+    return window.waypointDrag;
+  }
+
   if (!window.viewportState) {
     window.viewportState = {
       x: 80,
@@ -23,26 +63,8 @@
     };
   }
 
-  if (!window.interaction) {
-    window.interaction = {
-      isPanning: false,
-      panMouseX: 0,
-      panMouseY: 0,
-      panStartX: 0,
-      panStartY: 0,
-      movedDuringPointer: false,
-
-      dragNodeId: null,
-      dragStartMouseX: 0,
-      dragStartMouseY: 0,
-      dragStartNodeX: 0,
-      dragStartNodeY: 0,
-
-      connectFromNodeId: null,
-      connectMouseSceneX: 0,
-      connectMouseSceneY: 0
-    };
-  }
+  ensureInteraction();
+  ensureWaypointDrag();
 
   if (!window.graphData) {
     window.graphData = { nodes: [], edges: [] };
@@ -88,6 +110,7 @@
   }
 
   function getEdgeByKey(key) {
+    if (typeof window.edgeKeyOf !== "function") return null;
     return (window.graphData.edges || []).find(edge => window.edgeKeyOf(edge) === key) || null;
   }
 
@@ -117,7 +140,11 @@
   }
 
   function graphViewportRect() {
-    return graphViewport().getBoundingClientRect();
+    const el = graphViewport();
+    if (!el) {
+      return { left: 0, top: 0, width: 1, height: 1 };
+    }
+    return el.getBoundingClientRect();
   }
 
   function scenePointFromClient(clientX, clientY) {
@@ -151,6 +178,7 @@
       const waypoints = typeof window.normalizeWaypoints === "function"
         ? window.normalizeWaypoints(edge.waypoints)
         : [];
+
       for (const point of waypoints) {
         allX.push(point.x);
         allY.push(point.y);
@@ -352,7 +380,8 @@
       if (!path) continue;
 
       const edgeClass = getEdgeTypeClass(edge);
-      const isSelected = window.selectedEdgeKey === window.edgeKeyOf(edge);
+      const edgeKey = typeof window.edgeKeyOf === "function" ? window.edgeKeyOf(edge) : "";
+      const isSelected = window.selectedEdgeKey === edgeKey;
       const isRelatedToSelectedNode = window.selectedNodeId && (edge.from === window.selectedNodeId || edge.to === window.selectedNodeId);
       const lineClass = isSelected || isRelatedToSelectedNode ? "line-selected" : "line-base";
 
@@ -360,7 +389,7 @@
         <path
           d="${path}"
           class="${lineClass} ${edgeClass}"
-          data-edge-key="${window.escapeHtml ? window.escapeHtml(window.edgeKeyOf(edge)) : window.edgeKeyOf(edge)}"
+          data-edge-key="${window.escapeHtml ? window.escapeHtml(edgeKey) : edgeKey}"
         ></path>
       `);
 
@@ -381,7 +410,7 @@
               cy="${point.y}"
               r="${window.innerWidth <= 700 ? 5 : 6}"
               class="waypoint ${isSelected ? "selected" : ""}"
-              data-edge-key="${window.escapeHtml ? window.escapeHtml(window.edgeKeyOf(edge)) : window.edgeKeyOf(edge)}"
+              data-edge-key="${window.escapeHtml ? window.escapeHtml(edgeKey) : edgeKey}"
               data-waypoint-index="${index}"
             ></circle>
           `);
@@ -389,7 +418,7 @@
       }
     }
 
-    if (window.interaction.connectFromNodeId) {
+    if (ensureInteraction().connectFromNodeId) {
       const fromPort = getNodePortPosition(window.interaction.connectFromNodeId, "output");
       if (fromPort) {
         const previewPath = createSegmentPath([
@@ -410,11 +439,15 @@
   }
 
   function bindNodeEvents() {
-    nodesLayer().querySelectorAll(".node").forEach(nodeEl => {
+    const layer = nodesLayer();
+    if (!layer) return;
+
+    layer.querySelectorAll(".node").forEach(nodeEl => {
       const nodeId = nodeEl.dataset.nodeId;
 
       nodeEl.addEventListener("pointerdown", (event) => {
         event.stopPropagation();
+        ensureInteraction();
 
         if (event.shiftKey) {
           window.interaction.connectFromNodeId = nodeId;
@@ -425,13 +458,12 @@
           return;
         }
 
-        window.interaction.dragNodeId = nodeId;
-        window.interaction.dragStartMouseX = event.clientX;
-        window.interaction.dragStartMouseY = event.clientY;
-
         const node = getNodeById(nodeId);
         if (!node) return;
 
+        window.interaction.dragNodeId = nodeId;
+        window.interaction.dragStartMouseX = event.clientX;
+        window.interaction.dragStartMouseY = event.clientY;
         window.interaction.dragStartNodeX = node.x;
         window.interaction.dragStartNodeY = node.y;
         window.interaction.movedDuringPointer = false;
@@ -439,9 +471,11 @@
         window.selectedNodeId = nodeId;
         window.selectedEdgeKey = null;
 
-        if (window.refreshAllUI) window.refreshAllUI();
+        if (window.updateSidebarForSelection) window.updateSidebarForSelection();
+        if (window.updateStatsBar) window.updateStatsBar();
 
         nodeEl.classList.add("dragging");
+
         try {
           nodeEl.setPointerCapture(event.pointerId);
         } catch (_) {}
@@ -455,33 +489,44 @@
         event.stopPropagation();
         window.selectedNodeId = nodeId;
         window.selectedEdgeKey = null;
-        if (window.refreshAllUI) window.refreshAllUI();
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
       });
     });
   }
 
   function bindSvgEvents() {
-    edgesLayer().querySelectorAll("path[data-edge-key]").forEach(pathEl => {
+    const svg = edgesLayer();
+    if (!svg) return;
+
+    svg.querySelectorAll("path[data-edge-key]").forEach(pathEl => {
       pathEl.style.pointerEvents = "auto";
       pathEl.style.cursor = "pointer";
 
       pathEl.addEventListener("click", (event) => {
         event.stopPropagation();
         window.selectedEdgeKey = pathEl.getAttribute("data-edge-key");
-        if (window.refreshAllUI) window.refreshAllUI();
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
       });
     });
 
-    edgesLayer().querySelectorAll("circle[data-waypoint-index]").forEach(circle => {
+    svg.querySelectorAll("circle[data-waypoint-index]").forEach(circle => {
       circle.addEventListener("pointerdown", (event) => {
         event.stopPropagation();
+        ensureWaypointDrag();
 
         const edgeKey = circle.getAttribute("data-edge-key");
         const index = Number(circle.getAttribute("data-waypoint-index"));
         if (!edgeKey || Number.isNaN(index)) return;
 
         window.selectedEdgeKey = edgeKey;
-        window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
         window.waypointDrag.edgeKey = edgeKey;
         window.waypointDrag.index = index;
         window.waypointDrag.active = true;
@@ -490,22 +535,29 @@
           circle.setPointerCapture(event.pointerId);
         } catch (_) {}
 
-        if (window.refreshAllUI) window.refreshAllUI();
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
       });
     });
   }
 
   function startPan(clientX, clientY) {
+    ensureInteraction();
     window.interaction.isPanning = true;
     window.interaction.panMouseX = clientX;
     window.interaction.panMouseY = clientY;
     window.interaction.panStartX = window.viewportState.x;
     window.interaction.panStartY = window.viewportState.y;
     window.interaction.movedDuringPointer = false;
-    graphViewport().classList.add("panning");
+    const el = graphViewport();
+    if (el) el.classList.add("panning");
   }
 
   function movePan(clientX, clientY) {
+    ensureInteraction();
     if (!window.interaction.isPanning) return;
     window.viewportState.x = window.interaction.panStartX + (clientX - window.interaction.panMouseX);
     window.viewportState.y = window.interaction.panStartY + (clientY - window.interaction.panMouseY);
@@ -514,12 +566,15 @@
   }
 
   function endPan() {
+    ensureInteraction();
     window.interaction.isPanning = false;
-    graphViewport().classList.remove("panning");
+    const el = graphViewport();
+    if (el) el.classList.remove("panning");
   }
 
   function setupViewportInteractions() {
     const viewport = graphViewport();
+    if (!viewport) return;
 
     viewport.addEventListener("wheel", (event) => {
       if (window.innerWidth <= 700) return;
@@ -532,11 +587,14 @@
       if (event.target.closest(".node")) return;
       if (event.target.closest(".waypoint")) return;
       startPan(event.clientX, event.clientY);
-      try { viewport.setPointerCapture(event.pointerId); } catch (_) {}
+      try {
+        viewport.setPointerCapture(event.pointerId);
+      } catch (_) {}
     });
 
     viewport.addEventListener("pointermove", (event) => {
-      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
+      ensureInteraction();
+      ensureWaypointDrag();
 
       if (window.waypointDrag.active) {
         const edge = getEdgeByKey(window.waypointDrag.edgeKey);
@@ -544,7 +602,7 @@
           const pt = scenePointFromClient(event.clientX, event.clientY);
           edge.waypoints[window.waypointDrag.index].x = Math.round(pt.x);
           edge.waypoints[window.waypointDrag.index].y = Math.round(pt.y);
-          if (window.refreshAllUI) window.refreshAllUI();
+          if (window.refreshGraph) window.refreshGraph();
         }
         return;
       }
@@ -559,7 +617,7 @@
         node.y = Math.round(window.interaction.dragStartNodeY + dy);
 
         window.interaction.movedDuringPointer = true;
-        if (window.refreshAllUI) window.refreshAllUI();
+        if (window.refreshGraph) window.refreshGraph();
         return;
       }
 
@@ -577,10 +635,11 @@
     });
 
     viewport.addEventListener("pointerup", (event) => {
+      ensureInteraction();
+      ensureWaypointDrag();
+
       const targetNodeEl = event.target.closest(".node");
       const targetNodeId = targetNodeEl?.dataset?.nodeId || null;
-
-      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
 
       if (window.waypointDrag.active) {
         window.waypointDrag.active = false;
@@ -609,7 +668,11 @@
           if (window.pushUndoState) window.pushUndoState("Connect nodes");
           if (window.addEdge) window.addEdge(fromId, targetNodeId, "", true);
           window.selectedNodeId = fromId;
-          if (window.refreshAllUI) window.refreshAllUI();
+          if (window.refreshAllUI) {
+            window.refreshAllUI();
+          } else {
+            refreshGraph();
+          }
           if (window.markDirty) window.markDirty("Added link by dragging.");
         } else {
           refreshGraph();
@@ -618,7 +681,8 @@
     });
 
     viewport.addEventListener("pointercancel", () => {
-      window.waypointDrag = window.waypointDrag || { edgeKey: null, index: -1, active: false };
+      ensureInteraction();
+      ensureWaypointDrag();
       window.waypointDrag.active = false;
       window.interaction.dragNodeId = null;
       window.interaction.connectFromNodeId = null;
