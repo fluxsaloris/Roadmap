@@ -4,15 +4,15 @@
   }
 
   function graphCanvas() {
-    return document.getElementById("graphCanvas");
+    return document.getElementById("graphScene");
   }
 
   function edgesLayer() {
-    return document.getElementById("edgesLayer");
+    return document.getElementById("graphSvg");
   }
 
   function nodesLayer() {
-    return document.getElementById("nodesLayer");
+    return document.getElementById("graphNodes");
   }
 
   if (!window.viewportState) {
@@ -31,13 +31,11 @@
       panStartX: 0,
       panStartY: 0,
       movedDuringPointer: false,
-
       dragNodeId: null,
       dragStartMouseX: 0,
       dragStartMouseY: 0,
       dragStartNodeX: 0,
       dragStartNodeY: 0,
-
       connectFromNodeId: null,
       connectMouseSceneX: 0,
       connectMouseSceneY: 0
@@ -58,9 +56,7 @@
 
   function graphViewportRect() {
     const viewport = graphViewport();
-    if (!viewport) {
-      return { left: 0, top: 0, width: 0, height: 0 };
-    }
+    if (!viewport) return { left: 0, top: 0, width: 0, height: 0 };
     return viewport.getBoundingClientRect();
   }
 
@@ -384,6 +380,7 @@
           d="${path}"
           class="${lineClass} ${edgeClass}"
           data-edge-key="${safeEdgeKey}"
+          style="pointer-events:auto;cursor:pointer;"
         ></path>
       `);
 
@@ -416,6 +413,7 @@
             class="waypoint ${isSelected ? "selected" : ""}"
             data-edge-key="${safeEdgeKey}"
             data-waypoint-index="${index}"
+            style="pointer-events:auto;cursor:move;"
           ></circle>
         `);
       });
@@ -515,9 +513,6 @@
     if (!svg) return;
 
     svg.querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
-      pathEl.style.pointerEvents = "auto";
-      pathEl.style.cursor = "pointer";
-
       pathEl.onclick = (event) => {
         event.stopPropagation();
         window.selectedEdgeKey = pathEl.getAttribute("data-edge-key");
