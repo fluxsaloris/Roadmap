@@ -3,16 +3,16 @@
     return document.getElementById("graphViewport");
   }
 
-  function graphCanvas() {
-    return document.getElementById("graphCanvas");
+  function graphScene() {
+    return document.getElementById("graphScene");
   }
 
-  function edgesLayer() {
-    return document.getElementById("edgesLayer");
+  function graphSvg() {
+    return document.getElementById("graphSvg");
   }
 
-  function nodesLayer() {
-    return document.getElementById("nodesLayer");
+  function graphNodes() {
+    return document.getElementById("graphNodes");
   }
 
   if (!window.viewportState) {
@@ -73,12 +73,12 @@
   }
 
   function applyViewportTransform() {
-    const canvas = graphCanvas();
-    if (!canvas) return;
+    const scene = graphScene();
+    if (!scene) return;
 
-    canvas.style.transform =
+    scene.style.transform =
       `translate(${window.viewportState.x}px, ${window.viewportState.y}px) scale(${window.viewportState.scale})`;
-    canvas.style.transformOrigin = "0 0";
+    scene.style.transformOrigin = "0 0";
   }
 
   function getGraphBounds(nodes) {
@@ -114,10 +114,10 @@
   }
 
   function syncCanvasSize() {
-    const canvas = graphCanvas();
-    const svg = edgesLayer();
-    const nodes = nodesLayer();
-    if (!canvas || !svg || !nodes) return;
+    const scene = graphScene();
+    const svg = graphSvg();
+    const nodes = graphNodes();
+    if (!scene || !svg || !nodes) return;
 
     const bounds = getGraphBounds(window.graphData?.nodes || []);
     const padding = isMobile() ? 240 : 360;
@@ -127,11 +127,11 @@
     const width = Math.max(1600, (bounds.maxX - bounds.minX) + padding * 2);
     const height = Math.max(1100, (bounds.maxY - bounds.minY) + padding * 2);
 
-    canvas.style.position = "absolute";
-    canvas.style.left = "0";
-    canvas.style.top = "0";
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    scene.style.position = "absolute";
+    scene.style.left = "0";
+    scene.style.top = "0";
+    scene.style.width = `${width}px`;
+    scene.style.height = `${height}px`;
 
     svg.setAttribute("width", String(width));
     svg.setAttribute("height", String(height));
@@ -209,8 +209,8 @@
   }
 
   function refreshGraph() {
-    const nodeLayer = nodesLayer();
-    const svg = edgesLayer();
+    const nodeLayer = graphNodes();
+    const svg = graphSvg();
 
     if (!nodeLayer || !svg || !window.graphData) return;
 
@@ -251,6 +251,10 @@
             <div class="nodeStatusRow">
               <span class="nodeBadge">${safeType}</span>
               <span class="nodeBadge">${safeStatus}</span>
+            </div>
+            <div class="nodePorts">
+              <div class="port input"></div>
+              <div class="port output"></div>
             </div>
           </div>
         `;
@@ -356,13 +360,12 @@
     }
 
     svg.innerHTML = svgParts.join("");
-
     bindNodeEvents();
     bindSvgEvents();
   }
 
   function bindNodeEvents() {
-    const layer = nodesLayer();
+    const layer = graphNodes();
     if (!layer) return;
 
     layer.querySelectorAll(".node").forEach((nodeEl) => {
@@ -397,7 +400,11 @@
         window.selectedNodeId = nodeId;
         window.selectedEdgeKey = null;
 
-        refreshGraph();
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
 
         nodeEl.classList.add("dragging");
         try {
@@ -424,7 +431,7 @@
   }
 
   function bindSvgEvents() {
-    const svg = edgesLayer();
+    const svg = graphSvg();
     if (!svg) return;
 
     svg.querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
@@ -461,7 +468,11 @@
           circle.setPointerCapture(event.pointerId);
         } catch (_) {}
 
-        refreshGraph();
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
       };
     });
   }
@@ -531,7 +542,11 @@
           edge.waypoints[window.waypointDrag.index].x = Math.round(pt.x);
           edge.waypoints[window.waypointDrag.index].y = Math.round(pt.y);
 
-          refreshGraph();
+          if (window.refreshAllUI) {
+            window.refreshAllUI();
+          } else {
+            refreshGraph();
+          }
         }
         return;
       }
@@ -550,7 +565,12 @@
         node.y = Math.round(window.interaction.dragStartNodeY + dy);
 
         window.interaction.movedDuringPointer = true;
-        refreshGraph();
+
+        if (window.refreshAllUI) {
+          window.refreshAllUI();
+        } else {
+          refreshGraph();
+        }
         return;
       }
 
@@ -632,9 +652,9 @@
   }
 
   window.graphViewport = graphViewport;
-  window.graphCanvas = graphCanvas;
-  window.edgesLayer = edgesLayer;
-  window.nodesLayer = nodesLayer;
+  window.graphScene = graphScene;
+  window.graphSvg = graphSvg;
+  window.graphNodes = graphNodes;
   window.graphViewportRect = graphViewportRect;
   window.scenePointFromClient = scenePointFromClient;
   window.applyViewportTransform = applyViewportTransform;
