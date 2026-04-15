@@ -364,7 +364,7 @@ button:active {
   left: 0;
   top: 0;
   overflow: visible;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .graphNodes {
