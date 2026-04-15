@@ -542,14 +542,14 @@
     }
   }
 
-  function refreshAllUI() {
-    updateMetaBadges();
-    updateStatsBar();
-    updateSidebarForSelection();
-    if (typeof window.refreshGraph === "function") {
-      window.refreshGraph();
-    }
+function refreshAllUI() {
+  updateMetaBadges();
+  updateStatsBar();
+  if (typeof window.refreshGraph === "function") {
+    window.refreshGraph();
   }
+  updateSidebarForSelection();
+}
 
   window.setStatus = setStatus;
   window.showErrorPanel = showErrorPanel;
