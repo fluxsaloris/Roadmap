@@ -3,16 +3,16 @@
     return document.getElementById("graphViewport");
   }
 
-  function graphScene() {
-    return document.getElementById("graphScene");
+  function graphCanvas() {
+    return document.getElementById("graphCanvas");
   }
 
-  function graphSvg() {
-    return document.getElementById("graphSvg");
+  function edgesLayer() {
+    return document.getElementById("edgesLayer");
   }
 
-  function graphNodes() {
-    return document.getElementById("graphNodes");
+  function nodesLayer() {
+    return document.getElementById("nodesLayer");
   }
 
   if (!window.viewportState) {
@@ -73,176 +73,12 @@
   }
 
   function applyViewportTransform() {
-    const scene = graphScene();
-    if (!scene) return;
+    const canvas = graphCanvas();
+    if (!canvas) return;
 
-    scene.style.transform =
+    canvas.style.transform =
       `translate(${window.viewportState.x}px, ${window.viewportState.y}px) scale(${window.viewportState.scale})`;
-    scene.style.transformOrigin = "0 0";
-  }
-
-  function normalizeType(type) {
-    if (typeof window.normalizeType === "function" && window.normalizeType !== normalizeType) {
-      return window.normalizeType(type);
-    }
-
-    const value = String(type || "").trim().toLowerCase();
-    if (value === "stable" || value === "start") return "stable";
-    if (value === "dangerous" || value === "progression") return "dangerous";
-    if (value === "corrupted" || value === "danger") return "corrupted";
-    if (value === "anomalous" || value === "weird") return "anomalous";
-    return "stable";
-  }
-
-  function getTypeLabel(type) {
-    if (typeof window.getTypeLabel === "function" && window.getTypeLabel !== getTypeLabel) {
-      return window.getTypeLabel(type);
-    }
-
-    const meta = window.TYPE_META || {};
-    return (meta[normalizeType(type)] && meta[normalizeType(type)].label) || "Stable";
-  }
-
-  function getTypeClass(type) {
-    if (typeof window.getTypeClass === "function" && window.getTypeClass !== getTypeClass) {
-      return window.getTypeClass(type);
-    }
-
-    const meta = window.TYPE_META || {};
-    return (meta[normalizeType(type)] && meta[normalizeType(type)].className) || "stable";
-  }
-
-  function getTypeEdgeClass(type) {
-    if (typeof window.getTypeEdgeClass === "function" && window.getTypeEdgeClass !== getTypeEdgeClass) {
-      return window.getTypeEdgeClass(type);
-    }
-
-    const meta = window.TYPE_META || {};
-    return (meta[normalizeType(type)] && meta[normalizeType(type)].edgeClass) || "edge-stable";
-  }
-
-  function getNodeById(id) {
-    return (window.graphData?.nodes || []).find((n) => n.id === String(id)) || null;
-  }
-
-  function getVisibleNodeIds() {
-    const search = String(window.currentSearch || "").trim().toLowerCase();
-
-    if (!search) {
-      return new Set((window.graphData?.nodes || []).map((n) => n.id));
-    }
-
-    return new Set(
-      (window.graphData?.nodes || [])
-        .filter((node) => {
-          const hay = [
-            node.id,
-            node.label,
-            node.subtitle,
-            node.description,
-            node.notes,
-            getTypeLabel(node.type),
-            ...(Array.isArray(node.tags) ? node.tags : [])
-          ]
-            .join(" ")
-            .toLowerCase();
-
-          return hay.includes(search);
-        })
-        .map((n) => n.id)
-    );
-  }
-
-  function normalizeWaypoints(value) {
-    if (typeof window.normalizeWaypoints === "function" && window.normalizeWaypoints !== normalizeWaypoints) {
-      return window.normalizeWaypoints(value);
-    }
-
-    if (!Array.isArray(value)) return [];
-    return value
-      .map((item) => ({
-        x: typeof item?.x === "number" ? item.x : null,
-        y: typeof item?.y === "number" ? item.y : null
-      }))
-      .filter((item) => typeof item.x === "number" && typeof item.y === "number");
-  }
-
-  function edgeKeyOf(edge) {
-    if (typeof window.edgeKeyOf === "function" && window.edgeKeyOf !== edgeKeyOf) {
-      return window.edgeKeyOf(edge);
-    }
-
-    return `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay === false ? "0" : "1"}`;
-  }
-
-  function getNodePortPosition(nodeId, side) {
-    const node = getNodeById(nodeId);
-    if (!node) return null;
-
-    const width = isMobile() ? 118 : 170;
-
-    return {
-      x: Number(node.x || 0) + (side === "output" ? width / 2 : -width / 2),
-      y: Number(node.y || 0)
-    };
-  }
-
-  function buildEdgePoints(edge) {
-    const fromPort = getNodePortPosition(edge.from, "output");
-    const toPort = getNodePortPosition(edge.to, "input");
-
-    if (!fromPort || !toPort) return null;
-
-    return [fromPort, ...normalizeWaypoints(edge.waypoints), toPort];
-  }
-
-  function createEdgePath(points) {
-    if (!points || points.length < 2) return "";
-
-    let path = `M ${points[0].x} ${points[0].y}`;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const a = points[i];
-      const b = points[i + 1];
-      const dx = Math.abs(b.x - a.x);
-      const curve = Math.max(30, Math.min(120, dx * 0.35));
-
-      path += ` C ${a.x + curve} ${a.y}, ${b.x - curve} ${b.y}, ${b.x} ${b.y}`;
-    }
-
-    return path;
-  }
-
-  function getEdgeMidpoint(points) {
-    if (!points || points.length < 2) {
-      return { x: 0, y: 0 };
-    }
-
-    let total = 0;
-    const lengths = [];
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const dx = points[i + 1].x - points[i].x;
-      const dy = points[i + 1].y - points[i].y;
-      const len = Math.hypot(dx, dy);
-      lengths.push(len);
-      total += len;
-    }
-
-    let target = total / 2;
-
-    for (let i = 0; i < lengths.length; i++) {
-      if (target <= lengths[i]) {
-        const ratio = lengths[i] === 0 ? 0 : target / lengths[i];
-        return {
-          x: points[i].x + (points[i + 1].x - points[i].x) * ratio,
-          y: points[i].y + (points[i + 1].y - points[i].y) * ratio
-        };
-      }
-      target -= lengths[i];
-    }
-
-    return points[Math.floor(points.length / 2)];
+    canvas.style.transformOrigin = "0 0";
   }
 
   function getGraphBounds(nodes) {
@@ -259,7 +95,10 @@
     }
 
     for (const edge of window.graphData?.edges || []) {
-      const waypoints = normalizeWaypoints(edge.waypoints);
+      const waypoints = typeof window.normalizeWaypoints === "function"
+        ? window.normalizeWaypoints(edge.waypoints)
+        : [];
+
       for (const point of waypoints) {
         allX.push(Number(point.x) || 0);
         allY.push(Number(point.y) || 0);
@@ -275,32 +114,31 @@
   }
 
   function syncCanvasSize() {
-    const scene = graphScene();
-    const svg = graphSvg();
-    const nodes = graphNodes();
-    if (!scene || !svg || !nodes) return;
+    const canvas = graphCanvas();
+    const svg = edgesLayer();
+    const nodes = nodesLayer();
+    if (!canvas || !svg || !nodes) return;
 
     const bounds = getGraphBounds(window.graphData?.nodes || []);
     const padding = isMobile() ? 240 : 360;
 
-    const minX = bounds.minX - padding;
-    const minY = bounds.minY - padding;
-    const width = Math.max(1600, (bounds.maxX - bounds.minX) + padding * 2);
-    const height = Math.max(1100, (bounds.maxY - bounds.minY) + padding * 2);
+    const width = Math.max(1600, Math.ceil(bounds.maxX + padding));
+    const height = Math.max(1100, Math.ceil(bounds.maxY + padding));
 
-    scene.style.position = "absolute";
-    scene.style.left = "0";
-    scene.style.top = "0";
-    scene.style.width = `${width}px`;
-    scene.style.height = `${height}px`;
+    canvas.style.position = "absolute";
+    canvas.style.left = "0";
+    canvas.style.top = "0";
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
 
     svg.setAttribute("width", String(width));
     svg.setAttribute("height", String(height));
-    svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     svg.style.position = "absolute";
     svg.style.left = "0";
     svg.style.top = "0";
     svg.style.overflow = "visible";
+    svg.style.pointerEvents = "none";
 
     nodes.style.position = "absolute";
     nodes.style.left = "0";
@@ -322,7 +160,10 @@
   }
 
   function fitToGraph() {
-    const visibleNodeIds = getVisibleNodeIds();
+    const visibleNodeIds = typeof window.getVisibleNodeIds === "function"
+      ? window.getVisibleNodeIds()
+      : new Set((window.graphData?.nodes || []).map((n) => n.id));
+
     const visibleNodes = (window.graphData?.nodes || []).filter((node) =>
       visibleNodeIds.has(node.id)
     );
@@ -366,27 +207,127 @@
     applyViewportTransform();
   }
 
+  function getNodePortPosition(nodeId, side) {
+    const node = typeof window.getNodeById === "function"
+      ? window.getNodeById(nodeId)
+      : null;
+
+    if (!node) return null;
+
+    const width = isMobile() ? 118 : 170;
+
+    return {
+      x: (Number(node.x) || 0) + (side === "output" ? width / 2 : -width / 2),
+      y: Number(node.y) || 0
+    };
+  }
+
+  function buildEdgePoints(edge) {
+    const fromPort = getNodePortPosition(edge.from, "output");
+    const toPort = getNodePortPosition(edge.to, "input");
+
+    if (!fromPort || !toPort) return null;
+
+    const waypoints = typeof window.normalizeWaypoints === "function"
+      ? window.normalizeWaypoints(edge.waypoints)
+      : [];
+
+    return [fromPort, ...waypoints, toPort];
+  }
+
+  function createSegmentPath(points) {
+    if (!points || points.length < 2) return "";
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i];
+      const b = points[i + 1];
+      const dx = Math.abs(b.x - a.x);
+      const curve = Math.max(30, Math.min(120, dx * 0.35));
+
+      path += ` C ${a.x + curve} ${a.y}, ${b.x - curve} ${b.y}, ${b.x} ${b.y}`;
+    }
+
+    return path;
+  }
+
+  function createEdgePath(points) {
+    return createSegmentPath(points);
+  }
+
+  function getEdgeMidpoint(points) {
+    if (!points || points.length < 2) {
+      return { x: 0, y: 0 };
+    }
+
+    let total = 0;
+    const lengths = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const dx = points[i + 1].x - points[i].x;
+      const dy = points[i + 1].y - points[i].y;
+      const len = Math.hypot(dx, dy);
+
+      lengths.push(len);
+      total += len;
+    }
+
+    let target = total / 2;
+
+    for (let i = 0; i < lengths.length; i++) {
+      if (target <= lengths[i]) {
+        const ratio = lengths[i] === 0 ? 0 : target / lengths[i];
+
+        return {
+          x: points[i].x + (points[i + 1].x - points[i].x) * ratio,
+          y: points[i].y + (points[i + 1].y - points[i].y) * ratio
+        };
+      }
+
+      target -= lengths[i];
+    }
+
+    return points[Math.floor(points.length / 2)];
+  }
+
+  function getEdgeTypeClass(edge) {
+    const fromNode = typeof window.getNodeById === "function"
+      ? window.getNodeById(edge.from)
+      : null;
+
+    return typeof window.getTypeEdgeClass === "function"
+      ? window.getTypeEdgeClass(fromNode?.type || "stable")
+      : "edge-stable";
+  }
+
   function refreshGraph() {
-    const nodeLayer = graphNodes();
-    const svg = graphSvg();
+    const nodeLayer = nodesLayer();
+    const svg = edgesLayer();
 
     if (!nodeLayer || !svg || !window.graphData) return;
 
     syncCanvasSize();
     applyViewportTransform();
 
-    const visibleNodeIds = getVisibleNodeIds();
+    const visibleNodeIds = typeof window.getVisibleNodeIds === "function"
+      ? window.getVisibleNodeIds()
+      : new Set((window.graphData.nodes || []).map((n) => n.id));
 
     nodeLayer.innerHTML = (window.graphData.nodes || [])
       .filter((node) => visibleNodeIds.has(node.id))
       .map((node) => {
         const isSelected = node.id === window.selectedNodeId;
-        const typeClass = getTypeClass(node.type);
+        const typeClass = typeof window.getTypeClass === "function"
+          ? window.getTypeClass(node.type)
+          : "stable";
 
         const safeId = window.escapeHtml ? window.escapeHtml(node.id) : node.id;
         const safeLabel = window.escapeHtml ? window.escapeHtml(node.label || "Unnamed") : (node.label || "Unnamed");
         const safeSubtitle = window.escapeHtml ? window.escapeHtml(node.subtitle || "") : (node.subtitle || "");
-        const safeType = window.escapeHtml ? window.escapeHtml(getTypeLabel(node.type)) : getTypeLabel(node.type);
+        const safeType = window.escapeHtml && window.getTypeLabel
+          ? window.escapeHtml(window.getTypeLabel(node.type))
+          : (window.getTypeLabel ? window.getTypeLabel(node.type) : "Stable");
         const safeStatus = window.escapeHtml ? window.escapeHtml(node.status || "draft") : (node.status || "draft");
 
         return `
@@ -425,9 +366,11 @@
       const path = createEdgePath(points);
       if (!path) continue;
 
-      const edgeKey = edgeKeyOf(edge);
-      const edgeClass = getTypeEdgeClass(getNodeById(edge.from)?.type || "stable");
+      const edgeKey = typeof window.edgeKeyOf === "function"
+        ? window.edgeKeyOf(edge)
+        : `${edge.from}|${edge.to}`;
 
+      const edgeClass = getEdgeTypeClass(edge);
       const isSelected = window.selectedEdgeKey === edgeKey;
       const isRelatedToSelectedNode =
         window.selectedNodeId &&
@@ -460,7 +403,9 @@
         `);
       }
 
-      const waypoints = normalizeWaypoints(edge.waypoints);
+      const waypoints = typeof window.normalizeWaypoints === "function"
+        ? window.normalizeWaypoints(edge.waypoints)
+        : [];
 
       waypoints.forEach((point, index) => {
         svgParts.push(`
@@ -494,12 +439,13 @@
     }
 
     svg.innerHTML = svgParts.join("");
+
     bindNodeEvents();
     bindSvgEvents();
   }
 
   function bindNodeEvents() {
-    const layer = graphNodes();
+    const layer = nodesLayer();
     if (!layer) return;
 
     layer.querySelectorAll(".node").forEach((nodeEl) => {
@@ -521,7 +467,10 @@
         window.interaction.dragStartMouseX = event.clientX;
         window.interaction.dragStartMouseY = event.clientY;
 
-        const node = getNodeById(nodeId);
+        const node = typeof window.getNodeById === "function"
+          ? window.getNodeById(nodeId)
+          : null;
+
         if (!node) return;
 
         window.interaction.dragStartNodeX = Number(node.x) || 0;
@@ -562,7 +511,7 @@
   }
 
   function bindSvgEvents() {
-    const svg = graphSvg();
+    const svg = edgesLayer();
     if (!svg) return;
 
     svg.querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
@@ -683,7 +632,10 @@
       }
 
       if (window.interaction.dragNodeId) {
-        const node = getNodeById(window.interaction.dragNodeId);
+        const node = typeof window.getNodeById === "function"
+          ? window.getNodeById(window.interaction.dragNodeId)
+          : null;
+
         if (!node) return;
 
         const dx = (event.clientX - window.interaction.dragStartMouseX) / window.viewportState.scale;
@@ -780,9 +732,9 @@
   }
 
   window.graphViewport = graphViewport;
-  window.graphScene = graphScene;
-  window.graphSvg = graphSvg;
-  window.graphNodes = graphNodes;
+  window.graphCanvas = graphCanvas;
+  window.edgesLayer = edgesLayer;
+  window.nodesLayer = nodesLayer;
   window.graphViewportRect = graphViewportRect;
   window.scenePointFromClient = scenePointFromClient;
   window.applyViewportTransform = applyViewportTransform;
@@ -791,6 +743,12 @@
   window.resetView = resetView;
   window.fitToGraph = fitToGraph;
   window.zoomBy = zoomBy;
+  window.getNodePortPosition = getNodePortPosition;
+  window.buildEdgePoints = buildEdgePoints;
+  window.createSegmentPath = createSegmentPath;
+  window.createEdgePath = createEdgePath;
+  window.getEdgeMidpoint = getEdgeMidpoint;
+  window.getEdgeTypeClass = getEdgeTypeClass;
   window.refreshGraph = refreshGraph;
   window.bindNodeEvents = bindNodeEvents;
   window.bindSvgEvents = bindSvgEvents;
