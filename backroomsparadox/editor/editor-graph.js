@@ -425,13 +425,14 @@
         <path
           d="${path}"
           data-edge-key="${safeEdgeKey}"
+          data-edge-hit="1"
           class="edge-hit-area"
           fill="none"
-          stroke="rgba(0,0,0,0)"
+          stroke="rgba(255,255,255,0.001)"
           stroke-width="30"
           stroke-linecap="round"
           stroke-linejoin="round"
-          style="pointer-events:auto;cursor:pointer;"
+          style="pointer-events:stroke;cursor:pointer;"
         ></path>
       `);
 
@@ -564,7 +565,7 @@
     const svg = edgesLayer();
     if (!svg) return;
 
-    svg.querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
+    svg.querySelectorAll('path[data-edge-hit="1"]').forEach((pathEl) => {
       pathEl.onclick = (event) => {
         event.stopPropagation();
         window.selectedEdgeKey = pathEl.getAttribute("data-edge-key");
@@ -664,7 +665,7 @@
     viewport.onpointerdown = (event) => {
       if (event.target.closest(".node")) return;
       if (event.target.closest(".waypoint")) return;
-      if (event.target.closest("path[data-edge-key]")) return;
+      if (event.target.closest('[data-edge-hit="1"]')) return;
 
       startPan(event.clientX, event.clientY);
       try {
@@ -786,7 +787,7 @@
     viewport.onclick = (event) => {
       if (
         !event.target.closest(".node") &&
-        !event.target.closest("path[data-edge-key]") &&
+        !event.target.closest('[data-edge-hit="1"]') &&
         !event.target.closest(".waypoint")
       ) {
         if (window.clearSelection) window.clearSelection();
