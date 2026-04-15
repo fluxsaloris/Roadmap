@@ -50,13 +50,13 @@
       background: #0c0e13;
     }
 
-    #graphScene {
+    #graphCanvas {
       position: absolute;
       inset: 0;
       transform-origin: 0 0;
     }
 
-    #graphSvg {
+    #edgesLayer {
       position: absolute;
       top: 0;
       left: 0;
@@ -64,12 +64,44 @@
       pointer-events: none;
     }
 
-    #graphNodes {
+    #nodesLayer {
       position: absolute;
       inset: 0;
     }
+
+    #errorPanel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #aa3333;
+      padding: 10px;
+      border-radius: 6px;
+      z-index: 10000;
+      display: none;
+    }
+
+    #statusLine {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #1a1d24;
+      padding: 8px 12px;
+      border-radius: 6px;
+      z-index: 10000;
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: #0f1115;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
   </style>
 </head>
+
 <body>
   <div id="app">
 
@@ -92,31 +124,33 @@
       />
     </div>
 
+    <!-- ✅ FIXED GRAPH STRUCTURE -->
     <div id="graphViewport">
-      <div id="graphScene">
-        <svg id="graphSvg"></svg>
-        <div id="graphNodes"></div>
+      <div id="graphCanvas">
+        <svg id="edgesLayer"></svg>
+        <div id="nodesLayer"></div>
       </div>
     </div>
+
   </div>
 
-  <div id="errorPanel" style="display:none; position:fixed; bottom:10px; left:10px; background:#aa3333; padding:10px; border-radius:6px; z-index:10000;">
+  <div id="errorPanel">
     <div id="errorPanelText"></div>
   </div>
 
-  <div id="statusLine" style="position:fixed; bottom:10px; right:10px; background:#1a1d24; padding:8px 12px; border-radius:6px; z-index:10000;">
+  <div id="statusLine">
     Ready
   </div>
 
-  <div id="loadingOverlay" style="position:fixed; inset:0; background:#0f1115; display:flex; align-items:center; justify-content:center; z-index:9999;">
+  <div id="loadingOverlay">
     <div id="loadingText">Loading editor...</div>
   </div>
 
-<script src="editor-config.js"></script>
-<script src="editor-state.js"></script>
-<script src="editor-ui.js"></script>
-<script src="editor-graph.js"></script>
-<script src="editor-actions.js"></script>
-<script src="editor-init.js"></script>
+  <script src="editor-config.js"></script>
+  <script src="editor-state.js"></script>
+  <script src="editor-ui.js"></script>
+  <script src="editor-graph.js"></script>
+  <script src="editor-actions.js"></script>
+  <script src="editor-init.js"></script>
 </body>
 </html>
