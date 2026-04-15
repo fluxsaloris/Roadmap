@@ -16,15 +16,15 @@
   }
 
   function getTypeLabel(type) {
-    return window.TYPE_META[normalizeType(type)].label;
+    return window.TYPE_META?.[normalizeType(type)]?.label || "Stable";
   }
 
   function getTypeClass(type) {
-    return window.TYPE_META[normalizeType(type)].className;
+    return window.TYPE_META?.[normalizeType(type)]?.className || "stable";
   }
 
   function getTypeEdgeClass(type) {
-    return window.TYPE_META[normalizeType(type)].edgeClass;
+    return window.TYPE_META?.[normalizeType(type)]?.edgeClass || "edge-stable";
   }
 
   function cloneData(data) {
@@ -306,9 +306,7 @@
       node.notes,
       getTypeLabel(node.type),
       ...(Array.isArray(node.tags) ? node.tags : [])
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
 
     return hay.includes(search);
   }
@@ -325,152 +323,6 @@
         .filter((n) => nodeMatchesSearch(n, search))
         .map((n) => n.id)
     );
-  }
-
-  function getNodePortPosition(nodeId, side) {
-    const node = getNodeById(nodeId);
-    if (!node) return null;
-
-    const width = typeof window.isMobileLayout === "function" && window.isMobileLayout() ? 118 : 170;
-
-    return {
-      x: node.x + (side === "output" ? width / 2 : -width / 2),
-      y: node.y
-    };
-  }
-
-  function buildEdgePoints(edge) {
-    const fromPort = getNodePortPosition(edge.from, "output");
-    const toPort = getNodePortPosition(edge.to, "input");
-
-    if (!fromPort || !toPort) return null;
-
-    return [fromPort, ...normalizeWaypoints(edge.waypoints), toPort];
-  }
-
-  function createSegmentPath(points) {
-    if (!points || points.length < 2) return "";
-
-    let path = `M ${points[0].x} ${points[0].y}`;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const a = points[i];
-      const b = points[i + 1];
-      const dx = Math.abs(b.x - a.x);
-      const curve = Math.max(30, Math.min(120, dx * 0.35));
-
-      path += ` C ${a.x + curve} ${a.y}, ${b.x - curve} ${b.y}, ${b.x} ${b.y}`;
-    }
-
-    return path;
-  }
-
-  function createEdgePath(points) {
-    return createSegmentPath(points);
-  }
-
-  function getEdgeMidpoint(points) {
-    if (!points || points.length < 2) {
-      return { x: 0, y: 0 };
-    }
-
-    let total = 0;
-    const lengths = [];
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const dx = points[i + 1].x - points[i].x;
-      const dy = points[i + 1].y - points[i].y;
-      const len = Math.hypot(dx, dy);
-
-      lengths.push(len);
-      total += len;
-    }
-
-    let target = total / 2;
-
-    for (let i = 0; i < lengths.length; i++) {
-      if (target <= lengths[i]) {
-        const ratio = lengths[i] === 0 ? 0 : target / lengths[i];
-
-        return {
-          x: points[i].x + (points[i + 1].x - points[i].x) * ratio,
-          y: points[i].y + (points[i + 1].y - points[i].y) * ratio
-        };
-      }
-
-      target -= lengths[i];
-    }
-
-    return points[Math.floor(points.length / 2)];
-  }
-
-  function getEdgeTypeClass(edge) {
-    const fromNode = getNodeById(edge.from);
-    return getTypeEdgeClass(fromNode?.type || "stable");
-  }
-
-  function getGraphBounds(nodes) {
-    if (!nodes.length) {
-      return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
-    }
-
-    const allX = [];
-    const allY = [];
-
-    for (const node of nodes) {
-      allX.push(node.x);
-      allY.push(node.y);
-    }
-
-    for (const edge of window.graphData.edges) {
-      for (const waypoint of normalizeWaypoints(edge.waypoints)) {
-        allX.push(waypoint.x);
-        allY.push(waypoint.y);
-      }
-    }
-
-    return {
-      minX: Math.min(...allX),
-      maxX: Math.max(...allX),
-      minY: Math.min(...allY),
-      maxY: Math.max(...allY)
-    };
-  }
-
-  function edgeExists(from, to, label = "") {
-    return window.graphData.edges.some(
-      (e) => e.from === from && e.to === to && (e.label || "") === (label || "")
-    );
-  }
-
-  function addEdge(from, to, label = "", oneWay = true) {
-    if (!from || !to || from === to) return;
-    if (edgeExists(from, to, label)) return;
-
-    const edge = {
-      from,
-      to,
-      label: label || "",
-      oneWay: !!oneWay,
-      waypoints: []
-    };
-
-    window.graphData.edges.push(edge);
-
-    if (!oneWay && !edgeExists(to, from, label)) {
-      window.graphData.edges.push({
-        from: to,
-        to: from,
-        label: label || "",
-        oneWay: !!oneWay,
-        waypoints: []
-      });
-    }
-  }
-
-  function generateNodeId() {
-    const used = new Set(window.graphData.nodes.map((n) => String(n.id || "")));
-    return makeUniqueId("level", used);
   }
 
   window.normalizeType = normalizeType;
@@ -495,14 +347,4 @@
   window.buildSearchString = buildSearchString;
   window.nodeMatchesSearch = nodeMatchesSearch;
   window.getVisibleNodeIds = getVisibleNodeIds;
-  window.getNodePortPosition = getNodePortPosition;
-  window.buildEdgePoints = buildEdgePoints;
-  window.createSegmentPath = createSegmentPath;
-  window.createEdgePath = createEdgePath;
-  window.getEdgeMidpoint = getEdgeMidpoint;
-  window.getEdgeTypeClass = getEdgeTypeClass;
-  window.getGraphBounds = getGraphBounds;
-  window.edgeExists = edgeExists;
-  window.addEdge = addEdge;
-  window.generateNodeId = generateNodeId;
 })();
