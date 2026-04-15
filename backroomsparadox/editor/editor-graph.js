@@ -4,15 +4,15 @@
   }
 
   function graphCanvas() {
-    return document.getElementById("graphCanvas");
+    return document.getElementById("graphScene");
   }
 
   function edgesLayer() {
-    return document.getElementById("edgesLayer");
+    return document.getElementById("graphSvg");
   }
 
   function nodesLayer() {
-    return document.getElementById("nodesLayer");
+    return document.getElementById("graphNodes");
   }
 
   if (!window.viewportState) {
@@ -48,7 +48,8 @@
     window.waypointDrag = {
       edgeKey: null,
       index: -1,
-      active: false
+      active: false,
+      pointerId: null
     };
   }
 
@@ -301,6 +302,41 @@
       : "edge-stable";
   }
 
+  function addWaypointAtScenePosition(edgeKey, x, y) {
+    if (typeof window.getEdgeByKey !== "function") return;
+    const edge = window.getEdgeByKey(edgeKey);
+    if (!edge) return;
+
+    if (typeof window.pushUndoState === "function") {
+      window.pushUndoState("Add bend point");
+    }
+
+    if (!Array.isArray(edge.waypoints)) {
+      edge.waypoints = [];
+    }
+
+    edge.waypoints = typeof window.normalizeWaypoints === "function"
+      ? window.normalizeWaypoints(edge.waypoints)
+      : edge.waypoints;
+
+    edge.waypoints.push({
+      x: Math.round(x),
+      y: Math.round(y)
+    });
+
+    window.selectedEdgeKey = edgeKey;
+
+    if (window.refreshAllUI) {
+      window.refreshAllUI();
+    } else {
+      refreshGraph();
+    }
+
+    if (window.markDirty) {
+      window.markDirty("Added bend point.");
+    }
+  }
+
   function refreshGraph() {
     const nodeLayer = nodesLayer();
     const svg = edgesLayer();
@@ -383,7 +419,21 @@
         <path
           d="${path}"
           class="${lineClass} ${edgeClass}"
+          pointer-events="none"
+        ></path>
+      `);
+
+      svgParts.push(`
+        <path
+          d="${path}"
           data-edge-key="${safeEdgeKey}"
+          class="edge-hit-area"
+          fill="none"
+          stroke="rgba(0,0,0,0)"
+          stroke-width="22"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="pointer-events:auto;cursor:pointer;"
         ></path>
       `);
 
@@ -397,6 +447,7 @@
             y="${mid.y - (isMobile() ? 8 : 10)}"
             text-anchor="middle"
             class="edgeLabel"
+            pointer-events="none"
           >
             ${safeLabel}
           </text>
@@ -412,10 +463,11 @@
           <circle
             cx="${point.x}"
             cy="${point.y}"
-            r="${isMobile() ? 5 : 6}"
+            r="${isMobile() ? 7 : 8}"
             class="waypoint ${isSelected ? "selected" : ""}"
             data-edge-key="${safeEdgeKey}"
             data-waypoint-index="${index}"
+            style="pointer-events:auto;cursor:move;"
           ></circle>
         `);
       });
@@ -433,7 +485,7 @@
         ]);
 
         if (previewPath) {
-          svgParts.push(`<path d="${previewPath}" class="line-preview"></path>`);
+          svgParts.push(`<path d="${previewPath}" class="line-preview" pointer-events="none"></path>`);
         }
       }
     }
@@ -515,9 +567,6 @@
     if (!svg) return;
 
     svg.querySelectorAll("path[data-edge-key]").forEach((pathEl) => {
-      pathEl.style.pointerEvents = "auto";
-      pathEl.style.cursor = "pointer";
-
       pathEl.onclick = (event) => {
         event.stopPropagation();
         window.selectedEdgeKey = pathEl.getAttribute("data-edge-key");
@@ -528,10 +577,22 @@
           refreshGraph();
         }
       };
+
+      pathEl.ondblclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const edgeKey = pathEl.getAttribute("data-edge-key");
+        if (!edgeKey) return;
+
+        const pt = scenePointFromClient(event.clientX, event.clientY);
+        addWaypointAtScenePosition(edgeKey, pt.x, pt.y);
+      };
     });
 
     svg.querySelectorAll("circle[data-waypoint-index]").forEach((circle) => {
       circle.onpointerdown = (event) => {
+        event.preventDefault();
         event.stopPropagation();
 
         const edgeKey = circle.getAttribute("data-edge-key");
@@ -543,6 +604,7 @@
         window.waypointDrag.edgeKey = edgeKey;
         window.waypointDrag.index = index;
         window.waypointDrag.active = true;
+        window.waypointDrag.pointerId = event.pointerId;
 
         try {
           circle.setPointerCapture(event.pointerId);
@@ -604,6 +666,7 @@
     viewport.onpointerdown = (event) => {
       if (event.target.closest(".node")) return;
       if (event.target.closest(".waypoint")) return;
+      if (event.target.closest("path[data-edge-key]")) return;
 
       startPan(event.clientX, event.clientY);
       try {
@@ -673,6 +736,7 @@
 
       if (window.waypointDrag.active) {
         window.waypointDrag.active = false;
+        window.waypointDrag.pointerId = null;
         if (window.markDirty) window.markDirty("Moved bend point.");
         if (window.scheduleAutosave) window.scheduleAutosave();
         return;
@@ -714,6 +778,7 @@
 
     viewport.onpointercancel = () => {
       window.waypointDrag.active = false;
+      window.waypointDrag.pointerId = null;
       window.interaction.dragNodeId = null;
       window.interaction.connectFromNodeId = null;
       endPan();
@@ -749,6 +814,7 @@
   window.createEdgePath = createEdgePath;
   window.getEdgeMidpoint = getEdgeMidpoint;
   window.getEdgeTypeClass = getEdgeTypeClass;
+  window.addWaypointAtScenePosition = addWaypointAtScenePosition;
   window.refreshGraph = refreshGraph;
   window.bindNodeEvents = bindNodeEvents;
   window.bindSvgEvents = bindSvgEvents;
