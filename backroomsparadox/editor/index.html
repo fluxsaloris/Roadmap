@@ -3,147 +3,234 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Graph Editor</title>
-
+  <title>Backrooms Graph Editor</title>
   <link rel="stylesheet" href="editor.css" />
-
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, Arial, sans-serif;
-      background: #0f1115;
-      color: #e6e6e6;
-    }
-
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    #topbar {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      background: #1a1d24;
-      border-bottom: 1px solid #2a2f3a;
-      flex-wrap: wrap;
-    }
-
-    #topbar button {
-      background: #2b3140;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-
-    #topbar button:hover {
-      background: #3a4255;
-    }
-
-    #graphViewport {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: #0c0e13;
-    }
-
-    #graphCanvas {
-      position: absolute;
-      inset: 0;
-      transform-origin: 0 0;
-    }
-
-    #edgesLayer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      overflow: visible;
-      pointer-events: none;
-    }
-
-    #nodesLayer {
-      position: absolute;
-      inset: 0;
-    }
-
-    #errorPanel {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      background: #aa3333;
-      padding: 10px;
-      border-radius: 6px;
-      z-index: 10000;
-      display: none;
-    }
-
-    #statusLine {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #1a1d24;
-      padding: 8px 12px;
-      border-radius: 6px;
-      z-index: 10000;
-    }
-
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: #0f1115;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-  </style>
 </head>
-
 <body>
-  <div id="app">
-
-    <div id="topbar">
-      <button onclick="addNode()">+ Node</button>
-      <button onclick="autoLayout()">Auto Layout</button>
-      <button onclick="fitToGraph()">Fit</button>
-      <button onclick="resetView()">Reset</button>
-      <button onclick="undoAction()">Undo</button>
-      <button onclick="redoAction()">Redo</button>
-      <button onclick="saveGraph()">💾 Save</button>
-      <button onclick="discardLocalDraft()">Discard Draft</button>
-      <button onclick="previewLatestSnapshot()">Preview Snapshot</button>
-
-      <input
-        id="searchInput"
-        type="text"
-        placeholder="Search nodes..."
-        style="margin-left:auto; padding:6px; border-radius:6px; border:none;"
-      />
+  <div id="loadingOverlay">
+    <div id="loadingCard">
+      <div class="spinner"></div>
+      <div id="loadingText">Loading graph...</div>
     </div>
-
-    <!-- ✅ FIXED GRAPH STRUCTURE -->
-    <div id="graphViewport">
-      <div id="graphCanvas">
-        <svg id="edgesLayer"></svg>
-        <div id="nodesLayer"></div>
-      </div>
-    </div>
-
   </div>
 
   <div id="errorPanel">
-    <div id="errorPanelText"></div>
+    <div id="errorPanelTitle">Couldn’t load editor</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
-  <div id="statusLine">
-    Ready
-  </div>
+  <div id="app">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="heroTitle">
+          <div class="eyebrow">Backrooms planning workspace</div>
+          <h1>Backrooms Graph Editor</h1>
+          <p>Drag nodes, pan the graph, connect levels, add bend points, and save clean JSON for the viewer.</p>
+        </div>
 
-  <div id="loadingOverlay">
-    <div id="loadingText">Loading editor...</div>
+        <div class="heroMeta">
+          <div id="saveStateBadge" class="saveBadge save-clean">All changes saved locally</div>
+          <div id="lastRemoteSaveBadge" class="infoBadge">GitHub: not saved yet</div>
+          <div id="lastSnapshotBadge" class="infoBadge">No snapshot yet</div>
+        </div>
+      </div>
+
+      <div class="heroControls">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search level name, tag, subtitle, description, or notes..."
+          autocomplete="off"
+        />
+
+        <div class="toolbar">
+          <button onclick="zoomBy(1.12)">Zoom In</button>
+          <button onclick="zoomBy(1 / 1.12)">Zoom Out</button>
+          <button onclick="resetView()">Reset View</button>
+          <button onclick="fitToGraph()">Fit Graph</button>
+          <button onclick="autoLayout()">Auto Layout</button>
+          <button onclick="undoAction()">Undo</button>
+          <button onclick="redoAction()">Redo</button>
+          <button onclick="addNode()">Add Level</button>
+          <button onclick="refreshChangeSummary()">Refresh Diff</button>
+          <button onclick="previewLatestSnapshot()">Preview Snapshot</button>
+          <button class="primaryBtn" onclick="saveGraph()">Save to GitHub</button>
+          <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
+        </div>
+      </div>
+
+      <div id="statusLine">Loading graph...</div>
+    </section>
+
+    <div class="workspaceRow">
+      <div class="leftColumn">
+        <section class="panel">
+          <div class="statsBar">
+            <span class="metaChip" id="statNodes">0 nodes</span>
+            <span class="metaChip" id="statEdges">0 links</span>
+            <span class="metaChip" id="statSelected">No level selected</span>
+            <span class="metaChip" id="statLocalSave">Local draft: never</span>
+            <span class="metaChip" id="statUndo">Undo: 0</span>
+            <span class="metaChip" id="statRedo">Redo: 0</span>
+          </div>
+        </section>
+
+        <section class="panel canvasPanel">
+          <div class="canvasToolbar">
+            <div class="canvasHint">Pan: drag empty space • Zoom: mouse wheel • Select: click node</div>
+            <div class="canvasHint">Shift + drag node to node to connect • Drag white bend points to shape lines</div>
+          </div>
+
+          <div id="graphViewport" class="graphViewport">
+            <div id="graphScene" class="graphScene">
+              <svg id="graphSvg" class="graphSvg"></svg>
+              <div id="graphNodes" class="graphNodes"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="changeSummaryPanel" class="panel">
+          <h2 class="changeTitle">Change Summary</h2>
+          <div class="changeSub">No diff loaded yet.</div>
+        </section>
+      </div>
+
+      <div class="rightColumn" id="desktopInspector">
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Selected Level</h2>
+          <div id="selectedHint" class="sidebarSub">Click a node in the graph to edit it.</div>
+
+          <div class="fieldGrid">
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeLabel">Label</label>
+              <input id="nodeLabel" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeSubtitle">Subtitle</label>
+              <input id="nodeSubtitle" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeType">Type</label>
+              <select id="nodeType">
+                <option value="stable">Stable</option>
+                <option value="dangerous">Dangerous</option>
+                <option value="corrupted">Corrupted</option>
+                <option value="anomalous">Anomalous</option>
+              </select>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeStatus">Status</label>
+              <select id="nodeStatus">
+                <option value="draft">Draft</option>
+                <option value="planned">Planned</option>
+                <option value="in-progress">In Progress</option>
+                <option value="implemented">Implemented</option>
+                <option value="cut">Cut</option>
+              </select>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeX">X</label>
+              <input id="nodeX" type="number" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeY">Y</label>
+              <input id="nodeY" type="number" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeTags">Tags (comma separated)</label>
+              <input id="nodeTags" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeDescription">Description</label>
+              <textarea id="nodeDescription"></textarea>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeNotes">Notes</label>
+              <textarea id="nodeNotes"></textarea>
+            </div>
+
+            <div class="actionRow">
+              <button onclick="applySelectedNodeChanges()">Apply Node Changes</button>
+              <button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Connections</h2>
+
+          <div class="fieldGrid">
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkTarget">Target Level</label>
+              <select id="linkTarget"></select>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkLabel">Link Label</label>
+              <input id="linkLabel" type="text" placeholder="Trapdoor Puzzle" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkOneWay">One Way</label>
+              <select id="linkOneWay">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            <div class="actionRow">
+              <button onclick="addConnectionFromSidebar()">Add Link</button>
+            </div>
+
+            <div>
+              <div class="fieldLabel" style="margin-bottom:6px;">Outgoing</div>
+              <ul id="outgoingList" class="linkList">
+                <li>No level selected.</li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="fieldLabel" style="margin-bottom:6px;">Incoming</div>
+              <ul id="incomingList" class="linkList">
+                <li>No level selected.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Selected Link Bend Points</h2>
+          <div id="selectedEdgeHint" class="sidebarSub">Select a link from the outgoing list or click a line.</div>
+
+          <div class="actionRow">
+            <button onclick="addWaypointToSelectedEdge()">Add Bend Point</button>
+            <button class="dangerBtn" onclick="clearWaypointsFromSelectedEdge()">Clear Bend Points</button>
+          </div>
+
+          <div id="waypointList" class="waypointList" style="margin-top:10px;">
+            <div class="changeEmpty">No link selected.</div>
+          </div>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Legend</h2>
+          <ul class="linkList">
+            <li><span style="color:#4CAF50;">●</span> Stable</li>
+            <li><span style="color:#E53935;">●</span> Dangerous</li>
+            <li><span style="color:#3E5F3A;">●</span> Corrupted</li>
+            <li><span style="color:#8E44AD;">●</span> Anomalous</li>
+          </ul>
+        </section>
+      </div>
+    </div>
   </div>
 
   <script src="editor-config.js"></script>
