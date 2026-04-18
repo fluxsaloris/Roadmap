@@ -21,8 +21,8 @@
       "description": "[REDACED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 824,
-      "y": -199
+      "x": 531,
+      "y": -190
     },
     {
       "id": "level-0-2",
@@ -33,8 +33,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 808,
-      "y": -15
+      "x": 532,
+      "y": -19
     },
     {
       "id": "level-0-3",
@@ -45,7 +45,7 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 817,
+      "x": 816,
       "y": 293
     },
     {
@@ -57,8 +57,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1103,
-      "y": -26
+      "x": 1095,
+      "y": -108
     },
     {
       "id": "level-0-b",
@@ -69,8 +69,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1086,
-      "y": 307
+      "x": 1231,
+      "y": 416
     },
     {
       "id": "level-0-4",
@@ -93,8 +93,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1371,
-      "y": 129
+      "x": 1567,
+      "y": 139
     },
     {
       "id": "level-1-1",
@@ -129,8 +129,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1659,
-      "y": 291
+      "x": 1966,
+      "y": 396
     },
     {
       "id": "level",
@@ -141,8 +141,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1658,
-      "y": 458
+      "x": 2431,
+      "y": 318
     },
     {
       "id": "level-2",
@@ -153,8 +153,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1973,
-      "y": -20
+      "x": 1957,
+      "y": 136
     },
     {
       "id": "level-3",
@@ -165,8 +165,8 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 1972,
-      "y": 288
+      "x": 2423,
+      "y": 143
     }
   ],
   "edges": [
@@ -182,7 +182,12 @@
       "to": "level-0-1",
       "label": "",
       "oneWay": true,
-      "waypoints": []
+      "waypoints": [
+        {
+          "x": 327,
+          "y": -187
+        }
+      ]
     },
     {
       "from": "level-0",
@@ -194,6 +199,180 @@
     {
       "from": "level-0",
       "to": "level-0-4",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-2",
+      "to": "level-0-a",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-a",
+      "to": "level-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-2",
+      "to": "level-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-1",
+      "to": "level-1-2",
+      "label": "",
+      "oneWay": true,
+      "waypoints": [
+        {
+          "x": 1279,
+          "y": -163
+        }
+      ]
+    },
+    {
+      "from": "level-0-1",
+      "to": "level-1-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-1",
+      "to": "level-2",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-2",
+      "to": "level-3",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-2",
+      "to": "level",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-1-2",
+      "to": "level-3",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-1-1",
+      "to": "level-1-3",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-1-3",
+      "to": "level",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-4",
+      "to": "level-0-b",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-4",
+      "to": "level-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-4",
+      "to": "level-1-2",
+      "label": "",
+      "oneWay": true,
+      "waypoints": [
+        {
+          "x": 1133,
+          "y": -14
+        }
+      ]
+    },
+    {
+      "from": "level-0-3",
+      "to": "level-2",
+      "label": "",
+      "oneWay": true,
+      "waypoints": [
+        {
+          "x": 1424,
+          "y": 267
+        }
+      ]
+    },
+    {
+      "from": "level-0-3",
+      "to": "level",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0",
+      "to": "level-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-2",
+      "to": "level-0-3",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-1",
+      "to": "level-0-4",
+      "label": "",
+      "oneWay": true,
+      "waypoints": [
+        {
+          "x": 699,
+          "y": -187
+        }
+      ]
+    },
+    {
+      "from": "level-0-b",
+      "to": "level-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-b",
+      "to": "level-1-1",
+      "label": "",
+      "oneWay": true,
+      "waypoints": []
+    },
+    {
+      "from": "level-0-b",
+      "to": "level-1-3",
       "label": "",
       "oneWay": true,
       "waypoints": []
