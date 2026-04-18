@@ -55,6 +55,14 @@
     return window.innerWidth <= 700;
   }
 
+  function getSceneOffset() {
+    const canvas = graphCanvas();
+    return {
+      x: Number(canvas?.dataset?.sceneMinX || 0),
+      y: Number(canvas?.dataset?.sceneMinY || 0)
+    };
+  }
+
   function graphViewportRect() {
     const viewport = graphViewport();
     if (!viewport) {
@@ -65,9 +73,11 @@
 
   function scenePointFromClient(clientX, clientY) {
     const rect = graphViewportRect();
+    const offset = getSceneOffset();
+
     return {
-      x: (clientX - rect.left - window.viewportState.x) / window.viewportState.scale,
-      y: (clientY - rect.top - window.viewportState.y) / window.viewportState.scale
+      x: (clientX - rect.left - window.viewportState.x) / window.viewportState.scale + offset.x,
+      y: (clientY - rect.top - window.viewportState.y) / window.viewportState.scale + offset.y
     };
   }
 
@@ -121,8 +131,8 @@
     const bounds = getGraphBounds(window.graphData?.nodes || []);
     const padding = isMobile() ? 240 : 360;
 
-    const minX = Math.min(0, Math.floor(bounds.minX - padding));
-    const minY = Math.min(0, Math.floor(bounds.minY - padding));
+    const minX = Math.floor(bounds.minX - padding);
+    const minY = Math.floor(bounds.minY - padding);
     const maxX = Math.ceil(bounds.maxX + padding);
     const maxY = Math.ceil(bounds.maxY + padding);
 
@@ -133,8 +143,8 @@
     canvas.dataset.sceneMinY = String(minY);
 
     canvas.style.position = "absolute";
-    canvas.style.left = `${minX}px`;
-    canvas.style.top = `${minY}px`;
+    canvas.style.left = "0";
+    canvas.style.top = "0";
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
 
@@ -209,8 +219,12 @@
       Math.min(isMobile() ? 1.8 : 2.4, window.viewportState.scale * factor)
     );
 
-    window.viewportState.x = px - rect.left - before.x * window.viewportState.scale;
-    window.viewportState.y = py - rect.top - before.y * window.viewportState.scale;
+    const offset = getSceneOffset();
+    const beforeLocalX = before.x - offset.x;
+    const beforeLocalY = before.y - offset.y;
+
+    window.viewportState.x = px - rect.left - beforeLocalX * window.viewportState.scale;
+    window.viewportState.y = py - rect.top - beforeLocalY * window.viewportState.scale;
 
     applyViewportTransform();
   }
@@ -388,6 +402,7 @@
   function refreshGraph() {
     const nodeLayer = nodesLayer();
     const svg = edgesLayer();
+    const offset = getSceneOffset();
 
     if (!nodeLayer || !svg || !window.graphData) return;
 
@@ -414,11 +429,14 @@
           : (window.getTypeLabel ? window.getTypeLabel(node.type) : "Stable");
         const safeStatus = window.escapeHtml ? window.escapeHtml(node.status || "draft") : (node.status || "draft");
 
+        const localX = (Number(node.x) || 0) - offset.x;
+        const localY = (Number(node.y) || 0) - offset.y;
+
         return `
           <div
             class="node ${typeClass} ${isSelected ? "selected" : ""}"
             data-node-id="${safeId}"
-            style="left:${Number(node.x) || 0}px; top:${Number(node.y) || 0}px;"
+            style="left:${localX}px; top:${localY}px;"
           >
             <div class="nodeHeader">
               <div class="nodeDot"></div>
