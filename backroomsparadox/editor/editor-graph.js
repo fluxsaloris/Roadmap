@@ -121,18 +121,26 @@
     const bounds = getGraphBounds(window.graphData?.nodes || []);
     const padding = isMobile() ? 240 : 360;
 
-    const width = Math.max(1600, Math.ceil(bounds.maxX + padding));
-    const height = Math.max(1100, Math.ceil(bounds.maxY + padding));
+    const minX = Math.min(0, Math.floor(bounds.minX - padding));
+    const minY = Math.min(0, Math.floor(bounds.minY - padding));
+    const maxX = Math.ceil(bounds.maxX + padding);
+    const maxY = Math.ceil(bounds.maxY + padding);
+
+    const width = Math.max(1600, maxX - minX);
+    const height = Math.max(1100, maxY - minY);
+
+    canvas.dataset.sceneMinX = String(minX);
+    canvas.dataset.sceneMinY = String(minY);
 
     canvas.style.position = "absolute";
-    canvas.style.left = "0";
-    canvas.style.top = "0";
+    canvas.style.left = `${minX}px`;
+    canvas.style.top = `${minY}px`;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
 
     svg.setAttribute("width", String(width));
     svg.setAttribute("height", String(height));
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
     svg.style.position = "absolute";
     svg.style.left = "0";
     svg.style.top = "0";
@@ -145,6 +153,7 @@
     nodes.style.width = `${width}px`;
     nodes.style.height = `${height}px`;
     nodes.style.overflow = "visible";
+    nodes.style.pointerEvents = "none";
   }
 
   function resetView() {
@@ -300,6 +309,20 @@
       : "edge-stable";
   }
 
+  function pointToSegmentDistance(px, py, ax, ay, bx, by) {
+    const dx = bx - ax;
+    const dy = by - ay;
+
+    if (dx === 0 && dy === 0) {
+      return Math.hypot(px - ax, py - ay);
+    }
+
+    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+    const cx = ax + t * dx;
+    const cy = ay + t * dy;
+    return Math.hypot(px - cx, py - cy);
+  }
+
   function addWaypointAtScenePosition(edgeKey, x, y) {
     if (typeof window.getEdgeByKey !== "function") return;
     const edge = window.getEdgeByKey(edgeKey);
@@ -309,19 +332,46 @@
       window.pushUndoState("Add bend point");
     }
 
-    if (!Array.isArray(edge.waypoints)) {
-      edge.waypoints = [];
+    const normalized = typeof window.normalizeWaypoints === "function"
+      ? window.normalizeWaypoints(edge.waypoints)
+      : (Array.isArray(edge.waypoints) ? edge.waypoints : []);
+
+    const points = buildEdgePoints({
+      ...edge,
+      waypoints: normalized
+    }) || [];
+
+    let insertIndex = normalized.length;
+
+    if (points.length >= 2) {
+      let bestDistance = Infinity;
+      let bestSegmentIndex = 0;
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const dist = pointToSegmentDistance(
+          x,
+          y,
+          points[i].x,
+          points[i].y,
+          points[i + 1].x,
+          points[i + 1].y
+        );
+
+        if (dist < bestDistance) {
+          bestDistance = dist;
+          bestSegmentIndex = i;
+        }
+      }
+
+      insertIndex = Math.max(0, Math.min(normalized.length, bestSegmentIndex));
     }
 
-    edge.waypoints = typeof window.normalizeWaypoints === "function"
-      ? window.normalizeWaypoints(edge.waypoints)
-      : edge.waypoints;
-
-    edge.waypoints.push({
+    normalized.splice(insertIndex, 0, {
       x: Math.round(x),
       y: Math.round(y)
     });
 
+    edge.waypoints = normalized;
     window.selectedEdgeKey = edgeKey;
 
     if (window.refreshAllUI) {
@@ -429,7 +479,7 @@
           class="edge-hit-area"
           fill="none"
           stroke="rgba(255,255,255,0.001)"
-          stroke-width="30"
+          stroke-width="34"
           stroke-linecap="round"
           stroke-linejoin="round"
           style="pointer-events:stroke;cursor:pointer;"
