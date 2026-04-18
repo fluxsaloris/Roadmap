@@ -81,7 +81,7 @@
       "description": "[REDACTED]",
       "notes": "[WIP]",
       "tags": [],
-      "x": 809,
+      "x": 807,
       "y": 470
     },
     {
@@ -172,13 +172,6 @@
   "edges": [
     {
       "from": "level-0",
-      "to": "level-1",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0",
       "to": "level-0-2",
       "label": "",
       "oneWay": true,
@@ -201,20 +194,6 @@
     {
       "from": "level-0",
       "to": "level-0-4",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-3",
-      "to": "level-0-a",
-      "label": "",
-      "oneWay": true,
-      "waypoints": []
-    },
-    {
-      "from": "level-0-4",
-      "to": "level-1",
       "label": "",
       "oneWay": true,
       "waypoints": []
