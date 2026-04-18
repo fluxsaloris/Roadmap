@@ -329,8 +329,6 @@
     .graphScene {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
       transform-origin: 0 0;
       will-change: transform;
     }
@@ -339,6 +337,13 @@
       position: absolute;
       left: 0;
       top: 0;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .graphNodes {
+      position: absolute;
+      inset: 0;
       overflow: visible;
       pointer-events: none;
     }
@@ -379,12 +384,7 @@
       stroke: rgba(0,0,0,0.65);
       stroke-width: 4px;
       stroke-linejoin: round;
-    }
-
-    .graphNodes {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
+      pointer-events: none;
     }
 
     .node {
@@ -399,6 +399,7 @@
       transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
       backdrop-filter: blur(5px);
       cursor: pointer;
+      pointer-events: auto;
     }
 
     .node:hover {
@@ -1030,11 +1031,12 @@
     }
 
     function makeUniqueId(base, used) {
-      let id = String(base || "node").trim() || "node";
+      let normalizedBase = String(base || "node").trim() || "node";
+      let id = normalizedBase;
       let i = 2;
 
       while (used.has(id)) {
-        id = `${base}-${i}`;
+        id = `${normalizedBase}-${i}`;
         i++;
       }
 
@@ -1050,97 +1052,104 @@
       return { x, y };
     }
 
-    function normalizeData(raw) {
-      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
-      const usedIds = new Set();
+    function normalizeWaypoints(value) {
+      if (!Array.isArray(value)) return [];
+      return value.map(normalizeWaypoint).filter(Boolean);
+    }
 
-      const nodes = rawNodes.map((n, index) => {
+    function buildNodeMapsFromRaw(rawNodes) {
+      const usedIds = new Set();
+      const nodes = [];
+      const rawKeyToId = new Map();
+
+      for (let i = 0; i < rawNodes.length; i++) {
+        const n = rawNodes[i] || {};
+
         const explicitId =
-          n?.id !== null && n?.id !== undefined && String(n.id).trim() !== ""
+          n.id !== null &&
+          n.id !== undefined &&
+          String(n.id).trim() !== ""
             ? String(n.id).trim()
             : null;
 
-        const finalId = makeUniqueId(explicitId || slugifyLabel(n?.label || `node-${index + 1}`), usedIds);
+        const label = typeof n.label === "string" ? n.label : "Unnamed";
 
-        return {
+        const finalId = makeUniqueId(
+          explicitId || slugifyLabel(label || `node-${i + 1}`),
+          usedIds
+        );
+
+        const node = {
           id: finalId,
-          label: typeof n?.label === "string" ? n.label : "Unnamed",
-          subtitle: typeof n?.subtitle === "string" ? n.subtitle : "",
-          description: typeof n?.description === "string" ? n.description : "",
-          notes: typeof n?.notes === "string" ? n.notes : "",
-          x: typeof n?.x === "number" ? n.x : (typeof n?.position?.x === "number" ? n.position.x : 0),
-          y: typeof n?.y === "number" ? n.y : (typeof n?.position?.y === "number" ? n.position.y : 0),
-          type: normalizeType(n?.type),
-          status: typeof n?.status === "string" ? n.status : "draft",
-          tags: Array.isArray(n?.tags) ? n.tags.map(tag => String(tag)) : []
+          label,
+          subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+          description: typeof n.description === "string" ? n.description : "",
+          notes: typeof n.notes === "string" ? n.notes : "",
+          x: typeof n.x === "number" ? n.x : 0,
+          y: typeof n.y === "number" ? n.y : 0,
+          type: normalizeType(n.type),
+          status: typeof n.status === "string" ? n.status : "draft",
+          tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
         };
-      });
 
-      const idLookup = new Map();
-      rawNodes.forEach((rawNode, index) => {
-        const node = nodes[index];
-        if (!node) return;
-        idLookup.set(node.id, node.id);
-        idLookup.set(node.label, node.id);
+        nodes.push(node);
 
-        if (rawNode?.id !== null && rawNode?.id !== undefined && String(rawNode.id).trim() !== "") {
-          idLookup.set(String(rawNode.id).trim(), node.id);
-        }
-      });
+        rawKeyToId.set(finalId, finalId);
+        rawKeyToId.set(label, finalId);
 
-      function resolveNodeRef(ref) {
-        if (ref == null) return null;
-        const key = String(ref).trim();
-        return idLookup.get(key) || null;
-      }
-
-      const rawTopLevelEdges = [
-        ...(Array.isArray(raw?.edges) ? raw.edges : []),
-        ...(Array.isArray(raw?.links) ? raw.links : []),
-        ...(Array.isArray(raw?.connections) ? raw.connections : [])
-      ];
-
-      const embeddedEdges = [];
-      for (const n of rawNodes) {
-        const fromRef = n?.id ?? n?.key ?? n?.name ?? n?.label;
-        const outgoing =
-          Array.isArray(n?.edges) ? n.edges :
-          Array.isArray(n?.links) ? n.links :
-          Array.isArray(n?.connections) ? n.connections :
-          Array.isArray(n?.outgoing) ? n.outgoing :
-          [];
-
-        for (const edge of outgoing) {
-          embeddedEdges.push({
-            from: fromRef,
-            to: edge?.to ?? edge?.target ?? edge?.destination ?? edge?.id,
-            label: edge?.label ?? edge?.name ?? "",
-            oneWay: edge?.oneWay,
-            points: edge?.points ?? edge?.waypoints ?? edge?.handles ?? []
-          });
+        if (explicitId) {
+          rawKeyToId.set(explicitId, finalId);
         }
       }
 
-      const allRawEdges = [...rawTopLevelEdges, ...embeddedEdges];
+      return { nodes, rawKeyToId };
+    }
+
+    function normalizeData(raw) {
+      const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+      const { nodes, rawKeyToId } = buildNodeMapsFromRaw(rawNodes);
+
+      const validIds = new Set(nodes.map(n => n.id));
       const seen = new Set();
+
+      const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
       const edges = [];
 
-      for (const e of allRawEdges) {
-        const from = resolveNodeRef(e?.from ?? e?.source ?? e?.start ?? e?.parent);
-        const to = resolveNodeRef(e?.to ?? e?.target ?? e?.end ?? e?.child);
-        if (!from || !to || from === to) continue;
+      for (const e of rawEdges) {
+        const rawFrom =
+          e?.from !== null &&
+          e?.from !== undefined &&
+          String(e.from).trim() !== ""
+            ? String(e.from).trim()
+            : null;
 
-        const label = typeof e?.label === "string" ? e.label : (typeof e?.name === "string" ? e.name : "");
-        const oneWay = e?.oneWay === false ? false : true;
-        const points = Array.isArray(e?.points ?? e?.waypoints ?? e?.handles)
-          ? (e.points ?? e.waypoints ?? e.handles).map(normalizeWaypoint).filter(Boolean)
-          : [];
+        const rawTo =
+          e?.to !== null &&
+          e?.to !== undefined &&
+          String(e.to).trim() !== ""
+            ? String(e.to).trim()
+            : null;
 
-        const key = `${from}→${to}|${label}|${oneWay}|${JSON.stringify(points)}`;
+        const from = rawFrom ? rawKeyToId.get(rawFrom) || null : null;
+        const to = rawTo ? rawKeyToId.get(rawTo) || null : null;
+
+        if (!from || !to) continue;
+        if (!validIds.has(from) || !validIds.has(to)) continue;
+        if (from === to) continue;
+
+        const edge = {
+          from,
+          to,
+          label: typeof e?.label === "string" ? e.label : "",
+          oneWay: e?.oneWay === false ? false : true,
+          waypoints: normalizeWaypoints(e?.waypoints ?? e?.points ?? e?.handles)
+        };
+
+        const key = `${edge.from}|${edge.to}|${edge.label}|${edge.oneWay === false ? "0" : "1"}|${JSON.stringify(edge.waypoints)}`;
         if (seen.has(key)) continue;
-        seen.add(key);
 
-        edges.push({ from, to, label, oneWay, points });
+        seen.add(key);
+        edges.push(edge);
       }
 
       return { nodes, edges };
@@ -1200,11 +1209,21 @@
       return related;
     }
 
+    function getSceneOffset() {
+      const scene = graphScene();
+      return {
+        x: Number(scene?.dataset?.sceneMinX || 0),
+        y: Number(scene?.dataset?.sceneMinY || 0)
+      };
+    }
+
     function scenePointFromClient(clientX, clientY) {
       const rect = graphViewport().getBoundingClientRect();
+      const offset = getSceneOffset();
+
       return {
-        x: (clientX - rect.left - viewportState.x) / viewportState.scale,
-        y: (clientY - rect.top - viewportState.y) / viewportState.scale
+        x: (clientX - rect.left - viewportState.x) / viewportState.scale + offset.x,
+        y: (clientY - rect.top - viewportState.y) / viewportState.scale + offset.y
       };
     }
 
@@ -1217,11 +1236,60 @@
         return { minX: 0, maxX: 1000, minY: 0, maxY: 600 };
       }
 
-      const minX = Math.min(...nodes.map(n => n.x));
-      const maxX = Math.max(...nodes.map(n => n.x));
-      const minY = Math.min(...nodes.map(n => n.y));
-      const maxY = Math.max(...nodes.map(n => n.y));
-      return { minX, maxX, minY, maxY };
+      const allX = [];
+      const allY = [];
+
+      for (const node of nodes) {
+        allX.push(Number(node.x) || 0);
+        allY.push(Number(node.y) || 0);
+      }
+
+      for (const edge of graphData.edges) {
+        for (const point of normalizeWaypoints(edge.waypoints)) {
+          allX.push(point.x);
+          allY.push(point.y);
+        }
+      }
+
+      return {
+        minX: Math.min(...allX),
+        maxX: Math.max(...allX),
+        minY: Math.min(...allY),
+        maxY: Math.max(...allY)
+      };
+    }
+
+    function syncSceneSize() {
+      const scene = graphScene();
+      const svg = graphSvg();
+      const nodes = graphNodesEl();
+
+      const bounds = getGraphBounds(graphData.nodes);
+      const padding = isMobileLayout() ? 240 : 360;
+
+      const minX = Math.floor(bounds.minX - padding);
+      const minY = Math.floor(bounds.minY - padding);
+      const maxX = Math.ceil(bounds.maxX + padding);
+      const maxY = Math.ceil(bounds.maxY + padding);
+
+      const width = Math.max(1600, maxX - minX);
+      const height = Math.max(1100, maxY - minY);
+
+      scene.dataset.sceneMinX = String(minX);
+      scene.dataset.sceneMinY = String(minY);
+
+      scene.style.position = "absolute";
+      scene.style.left = "0";
+      scene.style.top = "0";
+      scene.style.width = `${width}px`;
+      scene.style.height = `${height}px`;
+
+      svg.setAttribute("width", String(width));
+      svg.setAttribute("height", String(height));
+      svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+
+      nodes.style.width = `${width}px`;
+      nodes.style.height = `${height}px`;
     }
 
     function fitToGraph() {
@@ -1258,38 +1326,14 @@
       const px = clientX ?? (rect.left + rect.width / 2);
       const py = clientY ?? (rect.top + rect.height / 2);
       const before = scenePointFromClient(px, py);
+      const offset = getSceneOffset();
+      const beforeLocalX = before.x - offset.x;
+      const beforeLocalY = before.y - offset.y;
 
       viewportState.scale = Math.max(0.22, Math.min(isMobileLayout() ? 1.8 : 2.4, viewportState.scale * factor));
-      viewportState.x = px - rect.left - before.x * viewportState.scale;
-      viewportState.y = py - rect.top - before.y * viewportState.scale;
+      viewportState.x = px - rect.left - beforeLocalX * viewportState.scale;
+      viewportState.y = py - rect.top - beforeLocalY * viewportState.scale;
       applyViewportTransform();
-    }
-
-    function createDefaultCurvePath(x1, y1, x2, y2) {
-      const dx = Math.max(isMobileLayout() ? 50 : 80, Math.abs(x2 - x1) * 0.45);
-      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-    }
-
-    function createWaypointPath(fromX, fromY, toX, toY, points) {
-      const validPoints = Array.isArray(points)
-        ? points.filter(p => p && typeof p.x === "number" && typeof p.y === "number")
-        : [];
-
-      if (!validPoints.length) {
-        return createDefaultCurvePath(fromX, fromY, toX, toY);
-      }
-
-      const route = [{ x: fromX, y: fromY }, ...validPoints, { x: toX, y: toY }];
-      let d = `M ${route[0].x} ${route[0].y}`;
-
-      for (let i = 1; i < route.length; i++) {
-        const prev = route[i - 1];
-        const curr = route[i];
-        const midX = (prev.x + curr.x) / 2;
-        d += ` C ${midX} ${prev.y}, ${midX} ${curr.y}, ${curr.x} ${curr.y}`;
-      }
-
-      return d;
     }
 
     function getNodePortPosition(nodeId, side) {
@@ -1302,19 +1346,60 @@
       };
     }
 
-    function syncSvgSize() {
-      const svg = graphSvg();
-      const bounds = getGraphBounds(graphData.nodes);
-      const padding = isMobileLayout() ? 300 : 600;
+    function buildEdgePoints(edge) {
+      const fromPort = getNodePortPosition(edge.from, "output");
+      const toPort = getNodePortPosition(edge.to, "input");
+      if (!fromPort || !toPort) return null;
 
-      const minX = bounds.minX - padding;
-      const minY = bounds.minY - padding;
-      const width = Math.max(2000, (bounds.maxX - bounds.minX) + padding * 2);
-      const height = Math.max(1400, (bounds.maxY - bounds.minY) + padding * 2);
+      return [fromPort, ...normalizeWaypoints(edge.waypoints), toPort];
+    }
 
-      svg.setAttribute("width", String(width));
-      svg.setAttribute("height", String(height));
-      svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+    function createSegmentPath(points) {
+      if (!points || points.length < 2) return "";
+
+      let path = `M ${points[0].x} ${points[0].y}`;
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const a = points[i];
+        const b = points[i + 1];
+        const dx = Math.abs(b.x - a.x);
+        const curve = Math.max(30, Math.min(120, dx * 0.35));
+        path += ` C ${a.x + curve} ${a.y}, ${b.x - curve} ${b.y}, ${b.x} ${b.y}`;
+      }
+
+      return path;
+    }
+
+    function getEdgeMidpoint(points) {
+      if (!points || points.length < 2) {
+        return { x: 0, y: 0 };
+      }
+
+      let total = 0;
+      const lengths = [];
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const dx = points[i + 1].x - points[i].x;
+        const dy = points[i + 1].y - points[i].y;
+        const len = Math.hypot(dx, dy);
+        lengths.push(len);
+        total += len;
+      }
+
+      let target = total / 2;
+
+      for (let i = 0; i < lengths.length; i++) {
+        if (target <= lengths[i]) {
+          const ratio = lengths[i] === 0 ? 0 : target / lengths[i];
+          return {
+            x: points[i].x + (points[i + 1].x - points[i].x) * ratio,
+            y: points[i].y + (points[i + 1].y - points[i].y) * ratio
+          };
+        }
+        target -= lengths[i];
+      }
+
+      return points[Math.floor(points.length / 2)];
     }
 
     function updateStats() {
@@ -1399,10 +1484,11 @@
     }
 
     function refreshGraph() {
-      syncSvgSize();
+      syncSceneSize();
 
       const visibleNodeIds = getVisibleNodeIds();
       const relatedNodeIds = selectedNodeId ? getRelatedNodeIds(selectedNodeId) : null;
+      const offset = getSceneOffset();
 
       graphNodesEl().innerHTML = graphData.nodes
         .filter(node => visibleNodeIds.has(node.id))
@@ -1416,7 +1502,7 @@
             <div
               class="node ${escapeHtml(typeClass)} ${isSelected ? "selected" : ""} ${isRelated && !isSelected ? "related" : ""} ${isDimmed ? "dimmed" : ""}"
               data-node-id="${escapeHtml(node.id)}"
-              style="left:${node.x}px; top:${node.y}px;"
+              style="left:${node.x - offset.x}px; top:${node.y - offset.y}px;"
             >
               <div class="nodeHeader">
                 <div class="nodeDot"></div>
@@ -1437,35 +1523,24 @@
       );
 
       for (const edge of visibleEdges) {
-        const fromPort = getNodePortPosition(edge.from, "output");
-        const toPort = getNodePortPosition(edge.to, "input");
-        if (!fromPort || !toPort) continue;
+        const points = buildEdgePoints(edge);
+        if (!points || points.length < 2) continue;
 
         const fromNode = getNodeById(edge.from);
         const edgeTypeClass = getTypeEdgeClass(fromNode?.type || "stable");
         const related = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
         const dimmed = selectedNodeId && !related;
 
-        const path = createWaypointPath(
-          fromPort.x,
-          fromPort.y,
-          toPort.x,
-          toPort.y,
-          edge.points || []
-        );
+        const path = createSegmentPath(points);
 
         svgParts.push(
           `<path d="${path}" class="${related ? "line-selected" : dimmed ? "line-dimmed" : "line-base"} ${edgeTypeClass}"></path>`
         );
 
         if (edge.label) {
-          const labelPoint = Array.isArray(edge.points) && edge.points.length
-            ? edge.points[Math.floor(edge.points.length / 2)]
-            : { x: (fromPort.x + toPort.x) / 2, y: (fromPort.y + toPort.y) / 2 };
-
-          const midY = labelPoint.y - (isMobileLayout() ? 8 : 10);
+          const mid = getEdgeMidpoint(points);
           svgParts.push(
-            `<text x="${labelPoint.x}" y="${midY}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
+            `<text x="${mid.x}" y="${mid.y - (isMobileLayout() ? 8 : 10)}" text-anchor="middle" class="edgeLabel">${escapeHtml(edge.label)}</text>`
           );
         }
       }
@@ -1648,7 +1723,7 @@
     }
 
     function handleResize() {
-      syncSvgSize();
+      syncSceneSize();
       applyViewportTransform();
       refreshGraph();
     }
