@@ -1083,13 +1083,13 @@ function init() {
   }
 
   const viewport = document.getElementById("graphViewport");
-  viewport.addEventListener("click", () => {
-    clearSelection();
-  });
+  if (viewport) {
+    viewport.addEventListener("click", () => {
+      clearSelection();
+    });
+  }
 
-  loadGraph().then(() => {
-    setTimeout(fitToGraph, 100);
-  });
+  loadGraph();
 }
 
 window.fitToGraph = fitToGraph;
