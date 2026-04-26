@@ -876,6 +876,8 @@ function updateStats() {
   document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
 }
 
+let sceneOffset = { x: 0, y: 0 };
+
 function renderGraph() {
   const nodesEl = document.getElementById("graphNodes");
   const svg = document.getElementById("graphSvg");
@@ -886,17 +888,22 @@ function renderGraph() {
   const bounds = getBounds();
   const padding = 260;
 
-  const minX = bounds.minX - padding;
-  const minY = bounds.minY - padding;
-  const width = bounds.maxX - bounds.minX + padding * 2;
-  const height = bounds.maxY - bounds.minY + padding * 2;
+  sceneOffset.x = bounds.minX - padding;
+  sceneOffset.y = bounds.minY - padding;
+
+  const width = Math.max(1200, bounds.maxX - bounds.minX + padding * 2);
+  const height = Math.max(800, bounds.maxY - bounds.minY + padding * 2);
 
   svg.setAttribute("width", width);
   svg.setAttribute("height", height);
-  svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-  document.getElementById("graphScene").style.width = `${width}px`;
-  document.getElementById("graphScene").style.height = `${height}px`;
+  const scene = document.getElementById("graphScene");
+  scene.style.width = `${width}px`;
+  scene.style.height = `${height}px`;
+
+  nodesEl.style.width = `${width}px`;
+  nodesEl.style.height = `${height}px`;
 
   renderEdges(svg);
   renderNodes(nodesEl);
@@ -922,34 +929,38 @@ function renderEdges(svg) {
   graphData.edges.forEach(edge => {
     const from = getNodeById(edge.from);
     const to = getNodeById(edge.to);
-
     if (!from || !to) return;
+
+    const fromX = from.x - sceneOffset.x;
+    const fromY = from.y - sceneOffset.y;
+    const toX = to.x - sceneOffset.x;
+    const toY = to.y - sceneOffset.y;
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
-    const dx = Math.abs(to.x - from.x);
+    const dx = Math.abs(toX - fromX);
     const curve = Math.max(40, Math.min(140, dx * 0.35));
 
     const d = `
-      M ${from.x + 85} ${from.y}
-      C ${from.x + 85 + curve} ${from.y},
-        ${to.x - 85 - curve} ${to.y},
-        ${to.x - 85} ${to.y}
+      M ${fromX + 85} ${fromY}
+      C ${fromX + 85 + curve} ${fromY},
+        ${toX - 85 - curve} ${toY},
+        ${toX - 85} ${toY}
     `;
 
+    const edgeClass =
+      selectedNodeId && edge.from !== selectedNodeId && edge.to !== selectedNodeId
+        ? "line-dimmed"
+        : `line-base edge-${from.type || "stable"}`;
+
     path.setAttribute("d", d);
-    path.setAttribute("class", `line-base edge-${from.type || "stable"}`);
-
-    if (selectedNodeId && edge.from !== selectedNodeId && edge.to !== selectedNodeId) {
-      path.setAttribute("class", "line-dimmed");
-    }
-
+    path.setAttribute("class", edgeClass);
     svg.appendChild(path);
 
     if (edge.label) {
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", (from.x + to.x) / 2);
-      text.setAttribute("y", (from.y + to.y) / 2 - 10);
+      text.setAttribute("x", (fromX + toX) / 2);
+      text.setAttribute("y", (fromY + toY) / 2 - 10);
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("class", "edgeLabel");
       text.textContent = edge.label;
@@ -966,8 +977,9 @@ function renderNodes(nodesEl) {
     const dimmed = selectedNodeId && !related;
 
     el.className = `node ${node.type || "stable"} ${selectedNodeId === node.id ? "selected" : ""} ${related ? "related" : ""} ${dimmed ? "dimmed" : ""}`;
-    el.style.left = `${node.x}px`;
-    el.style.top = `${node.y}px`;
+
+    el.style.left = `${node.x - sceneOffset.x}px`;
+    el.style.top = `${node.y - sceneOffset.y}px`;
 
     el.innerHTML = `
       <div class="nodeHeader">
@@ -992,59 +1004,26 @@ function renderNodes(nodesEl) {
   });
 }
 
-function isRelated(id) {
-  if (id === selectedNodeId) return true;
-
-  return graphData.edges.some(edge =>
-    (edge.from === selectedNodeId && edge.to === id) ||
-    (edge.to === selectedNodeId && edge.from === id)
-  );
-}
-
-function updateSidebar() {
-  const node = getNodeById(selectedNodeId);
-
-  document.getElementById("infoLabel").textContent = node?.label || "—";
-  document.getElementById("infoType").textContent = node?.type || "—";
-  document.getElementById("infoDescription").textContent = node?.description || "—";
-
-  const outgoing = graphData.edges.filter(e => e.from === selectedNodeId);
-  const incoming = graphData.edges.filter(e => e.to === selectedNodeId);
-
-  const items = [...outgoing, ...incoming].map(edge => {
-    const otherId = edge.from === selectedNodeId ? edge.to : edge.from;
-    const other = getNodeById(otherId);
-    return `<li>${escapeHtml(other?.label || otherId)}</li>`;
-  });
-
-  document.getElementById("outgoingList").innerHTML = items.length
-    ? items.join("")
-    : "<li>No connections selected.</li>";
-}
-
-function clearSelection() {
-  selectedNodeId = null;
-  updateSidebar();
-  renderGraph();
-}
-
 function fitToGraph() {
   const viewport = document.getElementById("graphViewport");
   const scene = document.getElementById("graphScene");
 
-  const bounds = getBounds();
   const rect = viewport.getBoundingClientRect();
+  const bounds = getBounds();
 
-  const graphWidth = Math.max(600, bounds.maxX - bounds.minX + 400);
-  const graphHeight = Math.max(400, bounds.maxY - bounds.minY + 300);
+  const graphWidth = Math.max(600, bounds.maxX - bounds.minX + 520);
+  const graphHeight = Math.max(400, bounds.maxY - bounds.minY + 520);
 
   const scale = Math.min(
     1.15,
     Math.max(0.35, Math.min(rect.width / graphWidth, rect.height / graphHeight))
   );
 
-  const x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * scale;
-  const y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * scale;
+  const centerX = (bounds.minX + bounds.maxX) / 2 - sceneOffset.x;
+  const centerY = (bounds.minY + bounds.maxY) / 2 - sceneOffset.y;
+
+  const x = rect.width / 2 - centerX * scale;
+  const y = rect.height / 2 - centerY * scale;
 
   scene.style.transformOrigin = "0 0";
   scene.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
