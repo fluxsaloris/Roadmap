@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dungeon Call Roadmap</title>
+
   <style>
     :root {
       --bg: #070709;
@@ -14,22 +15,45 @@
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
+      --frame: rgba(190, 26, 72, 0.45);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    body.light {
+      --bg: #f7f7f7;
+      --surface: rgba(255, 255, 255, 0.94);
+      --surface-soft: rgba(0, 0, 0, 0.035);
+      --border: rgba(0, 0, 0, 0.10);
+      --text: #111111;
+      --muted: #555555;
+      --muted-2: #777777;
+      --frame: rgba(190, 26, 72, 0.55);
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.14);
+      --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.10);
     }
 
     * {
       box-sizing: border-box;
       min-width: 0;
       -webkit-tap-highlight-color: transparent;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
 
-    html, body {
+    *::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    html,
+    body {
       margin: 0;
       padding: 0;
       min-height: 100%;
       width: 100%;
-      background: var(--bg);
+      background: transparent;
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
       overflow-x: hidden;
@@ -38,9 +62,15 @@
     body {
       position: relative;
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 28%),
         radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
-        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+    }
+
+    body.light {
+      background:
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
     }
 
     body::before {
@@ -57,14 +87,26 @@
         radial-gradient(1px 1px at 81% 58%, rgba(255,255,255,0.7), transparent);
     }
 
+    body.light::before {
+      opacity: 0.035;
+      background-image:
+        radial-gradient(1px 1px at 12% 20%, rgba(0,0,0,0.85), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(0,0,0,0.7), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(0,0,0,0.8), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(0,0,0,0.7), transparent);
+    }
+
     body::after {
       content: "";
       position: fixed;
       inset: 0;
       margin: 8px;
-      border-radius: 16px;
-      border: 1px solid rgba(190, 26, 72, 0.10);
-      box-shadow: 0 0 20px rgba(190, 26, 72, 0.04);
+      border-radius: 22px;
+      border: 2px solid var(--frame);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 0 22px rgba(190, 26, 72, 0.18),
+        0 18px 40px rgba(0,0,0,0.22);
       pointer-events: none;
       z-index: 1;
     }
@@ -76,6 +118,26 @@
       margin: 0 auto;
       padding: 18px 16px 34px;
       width: 100%;
+    }
+
+    #viewerThemeButton {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 80;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: var(--shadow-md);
+    }
+
+    #viewerThemeButton:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
 
     .hero,
@@ -91,7 +153,6 @@
       position: sticky;
       top: 8px;
       z-index: 20;
-      background: rgba(13, 13, 18, 0.68);
       padding: 14px 16px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -127,6 +188,7 @@
       line-height: 1.05;
       letter-spacing: -0.02em;
       word-break: break-word;
+      color: var(--text);
     }
 
     .heroTitle p {
@@ -162,7 +224,12 @@
     .status-pending {
       background: rgba(255,255,255,0.04);
       border-color: rgba(255,255,255,0.08);
-      color: #c8c8d4;
+      color: var(--muted);
+    }
+
+    body.light .status-pending {
+      background: rgba(0,0,0,0.04);
+      border-color: rgba(0,0,0,0.08);
     }
 
     .status-progress {
@@ -171,10 +238,18 @@
       color: #ffc0d1;
     }
 
+    body.light .status-progress {
+      color: #8f1236;
+    }
+
     .status-complete {
       background: rgba(110, 240, 138, 0.12);
       border-color: rgba(110, 240, 138, 0.34);
       color: #c7ffd4;
+    }
+
+    body.light .status-complete {
+      color: #176b2d;
     }
 
     .heroControls {
@@ -187,7 +262,7 @@
 
     #searchInput {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: var(--surface-soft);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 13px;
@@ -198,10 +273,13 @@
       font-family: inherit;
     }
 
+    #searchInput::placeholder {
+      color: var(--muted-2);
+    }
+
     #searchInput:focus {
       border-color: rgba(190, 26, 72, 0.42);
       box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
-      background: rgba(255,255,255,0.05);
     }
 
     .toolbar {
@@ -213,9 +291,9 @@
 
     button {
       appearance: none;
-      background: rgba(255,255,255,0.04);
-      color: #e5e5ec;
-      border: 1px solid rgba(255,255,255,0.09);
+      background: var(--surface-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 9px 12px;
       font-size: 13px;
@@ -228,8 +306,7 @@
     }
 
     button:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.14);
+      border-color: rgba(190, 26, 72, 0.34);
       transform: translateY(-1px);
     }
 
@@ -262,7 +339,7 @@
     .statValue {
       font-size: 18px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       letter-spacing: -0.02em;
     }
 
@@ -282,7 +359,7 @@
 
     .progressText {
       font-size: 11px;
-      color: #c0c1cd;
+      color: var(--muted);
       margin-bottom: 5px;
       font-weight: 600;
       word-break: break-word;
@@ -291,8 +368,8 @@
     .progressTrack {
       width: 100%;
       height: 7px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -342,6 +419,7 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       word-break: break-word;
+      color: var(--text);
     }
 
     .rootTitle {
@@ -399,9 +477,9 @@
       padding: 5px 8px;
       font-size: 10.5px;
       font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-      color: #c1c2ce;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
       max-width: 100%;
     }
 
@@ -436,7 +514,7 @@
     }
 
     .treeNode {
-      background: rgba(255,255,255,0.02);
+      background: var(--surface-soft);
       border: 1px solid var(--border);
       border-radius: 13px;
       padding: 10px;
@@ -457,7 +535,7 @@
     .childrenWrap {
       margin-top: 8px;
       padding-left: 10px;
-      border-left: 1px solid rgba(255,255,255,0.06);
+      border-left: 1px solid var(--border);
       width: 100%;
     }
 
@@ -486,6 +564,10 @@
       justify-content: center;
     }
 
+    body.light #loadingOverlay {
+      background: rgba(247,247,247,0.82);
+    }
+
     #loadingCard {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -499,13 +581,13 @@
 
     #loadingText {
       font-size: 14px;
-      color: #e2e2ea;
+      color: var(--text);
     }
 
     .spinner {
       width: 34px;
       height: 34px;
-      border: 3px solid rgba(255,255,255,0.10);
+      border: 3px solid var(--border);
       border-top: 3px solid #be1a48;
       border-radius: 50%;
       animation: spin 0.95s linear infinite;
@@ -587,6 +669,11 @@
           calc(24px + env(safe-area-inset-bottom));
       }
 
+      #viewerThemeButton {
+        top: 14px;
+        right: 14px;
+      }
+
       .hero {
         position: relative;
         top: 0;
@@ -627,6 +714,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="loadingOverlay">
     <div id="loadingCard">
@@ -641,6 +729,8 @@
   </div>
 
   <div id="app">
+    <button id="viewerThemeButton" type="button">Light Mode</button>
+
     <section class="hero">
       <div class="heroTop">
         <div class="heroTitle">
@@ -691,6 +781,28 @@
   <script>
     const RAW_JSON_URL = "./roadmap.json";
 
+    let currentTheme = localStorage.getItem("roadmapTheme") || "dark";
+
+    function applyViewerTheme(theme) {
+      currentTheme = theme === "light" ? "light" : "dark";
+      localStorage.setItem("roadmapTheme", currentTheme);
+
+      document.body.classList.toggle("light", currentTheme === "light");
+
+      const btn = document.getElementById("viewerThemeButton");
+      if (btn) {
+        btn.textContent = currentTheme === "light" ? "Dark Mode" : "Light Mode";
+      }
+    }
+
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+
+      if (data && data.type === "theme") {
+        applyViewerTheme(data.theme);
+      }
+    });
+
     let graphData = { nodes: [], edges: [] };
     let childMap = new Map();
     let nodeMap = new Map();
@@ -712,7 +824,7 @@
     function setStatus(text, isError = false) {
       const el = document.getElementById("statusLine");
       el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "#a7a7b5";
+      el.style.color = isError ? "#ff9a9a" : "var(--muted)";
     }
 
     function showErrorPanel(message) {
@@ -1068,6 +1180,15 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      applyViewerTheme(currentTheme);
+
+      const viewerThemeButton = document.getElementById("viewerThemeButton");
+      if (viewerThemeButton) {
+        viewerThemeButton.addEventListener("click", () => {
+          applyViewerTheme(currentTheme === "dark" ? "light" : "dark");
+        });
+      }
+
       const input = document.getElementById("searchInput");
       input.addEventListener("input", () => {
         currentSearch = input.value || "";
