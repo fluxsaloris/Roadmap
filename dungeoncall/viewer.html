@@ -15,7 +15,7 @@
       --muted: #a7a7b5;
       --muted-2: #7f8091;
       --accent: #be1a48;
-      --frame: rgba(190, 26, 72, 0.45);
+      --frame: rgba(190, 26, 72, 0.52);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.30);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.18);
     }
@@ -28,7 +28,7 @@
       --text: #111111;
       --muted: #555555;
       --muted-2: #777777;
-      --frame: rgba(190, 26, 72, 0.55);
+      --frame: rgba(190, 26, 72, 0.58);
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.14);
       --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.10);
     }
@@ -53,7 +53,7 @@
       padding: 0;
       min-height: 100%;
       width: 100%;
-      background: transparent;
+      background: var(--bg);
       color: var(--text);
       font-family: Inter, Arial, sans-serif;
       overflow-x: hidden;
@@ -61,15 +61,15 @@
 
     body {
       position: relative;
+      padding: 14px;
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.10), transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
     }
 
     body.light {
       background:
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
+        radial-gradient(circle at top left, rgba(190, 26, 72, 0.05), transparent 28%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
     }
 
@@ -101,12 +101,27 @@
       z-index: 2;
       max-width: 1620px;
       margin: 0 auto;
-      padding: 0;
+      padding: 16px;
       width: 100%;
+      border: 2px solid var(--frame);
+      border-radius: 22px;
+      background: var(--bg);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.06) inset,
+        0 18px 40px rgba(0,0,0,0.22),
+        0 0 26px rgba(190, 26, 72, 0.16);
+    }
+
+    body.light #app {
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.9) inset,
+        0 18px 40px rgba(0,0,0,0.10),
+        0 0 22px rgba(190, 26, 72, 0.12);
     }
 
     #viewerThemeButton {
-      position: fixed;
+      position: absolute;
       top: 18px;
       right: 18px;
       z-index: 80;
@@ -141,7 +156,7 @@
       padding: 14px 16px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .heroTop {
@@ -150,6 +165,7 @@
       align-items: flex-start;
       justify-content: space-between;
       flex-wrap: wrap;
+      padding-right: 120px;
     }
 
     .heroTitle {
@@ -616,9 +632,21 @@
     }
 
     @media (max-width: 1100px) {
+      body {
+        padding: 10px;
+      }
+
+      #app {
+        padding: 12px;
+      }
+
       .hero {
         position: relative;
         top: 0;
+      }
+
+      .heroTop {
+        padding-right: 0;
       }
 
       #panels {
@@ -640,23 +668,23 @@
       .stats {
         grid-template-columns: repeat(2, minmax(110px, 1fr));
       }
+
+      #viewerThemeButton {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 12px;
+      }
     }
 
     @media (max-width: 768px) {
-      body::after {
-        margin: 6px;
+      body {
+        padding: 8px;
       }
 
       #app {
-        padding:
-          calc(14px + env(safe-area-inset-top))
-          12px
-          calc(24px + env(safe-area-inset-bottom));
-      }
-
-      #viewerThemeButton {
-        top: 14px;
-        right: 14px;
+        padding: 10px;
+        border-radius: 18px;
       }
 
       .hero {
