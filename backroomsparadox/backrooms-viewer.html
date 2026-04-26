@@ -279,7 +279,7 @@
       justify-content: flex-end;
     }
 
-    .mobileControlsGrid {
+        .mobileControlsGrid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
@@ -457,6 +457,10 @@
       opacity: 1;
     }
 
+    body.light .line-selected {
+      filter: drop-shadow(0 0 8px rgba(0,0,0,0.12));
+    }
+
     .line-dimmed {
       fill: none;
       stroke: rgba(255,255,255,0.08);
@@ -499,7 +503,7 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow-md);
       transform: translate(-50%, -50%);
-      transition: all .14s ease;
+      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
       backdrop-filter: blur(5px);
       cursor: pointer;
       pointer-events: auto;
@@ -518,7 +522,7 @@
 
     .node.selected {
       z-index: 30;
-      box-shadow: 0 0 0 3px rgba(190, 26, 72, 0.25);
+      box-shadow: 0 0 0 3px rgba(190, 26, 72, 0.25), var(--shadow-md);
     }
 
     .node.related {
@@ -533,7 +537,7 @@
       opacity: 0.42;
     }
 
-    .nodeHeader {
+        .nodeHeader {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -588,7 +592,7 @@
       background: rgba(0,0,0,0.05);
     }
 
-        .sidebarTitle {
+    .sidebarTitle {
       margin: 0 0 10px;
       font-size: 14px;
       font-weight: 800;
@@ -603,214 +607,488 @@
       margin-bottom: 10px;
     }
 
+    .infoList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .infoBlock {
+      display: grid;
+      gap: 5px;
+    }
+
+    .infoLabel {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-2);
+      font-weight: 700;
+    }
+
     .infoValue {
       color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
     }
 
     .linkList, .legendList {
+      margin: 0;
+      padding-left: 18px;
       color: var(--text);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .linkList li + li, .legendList li + li {
+      margin-top: 4px;
+    }
+
+    /* Mobile */
+
+    .mobileFabStack {
+      position: fixed;
+      right: 10px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mobileFab {
+      width: var(--mobile-fab-size);
+      height: var(--mobile-fab-size);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      box-shadow: var(--shadow-lg);
+      background: var(--surface);
+    }
+
+    @media (max-width: 700px) {
+      body::after { display: none; }
+
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #app {
+        padding: 0;
+        height: 100vh;
+      }
+
+      .hero, .rightColumn {
+        display: none !important;
+      }
+
+      .graphViewport {
+        position: fixed;
+        inset: 0;
+        border-radius: 0;
+        border: none;
+      }
+
+      .node {
+        min-width: var(--node-width-mobile);
+        max-width: 155px;
+        padding: 8px;
+      }
+
+      .nodeTitle {
+        font-size: 11px;
+      }
+
+      .nodeSubtitle {
+        font-size: 9px;
+      }
+
+      .mobileFabStack {
+        display: flex;
+      }
     }
   </style>
 </head>
 
 <body>
-  <button id="viewerThemeButton">Light Mode</button>
 
-  <div id="loadingOverlay">
-    <div id="loadingCard">
-      <div class="spinner"></div>
-      <div id="loadingText">Loading graph...</div>
+<button id="viewerThemeButton">Light Mode</button>
+
+<div id="loadingOverlay">
+  <div id="loadingCard">
+    <div class="spinner"></div>
+    <div id="loadingText">Loading graph...</div>
+  </div>
+</div>
+
+<div id="errorPanel">
+  <div id="errorPanelTitle">Couldn’t load viewer</div>
+  <div id="errorPanelText">Try refreshing or check your connection.</div>
+</div>
+
+<div id="app">
+
+    <section class="hero">
+    <div class="heroTop">
+      <div class="heroTitle">
+        <div class="eyebrow">Backrooms Paradox: Map</div>
+        <h1>Backrooms Paradox: Level Paths</h1>
+        <p>Explore level paths and connections.</p>
+      </div>
+
+      <div class="heroMeta">
+        <div class="infoBadge" id="statNodes">0 nodes</div>
+        <div class="infoBadge" id="statEdges">0 links</div>
+      </div>
+    </div>
+
+    <div class="heroControls">
+      <input id="searchInput" type="text" placeholder="Search..." />
+      <div class="toolbar">
+        <button onclick="fitToGraph()">Fit</button>
+        <button onclick="clearSelection()">Clear</button>
+        <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="statusLine" id="statusLine">Loading graph...</div>
+  </section>
+
+  <div class="workspaceRow">
+    <div class="leftColumn">
+      <section class="panel canvasPanel">
+        <div class="graphViewport" id="graphViewport">
+          <div class="graphScene" id="graphScene">
+            <svg id="graphSvg" class="graphSvg"></svg>
+            <div id="graphNodes" class="graphNodes"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="rightColumn">
+      <section class="sidebarCard">
+        <h2 class="sidebarTitle">Selected Level</h2>
+
+        <div class="infoList">
+          <div class="infoBlock"><div class="infoLabel">Label</div><div id="infoLabel" class="infoValue">—</div></div>
+          <div class="infoBlock"><div class="infoLabel">Type</div><div id="infoType" class="infoValue">—</div></div>
+          <div class="infoBlock"><div class="infoLabel">Description</div><div id="infoDescription" class="infoValue">—</div></div>
+        </div>
+      </section>
+
+      <section class="sidebarCard">
+        <h2 class="sidebarTitle">Connections</h2>
+        <ul id="outgoingList" class="linkList"></ul>
+      </section>
     </div>
   </div>
+</div>
 
-  <div id="errorPanel">
-    <div id="errorPanelTitle">Couldn’t load viewer</div>
-    <div id="errorPanelText">Try refreshing or check your connection.</div>
-  </div>
+<script>
+const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-  <!-- YOUR ENTIRE EXISTING HTML STRUCTURE STAYS EXACTLY THE SAME -->
-  <!-- DO NOT CHANGE YOUR APP CONTENT BELOW THIS LINE -->
+/* ================= THEME ================= */
 
-  <script>
-    const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
+let currentTheme = localStorage.getItem("backroomsTheme") || "dark";
 
-    /* =========================
-       THEME SYSTEM (NEW)
-    ========================= */
+function applyViewerTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem("backroomsTheme", theme);
+  document.body.classList.toggle("light", theme === "light");
 
-    let currentTheme = localStorage.getItem("backroomsTheme") || "dark";
-
-    function applyViewerTheme(theme) {
-      currentTheme = theme === "light" ? "light" : "dark";
-      localStorage.setItem("backroomsTheme", currentTheme);
-
-      document.body.classList.toggle("light", currentTheme === "light");
-
-      const btn = document.getElementById("viewerThemeButton");
-      if (btn) {
-        btn.textContent = currentTheme === "light" ? "Dark Mode" : "Light Mode";
-      }
-    }
-
-    // Wix → iframe sync
-    window.addEventListener("message", (event) => {
-      const data = event.data;
-      if (data && data.type === "theme") {
-        applyViewerTheme(data.theme);
-      }
-    });
-
-    /* =========================
-       ORIGINAL LOGIC (UNCHANGED)
-    ========================= */
-
-    let graphData = { nodes: [], edges: [] };
-    let selectedNodeId = null;
-    let currentSearch = "";
-
-    function showLoading(text = "Loading graph...") {
-      document.getElementById("loadingText").textContent = text;
-      document.getElementById("loadingOverlay").style.display = "flex";
-    }
-
-    function hideLoading() {
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
-
-    function setStatus(text, isError = false) {
-      const el = document.getElementById("statusLine");
-      if (!el) return;
-      el.textContent = text;
-      el.style.color = isError ? "#ff9a9a" : "var(--muted)";
-    }
-
-    function showErrorPanel(message) {
-      document.getElementById("errorPanelText").textContent = message;
-      document.getElementById("errorPanel").classList.add("show");
-    }
-
-    function hideErrorPanel() {
-      document.getElementById("errorPanel").classList.remove("show");
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function getNodeById(id) {
-      return graphData.nodes.find(n => n.id === String(id)) || null;
-    }
-
-    function getOutgoingEdges(id) {
-      return graphData.edges.filter(edge => edge.from === String(id));
-    }
-
-    function getIncomingEdges(id) {
-      return graphData.edges.filter(edge => edge.to === String(id));
-    }
-
-    function selectNode(nodeId) {
-      selectedNodeId = nodeId;
-      refreshGraph();
-    }
-
-    function clearSelection() {
-      selectedNodeId = null;
-      refreshGraph();
-    }
-
-    function refreshGraph() {
-      updateStats();
-      updateSidebar();
-    }
-
-    function updateStats() {
-      document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-      document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
-    }
-
-    function updateSidebar() {
-      const node = getNodeById(selectedNodeId);
-
-      document.getElementById("infoLabel").textContent = node?.label || "—";
-      document.getElementById("infoSubtitle").textContent = node?.subtitle || "—";
-      document.getElementById("infoType").textContent = node?.type || "—";
-      document.getElementById("infoStatus").textContent = node?.status || "—";
-      document.getElementById("infoTags").textContent = node?.tags?.join(", ") || "—";
-      document.getElementById("infoDescription").textContent = node?.description || "—";
-      document.getElementById("infoNotes").textContent = node?.notes || "—";
-
-      document.getElementById("outgoingList").innerHTML =
-        node ? getOutgoingEdges(node.id).map(e => `<li>${escapeHtml(e.to)}</li>`).join("") : "<li>No level selected.</li>";
-
-      document.getElementById("incomingList").innerHTML =
-        node ? getIncomingEdges(node.id).map(e => `<li>${escapeHtml(e.from)}</li>`).join("") : "<li>No level selected.</li>";
-    }
-
-async function loadGraph() {
-  showLoading("Loading graph...");
-  hideErrorPanel();
-
-  try {
-    const response = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const raw = await response.json();
-
-    // ✅ IMPORTANT: use YOUR original normalizer
-    graphData = normalizeData(raw);
-
-    if (!graphData.nodes.length) {
-      throw new Error("No nodes found in graph data.");
-    }
-
-    refreshGraph();
-    fitToGraph();
-    refreshGraph();
-
-    setStatus(`Loaded ${graphData.nodes.length} nodes and ${graphData.edges.length} links.`);
-    hideLoading();
-
-  } catch (error) {
-    console.error(error);
-    hideLoading();
-    showErrorPanel(`Failed to load graph data. ${error.message || ""}`);
-    setStatus("Failed to load graph.", true);
+  const btn = document.getElementById("viewerThemeButton");
+  if (btn) {
+    btn.textContent = theme === "light" ? "Dark Mode" : "Light Mode";
   }
 }
 
-    function reloadGraph() {
-      selectedNodeId = null;
-      loadGraph();
+window.addEventListener("message", (event) => {
+  if (event.data?.type === "theme") {
+    applyViewerTheme(event.data.theme);
+  }
+});
+
+/* ================= GRAPH CORE ================= */
+
+let graphData = { nodes: [], edges: [] };
+let selectedNodeId = null;
+
+/* ================= LOAD GRAPH ================= */
+
+async function loadGraph() {
+  try {
+    const res = await fetch(RAW_JSON_URL + "?v=" + Date.now());
+    const raw = await res.json();
+
+    graphData = normalizeData(raw); // 🔥 IMPORTANT
+
+    renderGraph();
+    updateStats();
+
+    document.getElementById("statusLine").textContent = "Loaded.";
+  } catch (e) {
+    console.error(e);
+    document.getElementById("statusLine").textContent = "Failed to load.";
+  }
+}
+
+  function normalizeData(raw) {
+  const nodes = Array.isArray(raw?.nodes)
+    ? raw.nodes.map((n, index) => ({
+        id: String(n.id ?? n.label ?? `node-${index}`),
+        label: String(n.label ?? n.id ?? `Node ${index + 1}`),
+        subtitle: String(n.subtitle ?? ""),
+        description: String(n.description ?? ""),
+        type: String(n.type ?? "stable").toLowerCase(),
+        status: String(n.status ?? "draft"),
+        x: Number(n.x ?? index * 220),
+        y: Number(n.y ?? 220),
+        tags: Array.isArray(n.tags) ? n.tags : []
+      }))
+    : [];
+
+  const validIds = new Set(nodes.map(n => n.id));
+
+  const edges = Array.isArray(raw?.edges)
+    ? raw.edges
+        .map(e => ({
+          from: String(e.from ?? ""),
+          to: String(e.to ?? ""),
+          label: String(e.label ?? "")
+        }))
+        .filter(e => validIds.has(e.from) && validIds.has(e.to) && e.from !== e.to)
+    : [];
+
+  return { nodes, edges };
+}
+
+function getNodeById(id) {
+  return graphData.nodes.find(n => n.id === String(id)) || null;
+}
+
+function updateStats() {
+  document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+  document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+}
+
+function renderGraph() {
+  const nodesEl = document.getElementById("graphNodes");
+  const svg = document.getElementById("graphSvg");
+
+  nodesEl.innerHTML = "";
+  svg.innerHTML = "";
+
+  const bounds = getBounds();
+  const padding = 260;
+
+  const minX = bounds.minX - padding;
+  const minY = bounds.minY - padding;
+  const width = bounds.maxX - bounds.minX + padding * 2;
+  const height = bounds.maxY - bounds.minY + padding * 2;
+
+  svg.setAttribute("width", width);
+  svg.setAttribute("height", height);
+  svg.setAttribute("viewBox", `${minX} ${minY} ${width} ${height}`);
+
+  document.getElementById("graphScene").style.width = `${width}px`;
+  document.getElementById("graphScene").style.height = `${height}px`;
+
+  renderEdges(svg);
+  renderNodes(nodesEl);
+}
+
+function getBounds() {
+  if (!graphData.nodes.length) {
+    return { minX: 0, maxX: 1000, minY: 0, maxY: 800 };
+  }
+
+  const xs = graphData.nodes.map(n => Number(n.x) || 0);
+  const ys = graphData.nodes.map(n => Number(n.y) || 0);
+
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+  };
+}
+
+function renderEdges(svg) {
+  graphData.edges.forEach(edge => {
+    const from = getNodeById(edge.from);
+    const to = getNodeById(edge.to);
+
+    if (!from || !to) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    const dx = Math.abs(to.x - from.x);
+    const curve = Math.max(40, Math.min(140, dx * 0.35));
+
+    const d = `
+      M ${from.x + 85} ${from.y}
+      C ${from.x + 85 + curve} ${from.y},
+        ${to.x - 85 - curve} ${to.y},
+        ${to.x - 85} ${to.y}
+    `;
+
+    path.setAttribute("d", d);
+    path.setAttribute("class", `line-base edge-${from.type || "stable"}`);
+
+    if (selectedNodeId && edge.from !== selectedNodeId && edge.to !== selectedNodeId) {
+      path.setAttribute("class", "line-dimmed");
     }
 
-    function init() {
-      applyViewerTheme(currentTheme);
+    svg.appendChild(path);
 
-      const btn = document.getElementById("viewerThemeButton");
-      if (btn) {
-        btn.onclick = () => {
-          applyViewerTheme(currentTheme === "dark" ? "light" : "dark");
-        };
-      }
-
-      loadGraph();
+    if (edge.label) {
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", (from.x + to.x) / 2);
+      text.setAttribute("y", (from.y + to.y) / 2 - 10);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("class", "edgeLabel");
+      text.textContent = edge.label;
+      svg.appendChild(text);
     }
+  });
+}
 
-    window.reloadGraph = reloadGraph;
-    window.clearSelection = clearSelection;
+function renderNodes(nodesEl) {
+  graphData.nodes.forEach(node => {
+    const el = document.createElement("div");
 
-    document.addEventListener("DOMContentLoaded", init);
-  </script>
+    const related = selectedNodeId && isRelated(node.id);
+    const dimmed = selectedNodeId && !related;
+
+    el.className = `node ${node.type || "stable"} ${selectedNodeId === node.id ? "selected" : ""} ${related ? "related" : ""} ${dimmed ? "dimmed" : ""}`;
+    el.style.left = `${node.x}px`;
+    el.style.top = `${node.y}px`;
+
+    el.innerHTML = `
+      <div class="nodeHeader">
+        <div class="nodeDot"></div>
+        <div class="nodeTitle">${escapeHtml(node.label)}</div>
+      </div>
+      ${node.subtitle ? `<div class="nodeSubtitle">${escapeHtml(node.subtitle)}</div>` : ""}
+      <div class="nodeStatusRow">
+        <span class="nodeBadge">${escapeHtml(node.type)}</span>
+        <span class="nodeBadge">${escapeHtml(node.status)}</span>
+      </div>
+    `;
+
+    el.onclick = (event) => {
+      event.stopPropagation();
+      selectedNodeId = node.id;
+      updateSidebar();
+      renderGraph();
+    };
+
+    nodesEl.appendChild(el);
+  });
+}
+
+function isRelated(id) {
+  if (id === selectedNodeId) return true;
+
+  return graphData.edges.some(edge =>
+    (edge.from === selectedNodeId && edge.to === id) ||
+    (edge.to === selectedNodeId && edge.from === id)
+  );
+}
+
+function updateSidebar() {
+  const node = getNodeById(selectedNodeId);
+
+  document.getElementById("infoLabel").textContent = node?.label || "—";
+  document.getElementById("infoType").textContent = node?.type || "—";
+  document.getElementById("infoDescription").textContent = node?.description || "—";
+
+  const outgoing = graphData.edges.filter(e => e.from === selectedNodeId);
+  const incoming = graphData.edges.filter(e => e.to === selectedNodeId);
+
+  const items = [...outgoing, ...incoming].map(edge => {
+    const otherId = edge.from === selectedNodeId ? edge.to : edge.from;
+    const other = getNodeById(otherId);
+    return `<li>${escapeHtml(other?.label || otherId)}</li>`;
+  });
+
+  document.getElementById("outgoingList").innerHTML = items.length
+    ? items.join("")
+    : "<li>No connections selected.</li>";
+}
+
+function clearSelection() {
+  selectedNodeId = null;
+  updateSidebar();
+  renderGraph();
+}
+
+function fitToGraph() {
+  const viewport = document.getElementById("graphViewport");
+  const scene = document.getElementById("graphScene");
+
+  const bounds = getBounds();
+  const rect = viewport.getBoundingClientRect();
+
+  const graphWidth = Math.max(600, bounds.maxX - bounds.minX + 400);
+  const graphHeight = Math.max(400, bounds.maxY - bounds.minY + 300);
+
+  const scale = Math.min(
+    1.15,
+    Math.max(0.35, Math.min(rect.width / graphWidth, rect.height / graphHeight))
+  );
+
+  const x = rect.width / 2 - ((bounds.minX + bounds.maxX) / 2) * scale;
+  const y = rect.height / 2 - ((bounds.minY + bounds.maxY) / 2) * scale;
+
+  scene.style.transformOrigin = "0 0";
+  scene.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function reloadGraph() {
+  selectedNodeId = null;
+  loadGraph();
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function init() {
+  applyViewerTheme(currentTheme);
+
+  const btn = document.getElementById("viewerThemeButton");
+  if (btn) {
+    btn.onclick = () => {
+      applyViewerTheme(currentTheme === "dark" ? "light" : "dark");
+    };
+  }
+
+  const viewport = document.getElementById("graphViewport");
+  viewport.addEventListener("click", () => {
+    clearSelection();
+  });
+
+  loadGraph().then(() => {
+    setTimeout(fitToGraph, 100);
+  });
+}
+
+window.fitToGraph = fitToGraph;
+window.clearSelection = clearSelection;
+window.reloadGraph = reloadGraph;
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
 </body>
 </html>
