@@ -96,35 +96,12 @@
         radial-gradient(1px 1px at 81% 58%, rgba(0,0,0,0.7), transparent);
     }
 
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      margin: 8px;
-      border-radius: 22px;
-      border: 2px solid var(--frame);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.05) inset,
-        0 0 22px rgba(190, 26, 72, 0.18),
-        0 18px 40px rgba(0,0,0,0.22);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    body.light::after {
-      background: rgba(190, 26, 72, 0.055);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.8) inset,
-        0 0 20px rgba(190, 26, 72, 0.12),
-        0 18px 40px rgba(0,0,0,0.10);
-    }
-
     #app {
       position: relative;
       z-index: 2;
       max-width: 1620px;
       margin: 0 auto;
-      padding: 18px;
+      padding: 0;
       width: 100%;
     }
 
