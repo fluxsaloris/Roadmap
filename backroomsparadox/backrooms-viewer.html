@@ -752,23 +752,42 @@
         node ? getIncomingEdges(node.id).map(e => `<li>${escapeHtml(e.from)}</li>`).join("") : "<li>No level selected.</li>";
     }
 
-    async function loadGraph() {
-      showLoading();
+async function loadGraph() {
+  showLoading("Loading graph...");
+  hideErrorPanel();
 
-      try {
-        const res = await fetch(RAW_JSON_URL);
-        const data = await res.json();
+  try {
+    const response = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+      cache: "no-store"
+    });
 
-        graphData = data;
-
-        refreshGraph();
-        hideLoading();
-      } catch (err) {
-        console.error(err);
-        hideLoading();
-        showErrorPanel("Failed to load graph.");
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+
+    const raw = await response.json();
+
+    // ✅ IMPORTANT: use YOUR original normalizer
+    graphData = normalizeData(raw);
+
+    if (!graphData.nodes.length) {
+      throw new Error("No nodes found in graph data.");
+    }
+
+    refreshGraph();
+    fitToGraph();
+    refreshGraph();
+
+    setStatus(`Loaded ${graphData.nodes.length} nodes and ${graphData.edges.length} links.`);
+    hideLoading();
+
+  } catch (error) {
+    console.error(error);
+    hideLoading();
+    showErrorPanel(`Failed to load graph data. ${error.message || ""}`);
+    setStatus("Failed to load graph.", true);
+  }
+}
 
     function reloadGraph() {
       selectedNodeId = null;
