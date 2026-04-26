@@ -829,19 +829,40 @@ let selectedNodeId = null;
 /* ================= LOAD GRAPH ================= */
 
 async function loadGraph() {
+  const loading = document.getElementById("loadingOverlay");
+  const error = document.getElementById("errorPanel");
+
+  if (loading) loading.style.display = "none";
+  if (error) error.classList.remove("show");
+
   try {
-    const res = await fetch(RAW_JSON_URL + "?v=" + Date.now());
+    const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+      cache: "no-store"
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const raw = await res.json();
 
-    graphData = normalizeData(raw); // 🔥 IMPORTANT
+    graphData = normalizeData(raw);
+
+    if (!graphData.nodes.length) {
+      throw new Error("No nodes found.");
+    }
 
     renderGraph();
     updateStats();
+    updateSidebar();
+
+    setTimeout(fitToGraph, 100);
 
     document.getElementById("statusLine").textContent = "Loaded.";
   } catch (e) {
     console.error(e);
-    document.getElementById("statusLine").textContent = "Failed to load.";
+    document.getElementById("statusLine").textContent = "Graph failed to load. Check console.";
+    if (error) error.classList.add("show");
   }
 }
 
