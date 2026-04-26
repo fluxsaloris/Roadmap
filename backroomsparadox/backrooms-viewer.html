@@ -44,14 +44,6 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    *::-webkit-scrollbar {
-      width: 0;
-      height: 0;
-      display: none;
     }
 
     html, body {
@@ -70,7 +62,7 @@
       background:
         radial-gradient(circle at top left, rgba(190, 26, 72, 0.08), transparent 28%),
         radial-gradient(circle at 90% 12%, rgba(255,255,255,0.025), transparent 18%),
-        linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
+        linear-gradient(180deg, #0a0a0d 0%, #070709 100%);
     }
 
     body.light {
@@ -96,10 +88,10 @@
     body.light::before {
       opacity: 0.035;
       background-image:
-        radial-gradient(1px 1px at 12% 20%, rgba(0,0,0,0.85), transparent),
-        radial-gradient(1px 1px at 30% 72%, rgba(0,0,0,0.7), transparent),
-        radial-gradient(1.3px 1.3px at 52% 40%, rgba(0,0,0,0.8), transparent),
-        radial-gradient(1px 1px at 81% 58%, rgba(0,0,0,0.7), transparent);
+        radial-gradient(1px 1px at 12% 20%, rgba(0,0,0,0.7), transparent),
+        radial-gradient(1px 1px at 30% 72%, rgba(0,0,0,0.6), transparent),
+        radial-gradient(1.3px 1.3px at 52% 40%, rgba(0,0,0,0.65), transparent),
+        radial-gradient(1px 1px at 81% 58%, rgba(0,0,0,0.6), transparent);
     }
 
     body::after {
@@ -135,6 +127,7 @@
       font-size: 12px;
       font-weight: 800;
       box-shadow: var(--shadow-md);
+      cursor: pointer;
     }
 
     #viewerThemeButton:hover {
@@ -159,6 +152,11 @@
       z-index: 30;
       padding: 14px 16px;
       margin-bottom: 14px;
+      background: rgba(13, 13, 18, 0.88);
+    }
+
+    body.light .hero {
+      background: rgba(255, 255, 255, 0.92);
     }
 
     .heroTop {
@@ -201,23 +199,20 @@
       max-width: 860px;
     }
 
-    .heroMeta {
+        .heroMeta {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
 
-    .infoBadge, .metaChip {
+    .infoBadge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       white-space: nowrap;
       border-radius: 999px;
       font-weight: 700;
-    }
-
-    .infoBadge {
       padding: 7px 11px;
       font-size: 12px;
       border: 1px solid var(--border);
@@ -237,7 +232,7 @@
       align-items: start;
     }
 
-    #searchInput, #mobileSearchInput {
+    #searchInput {
       width: 100%;
       background: rgba(22, 22, 30, 0.96);
       color: var(--text);
@@ -247,29 +242,19 @@
       font-size: 14px;
       outline: none;
       transition: 0.18s ease;
-      font-family: inherit;
     }
 
-    body.light #searchInput,
-    body.light #mobileSearchInput {
+    body.light #searchInput {
       background: rgba(0, 0, 0, 0.035);
-      color: var(--text);
     }
 
-    #searchInput::placeholder,
-    #mobileSearchInput::placeholder {
+    #searchInput::placeholder {
       color: var(--muted-2);
     }
 
-    #searchInput:focus, #mobileSearchInput:focus {
+    #searchInput:focus {
       border-color: rgba(190, 26, 72, 0.42);
       box-shadow: 0 0 0 4px rgba(190, 26, 72, 0.10);
-      background: rgba(26, 26, 34, 0.98);
-    }
-
-    body.light #searchInput:focus,
-    body.light #mobileSearchInput:focus {
-      background: rgba(255,255,255,0.98);
     }
 
     .toolbar {
@@ -277,12 +262,6 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
-    }
-
-        .mobileControlsGrid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
     }
 
     button {
@@ -296,8 +275,6 @@
       font-weight: 600;
       cursor: pointer;
       transition: 0.18s ease;
-      box-shadow: none;
-      font-family: inherit;
     }
 
     body.light button {
@@ -310,23 +287,9 @@
       transform: translateY(-1px);
     }
 
-    body.light button:hover {
-      background: rgba(0,0,0,0.06);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
     .primaryBtn {
       background: linear-gradient(180deg, rgba(190, 26, 72, 0.9), rgba(148, 16, 53, 0.95));
-      border-color: rgba(255,255,255,0.05);
       color: #fff;
-      box-shadow: 0 8px 18px rgba(190, 26, 72, 0.22);
-    }
-
-    .primaryBtn:hover {
-      background: linear-gradient(180deg, rgba(206, 33, 82, 0.98), rgba(162, 19, 59, 0.98));
     }
 
     .statusLine {
@@ -339,54 +302,20 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
       gap: 14px;
-      align-items: start;
     }
 
     .leftColumn {
-      min-width: 0;
       display: grid;
       gap: 14px;
     }
 
     .rightColumn {
-      min-width: 0;
       display: grid;
       gap: 12px;
-      position: sticky;
-      top: 132px;
-      align-self: start;
-      max-height: calc(100vh - 150px);
-      overflow-y: auto;
-      padding-right: 2px;
     }
 
     .panel, .sidebarCard {
       padding: 14px;
-    }
-
-    .canvasPanel {
-      padding: 10px;
-    }
-
-    .canvasToolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-
-    .canvasHint {
-      color: var(--muted);
-      font-size: 12px;
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-      border-radius: 999px;
-    }
-
-    body.light .canvasHint {
-      background: rgba(0,0,0,0.035);
     }
 
     .graphViewport {
@@ -400,31 +329,22 @@
       background:
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.07), transparent 32%),
-        linear-gradient(180deg, rgba(8,8,12,0.98), rgba(5,5,9,0.99));
-      background-size: 48px 48px, 48px 48px, auto, auto;
-      user-select: none;
+        linear-gradient(180deg, #08080c, #050509);
+      background-size: 48px 48px, 48px 48px, auto;
       cursor: grab;
-      touch-action: none;
     }
 
     body.light .graphViewport {
       background:
         linear-gradient(rgba(0,0,0,0.045) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.045) 1px, transparent 1px),
-        radial-gradient(circle at top left, rgba(190, 26, 72, 0.05), transparent 32%),
-        linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,245,245,0.99));
-    }
-
-    .graphViewport.panning {
-      cursor: grabbing;
+        linear-gradient(180deg, #ffffff, #f0f0f0);
     }
 
     .graphScene {
       position: absolute;
       inset: 0;
       transform-origin: 0 0;
-      will-change: transform;
     }
 
     .graphSvg {
@@ -438,27 +358,13 @@
     .graphNodes {
       position: absolute;
       inset: 0;
-      overflow: visible;
-      pointer-events: none;
     }
 
-    .line-base {
+        .line-base {
       fill: none;
-      stroke-width: 2.8;
+      stroke-width: 2.6;
       stroke-linecap: round;
       opacity: 0.95;
-    }
-
-    .line-selected {
-      fill: none;
-      stroke-width: 3.8;
-      stroke-linecap: round;
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.18));
-      opacity: 1;
-    }
-
-    body.light .line-selected {
-      filter: drop-shadow(0 0 8px rgba(0,0,0,0.12));
     }
 
     .line-dimmed {
@@ -466,11 +372,11 @@
       stroke: rgba(255,255,255,0.08);
       stroke-width: 2;
       stroke-linecap: round;
-      opacity: 0.7;
+      opacity: 0.6;
     }
 
     body.light .line-dimmed {
-      stroke: rgba(0,0,0,0.10);
+      stroke: rgba(0,0,0,0.1);
     }
 
     .edge-stable { stroke: #4CAF50; }
@@ -478,35 +384,17 @@
     .edge-corrupted { stroke: #3E5F3A; }
     .edge-anomalous { stroke: #8E44AD; }
 
-    .edgeLabel {
-      fill: rgba(220,220,230,0.92);
-      font-size: 12px;
-      font-weight: 600;
-      paint-order: stroke;
-      stroke: rgba(0,0,0,0.65);
-      stroke-width: 4px;
-      stroke-linejoin: round;
-      pointer-events: none;
-    }
-
-    body.light .edgeLabel {
-      fill: #222;
-      stroke: rgba(255,255,255,0.88);
-    }
-
     .node {
       position: absolute;
       min-width: var(--node-width-desktop);
       max-width: 260px;
-      padding: 12px 12px 10px;
+      padding: 12px;
       border-radius: 14px;
       border: 1px solid var(--border);
       box-shadow: var(--shadow-md);
       transform: translate(-50%, -50%);
-      transition: box-shadow .14s ease, border-color .14s ease, transform .14s ease, opacity .14s ease;
-      backdrop-filter: blur(5px);
+      transition: 0.15s ease;
       cursor: pointer;
-      pointer-events: auto;
       background: var(--surface);
     }
 
@@ -521,23 +409,14 @@
     }
 
     .node.selected {
-      z-index: 30;
-      box-shadow: 0 0 0 3px rgba(190, 26, 72, 0.25), var(--shadow-md);
-    }
-
-    .node.related {
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.05), var(--shadow-md);
-    }
-
-    body.light .node.related {
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.05), var(--shadow-md);
+      box-shadow: 0 0 0 3px rgba(190, 26, 72, 0.25);
     }
 
     .node.dimmed {
-      opacity: 0.42;
+      opacity: 0.4;
     }
 
-        .nodeHeader {
+    .nodeHeader {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -547,7 +426,6 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      flex: 0 0 auto;
     }
 
     .node.stable .nodeDot { background: var(--type-stable-dot); }
@@ -558,21 +436,17 @@
     .nodeTitle {
       font-size: 14px;
       font-weight: 800;
-      letter-spacing: -0.01em;
       color: var(--text);
-      line-height: 1.2;
-      word-break: break-word;
     }
 
     .nodeSubtitle {
       margin-top: 4px;
       font-size: 11px;
-      line-height: 1.35;
       color: var(--muted);
     }
 
     .nodeStatusRow {
-      margin-top: 8px;
+      margin-top: 6px;
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
@@ -585,7 +459,6 @@
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
-      color: var(--text);
     }
 
     body.light .nodeBadge {
@@ -593,17 +466,8 @@
     }
 
     .sidebarTitle {
-      margin: 0 0 10px;
       font-size: 14px;
       font-weight: 800;
-      letter-spacing: -0.01em;
-      color: var(--text);
-    }
-
-    .sidebarSub {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
       margin-bottom: 10px;
     }
 
@@ -612,112 +476,21 @@
       gap: 10px;
     }
 
-    .infoBlock {
-      display: grid;
-      gap: 5px;
-    }
-
     .infoLabel {
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
       color: var(--muted-2);
       font-weight: 700;
     }
 
     .infoValue {
-      color: var(--text);
       font-size: 13px;
-      line-height: 1.5;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    .linkList, .legendList {
-      margin: 0;
-      padding-left: 18px;
       color: var(--text);
-      font-size: 12.5px;
-      line-height: 1.5;
     }
 
-    .linkList li + li, .legendList li + li {
-      margin-top: 4px;
-    }
-
-    /* Mobile */
-
-    .mobileFabStack {
-      position: fixed;
-      right: 10px;
-      bottom: calc(12px + env(safe-area-inset-bottom));
-      z-index: 50;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .mobileFab {
-      width: var(--mobile-fab-size);
-      height: var(--mobile-fab-size);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      box-shadow: var(--shadow-lg);
-      background: var(--surface);
-    }
-
-    @media (max-width: 700px) {
-      body::after { display: none; }
-
-      html, body {
-        height: 100%;
-        overflow: hidden;
-      }
-
-      #app {
-        padding: 0;
-        height: 100vh;
-      }
-
-      .hero, .rightColumn {
-        display: none !important;
-      }
-
-      .graphViewport {
-        position: fixed;
-        inset: 0;
-        border-radius: 0;
-        border: none;
-      }
-
-      .node {
-        min-width: var(--node-width-mobile);
-        max-width: 155px;
-        padding: 8px;
-      }
-
-      .nodeTitle {
-        font-size: 11px;
-      }
-
-      .nodeSubtitle {
-        font-size: 9px;
-      }
-
-      .mobileFabStack {
-        display: flex;
-      }
-
-      #loadingOverlay {
-  display: none;
-}
-
-#errorPanel {
-  display: none;
-}
+    .linkList {
+      padding-left: 18px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -726,172 +499,215 @@
 
 <button id="viewerThemeButton">Light Mode</button>
 
-<div id="loadingOverlay">
-  <div id="loadingCard">
-    <div class="spinner"></div>
-    <div id="loadingText">Loading graph...</div>
-  </div>
-</div>
-
-<div id="errorPanel">
-  <div id="errorPanelTitle">Couldn’t load viewer</div>
-  <div id="errorPanelText">Try refreshing or check your connection.</div>
-</div>
-
 <div id="app">
 
-    <section class="hero">
-    <div class="heroTop">
-      <div class="heroTitle">
-        <div class="eyebrow">Backrooms Paradox: Map</div>
-        <h1>Backrooms Paradox: Level Paths</h1>
-        <p>Explore level paths and connections.</p>
-      </div>
-
-      <div class="heroMeta">
-        <div class="infoBadge" id="statNodes">0 nodes</div>
-        <div class="infoBadge" id="statEdges">0 links</div>
-      </div>
+<section class="hero">
+  <div class="heroTop">
+    <div class="heroTitle">
+      <div class="eyebrow">Backrooms Paradox: Map</div>
+      <h1>Backrooms Paradox: Level Paths</h1>
+      <p>Explore level paths and connections.</p>
     </div>
 
-    <div class="heroControls">
-      <input id="searchInput" type="text" placeholder="Search..." />
-      <div class="toolbar">
-        <button onclick="fitToGraph()">Fit</button>
-        <button onclick="clearSelection()">Clear</button>
-        <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
-      </div>
-    </div>
-
-    <div class="statusLine" id="statusLine">Loading graph...</div>
-  </section>
-
-  <div class="workspaceRow">
-    <div class="leftColumn">
-      <section class="panel canvasPanel">
-        <div class="graphViewport" id="graphViewport">
-          <div class="graphScene" id="graphScene">
-            <svg id="graphSvg" class="graphSvg"></svg>
-            <div id="graphNodes" class="graphNodes"></div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <div class="rightColumn">
-      <section class="sidebarCard">
-        <h2 class="sidebarTitle">Selected Level</h2>
-
-        <div class="infoList">
-          <div class="infoBlock"><div class="infoLabel">Label</div><div id="infoLabel" class="infoValue">—</div></div>
-          <div class="infoBlock"><div class="infoLabel">Type</div><div id="infoType" class="infoValue">—</div></div>
-          <div class="infoBlock"><div class="infoLabel">Description</div><div id="infoDescription" class="infoValue">—</div></div>
-        </div>
-      </section>
-
-      <section class="sidebarCard">
-        <h2 class="sidebarTitle">Connections</h2>
-        <ul id="outgoingList" class="linkList"></ul>
-      </section>
+    <div class="heroMeta">
+      <div class="infoBadge" id="statNodes">0 nodes</div>
+      <div class="infoBadge" id="statEdges">0 links</div>
     </div>
   </div>
+
+  <div class="heroControls">
+    <input id="searchInput" placeholder="Search..." />
+    <div class="toolbar">
+      <button onclick="fitToGraph()">Fit</button>
+      <button onclick="clearSelection()">Clear</button>
+      <button class="primaryBtn" onclick="reloadGraph()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="statusLine" id="statusLine">Loading graph...</div>
+</section>
+
+<div class="workspaceRow">
+  <div class="leftColumn">
+    <div class="panel">
+      <div class="graphViewport" id="graphViewport">
+        <div class="graphScene" id="graphScene">
+          <svg id="graphSvg" class="graphSvg"></svg>
+          <div id="graphNodes" class="graphNodes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rightColumn">
+    <div class="sidebarCard">
+      <div class="sidebarTitle">Selected Level</div>
+      <div class="infoList">
+        <div><div class="infoLabel">Label</div><div id="infoLabel" class="infoValue">—</div></div>
+        <div><div class="infoLabel">Type</div><div id="infoType" class="infoValue">—</div></div>
+        <div><div class="infoLabel">Description</div><div id="infoDescription" class="infoValue">—</div></div>
+      </div>
+    </div>
+
+    <div class="sidebarCard">
+      <div class="sidebarTitle">Connections</div>
+      <ul id="outgoingList" class="linkList"></ul>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
 const RAW_JSON_URL = "https://raw.githubusercontent.com/fluxsaloris/Roadmap/main/backroomsparadox/backrooms-levels.json";
 
-/* ================= THEME ================= */
-
 let currentTheme = localStorage.getItem("backroomsTheme") || "dark";
 
 function applyViewerTheme(theme) {
-  currentTheme = theme;
-  localStorage.setItem("backroomsTheme", theme);
-  document.body.classList.toggle("light", theme === "light");
+  currentTheme = theme === "light" ? "light" : "dark";
+  localStorage.setItem("backroomsTheme", currentTheme);
+  document.body.classList.toggle("light", currentTheme === "light");
 
   const btn = document.getElementById("viewerThemeButton");
   if (btn) {
-    btn.textContent = theme === "light" ? "Dark Mode" : "Light Mode";
+    btn.textContent = currentTheme === "light" ? "Dark Mode" : "Light Mode";
   }
 }
 
 window.addEventListener("message", (event) => {
-  if (event.data?.type === "theme") {
+  if (event.data && event.data.type === "theme") {
     applyViewerTheme(event.data.theme);
   }
 });
 
-/* ================= GRAPH CORE ================= */
-
 let graphData = { nodes: [], edges: [] };
 let selectedNodeId = null;
+let sceneOffset = { x: 0, y: 0 };
 
-/* ================= LOAD GRAPH ================= */
+function normalizeType(type) {
+  const value = String(type || "").trim().toLowerCase();
 
-async function loadGraph() {
-  const loading = document.getElementById("loadingOverlay");
-  const error = document.getElementById("errorPanel");
+  if (value === "stable" || value === "start") return "stable";
+  if (value === "dangerous" || value === "progression") return "dangerous";
+  if (value === "corrupted" || value === "danger") return "corrupted";
+  if (value === "anomalous" || value === "weird") return "anomalous";
 
-  if (loading) loading.style.display = "none";
-  if (error) error.classList.remove("show");
-
-  try {
-    const res = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
-      cache: "no-store"
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    const raw = await res.json();
-
-    graphData = normalizeData(raw);
-
-    if (!graphData.nodes.length) {
-      throw new Error("No nodes found.");
-    }
-
-    renderGraph();
-    updateStats();
-    updateSidebar();
-
-    setTimeout(fitToGraph, 100);
-
-    document.getElementById("statusLine").textContent = "Loaded.";
-  } catch (e) {
-    console.error(e);
-    document.getElementById("statusLine").textContent = "Graph failed to load. Check console.";
-    if (error) error.classList.add("show");
-  }
+  return "stable";
 }
 
-  function normalizeData(raw) {
-  const nodes = Array.isArray(raw?.nodes)
-    ? raw.nodes.map((n, index) => ({
-        id: String(n.id ?? n.label ?? `node-${index}`),
-        label: String(n.label ?? n.id ?? `Node ${index + 1}`),
-        subtitle: String(n.subtitle ?? ""),
-        description: String(n.description ?? ""),
-        type: String(n.type ?? "stable").toLowerCase(),
-        status: String(n.status ?? "draft"),
-        x: Number(n.x ?? index * 220),
-        y: Number(n.y ?? 220),
-        tags: Array.isArray(n.tags) ? n.tags : []
-      }))
-    : [];
+function slugifyLabel(label) {
+  return String(label || "node")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "node";
+}
+
+function makeUniqueId(base, used) {
+  let normalizedBase = String(base || "node").trim() || "node";
+  let id = normalizedBase;
+  let i = 2;
+
+  while (used.has(id)) {
+    id = `${normalizedBase}-${i}`;
+    i++;
+  }
+
+  used.add(id);
+  return id;
+}
+
+function buildNodeMapsFromRaw(rawNodes) {
+  const usedIds = new Set();
+  const nodes = [];
+  const rawKeyToId = new Map();
+
+  for (let i = 0; i < rawNodes.length; i++) {
+    const n = rawNodes[i] || {};
+
+    const explicitId =
+      n.id !== null &&
+      n.id !== undefined &&
+      String(n.id).trim() !== ""
+        ? String(n.id).trim()
+        : null;
+
+    const label = typeof n.label === "string" ? n.label : "Unnamed";
+
+    const finalId = makeUniqueId(
+      explicitId || slugifyLabel(label || `node-${i + 1}`),
+      usedIds
+    );
+
+    const node = {
+      id: finalId,
+      label,
+      subtitle: typeof n.subtitle === "string" ? n.subtitle : "",
+      description: typeof n.description === "string" ? n.description : "",
+      notes: typeof n.notes === "string" ? n.notes : "",
+      x: typeof n.x === "number" ? n.x : 0,
+      y: typeof n.y === "number" ? n.y : 0,
+      type: normalizeType(n.type),
+      status: typeof n.status === "string" ? n.status : "draft",
+      tags: Array.isArray(n.tags) ? n.tags.map(tag => String(tag)) : []
+    };
+
+    nodes.push(node);
+
+    rawKeyToId.set(finalId, finalId);
+    rawKeyToId.set(label, finalId);
+
+    if (explicitId) {
+      rawKeyToId.set(explicitId, finalId);
+    }
+  }
+
+  return { nodes, rawKeyToId };
+}
+
+function normalizeData(raw) {
+  const rawNodes = Array.isArray(raw && raw.nodes) ? raw.nodes : [];
+  const { nodes, rawKeyToId } = buildNodeMapsFromRaw(rawNodes);
 
   const validIds = new Set(nodes.map(n => n.id));
+  const seen = new Set();
 
-  const edges = Array.isArray(raw?.edges)
-    ? raw.edges
-        .map(e => ({
-          from: String(e.from ?? ""),
-          to: String(e.to ?? ""),
-          label: String(e.label ?? "")
-        }))
-        .filter(e => validIds.has(e.from) && validIds.has(e.to) && e.from !== e.to)
-    : [];
+  const rawEdges = Array.isArray(raw && raw.edges) ? raw.edges : [];
+  const edges = [];
+
+  for (const e of rawEdges) {
+    const rawFrom =
+      e && e.from !== null &&
+      e.from !== undefined &&
+      String(e.from).trim() !== ""
+        ? String(e.from).trim()
+        : null;
+
+    const rawTo =
+      e && e.to !== null &&
+      e.to !== undefined &&
+      String(e.to).trim() !== ""
+        ? String(e.to).trim()
+        : null;
+
+    const from = rawFrom ? rawKeyToId.get(rawFrom) || null : null;
+    const to = rawTo ? rawKeyToId.get(rawTo) || null : null;
+
+    if (!from || !to) continue;
+    if (!validIds.has(from) || !validIds.has(to)) continue;
+    if (from === to) continue;
+
+    const edge = {
+      from,
+      to,
+      label: typeof (e && e.label) === "string" ? e.label : ""
+    };
+
+    const key = `${edge.from}|${edge.to}|${edge.label}`;
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    edges.push(edge);
+  }
 
   return { nodes, edges };
 }
@@ -900,14 +716,32 @@ function getNodeById(id) {
   return graphData.nodes.find(n => n.id === String(id)) || null;
 }
 
-function updateStats() {
-  document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
-  document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-let sceneOffset = { x: 0, y: 0 };
+function getBounds() {
+  if (!graphData.nodes.length) {
+    return { minX: 0, maxX: 1000, minY: 0, maxY: 800 };
+  }
 
-function renderGraph() {
+  const xs = graphData.nodes.map(n => Number(n.x) || 0);
+  const ys = graphData.nodes.map(n => Number(n.y) || 0);
+
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+  };
+}
+
+  function renderGraph() {
   const nodesEl = document.getElementById("graphNodes");
   const svg = document.getElementById("graphSvg");
 
@@ -936,22 +770,6 @@ function renderGraph() {
 
   renderEdges(svg);
   renderNodes(nodesEl);
-}
-
-function getBounds() {
-  if (!graphData.nodes.length) {
-    return { minX: 0, maxX: 1000, minY: 0, maxY: 800 };
-  }
-
-  const xs = graphData.nodes.map(n => Number(n.x) || 0);
-  const ys = graphData.nodes.map(n => Number(n.y) || 0);
-
-  return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys)
-  };
 }
 
 function renderEdges(svg) {
@@ -985,16 +803,6 @@ function renderEdges(svg) {
     path.setAttribute("d", d);
     path.setAttribute("class", edgeClass);
     svg.appendChild(path);
-
-    if (edge.label) {
-      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", (fromX + toX) / 2);
-      text.setAttribute("y", (fromY + toY) / 2 - 10);
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("class", "edgeLabel");
-      text.textContent = edge.label;
-      svg.appendChild(text);
-    }
   });
 }
 
@@ -1033,6 +841,45 @@ function renderNodes(nodesEl) {
   });
 }
 
+function isRelated(id) {
+  if (id === selectedNodeId) return true;
+
+  return graphData.edges.some(edge =>
+    (edge.from === selectedNodeId && edge.to === id) ||
+    (edge.to === selectedNodeId && edge.from === id)
+  );
+}
+
+function updateSidebar() {
+  const node = getNodeById(selectedNodeId);
+
+  document.getElementById("infoLabel").textContent = node ? node.label : "—";
+  document.getElementById("infoType").textContent = node ? node.type : "—";
+  document.getElementById("infoDescription").textContent = node ? node.description || "—" : "—";
+
+  if (!node) {
+    document.getElementById("outgoingList").innerHTML = "<li>No level selected.</li>";
+    return;
+  }
+
+  const connected = graphData.edges
+    .filter(edge => edge.from === node.id || edge.to === node.id)
+    .map(edge => {
+      const otherId = edge.from === node.id ? edge.to : edge.from;
+      const other = getNodeById(otherId);
+      return `<li>${escapeHtml(other ? other.label : otherId)}</li>`;
+    });
+
+  document.getElementById("outgoingList").innerHTML = connected.length
+    ? connected.join("")
+    : "<li>No connections.</li>";
+}
+
+function updateStats() {
+  document.getElementById("statNodes").textContent = `${graphData.nodes.length} nodes`;
+  document.getElementById("statEdges").textContent = `${graphData.edges.length} links`;
+}
+
 function fitToGraph() {
   const viewport = document.getElementById("graphViewport");
   const scene = document.getElementById("graphScene");
@@ -1058,18 +905,50 @@ function fitToGraph() {
   scene.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 
+async function loadGraph() {
+  const status = document.getElementById("statusLine");
+
+  try {
+    status.textContent = "Loading graph...";
+
+    const response = await fetch(RAW_JSON_URL + "?v=" + Date.now(), {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const raw = await response.json();
+    graphData = normalizeData(raw);
+
+    if (!graphData.nodes.length) {
+      throw new Error("No nodes found.");
+    }
+
+    selectedNodeId = null;
+
+    renderGraph();
+    updateStats();
+    updateSidebar();
+
+    setTimeout(fitToGraph, 100);
+
+    status.textContent = `Loaded ${graphData.nodes.length} nodes and ${graphData.edges.length} links.`;
+  } catch (err) {
+    console.error(err);
+    status.textContent = "Failed to load graph.";
+  }
+}
+
 function reloadGraph() {
-  selectedNodeId = null;
   loadGraph();
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function clearSelection() {
+  selectedNodeId = null;
+  updateSidebar();
+  renderGraph();
 }
 
 function init() {
