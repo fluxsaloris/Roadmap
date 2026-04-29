@@ -582,6 +582,25 @@ window.addEventListener("message", (event) => {
 let graphData = { nodes: [], edges: [] };
 let selectedNodeId = null;
 let sceneOffset = { x: 0, y: 0 };
+let viewportState = {
+  x: 0,
+  y: 0,
+  scale: 1
+};
+
+let isPanning = false;
+let panStart = {
+  mouseX: 0,
+  mouseY: 0,
+  x: 0,
+  y: 0
+};
+
+function applyViewportTransform() {
+  const scene = document.getElementById("graphScene");
+  scene.style.transformOrigin = "0 0";
+  scene.style.transform = `translate(${viewportState.x}px, ${viewportState.y}px) scale(${viewportState.scale})`;
+}
 
 function normalizeType(type) {
   const value = String(type || "").trim().toLowerCase();
