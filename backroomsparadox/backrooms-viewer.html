@@ -901,7 +901,6 @@ function updateStats() {
 
 function fitToGraph() {
   const viewport = document.getElementById("graphViewport");
-  const scene = document.getElementById("graphScene");
 
   const rect = viewport.getBoundingClientRect();
   const bounds = getBounds();
@@ -917,13 +916,13 @@ function fitToGraph() {
   const centerX = (bounds.minX + bounds.maxX) / 2 - sceneOffset.x;
   const centerY = (bounds.minY + bounds.maxY) / 2 - sceneOffset.y;
 
-  const x = rect.width / 2 - centerX * scale;
-  const y = rect.height / 2 - centerY * scale;
+  viewportState.scale = scale;
+  viewportState.x = rect.width / 2 - centerX * scale;
+  viewportState.y = rect.height / 2 - centerY * scale;
 
-  scene.style.transformOrigin = "0 0";
-  scene.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  applyViewportTransform();
 }
-
+  
 async function loadGraph() {
   const status = document.getElementById("statusLine");
 
@@ -970,6 +969,45 @@ function clearSelection() {
   renderGraph();
 }
 
+function setupGraphPan() {
+  const viewport = document.getElementById("graphViewport");
+
+  viewport.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+
+    isPanning = true;
+    panStart.mouseX = event.clientX;
+    panStart.mouseY = event.clientY;
+    panStart.x = viewportState.x;
+    panStart.y = viewportState.y;
+
+    viewport.style.cursor = "grabbing";
+
+    try {
+      viewport.setPointerCapture(event.pointerId);
+    } catch (_) {}
+  });
+
+  viewport.addEventListener("pointermove", (event) => {
+    if (!isPanning) return;
+
+    viewportState.x = panStart.x + (event.clientX - panStart.mouseX);
+    viewportState.y = panStart.y + (event.clientY - panStart.mouseY);
+
+    applyViewportTransform();
+  });
+
+  viewport.addEventListener("pointerup", () => {
+    isPanning = false;
+    viewport.style.cursor = "grab";
+  });
+
+  viewport.addEventListener("pointercancel", () => {
+    isPanning = false;
+    viewport.style.cursor = "grab";
+  });
+}
+
 function init() {
   applyViewerTheme(currentTheme);
 
@@ -980,12 +1018,7 @@ function init() {
     };
   }
 
-  const viewport = document.getElementById("graphViewport");
-  if (viewport) {
-    viewport.addEventListener("click", () => {
-      clearSelection();
-    });
-  }
+setupGraphPan();
 
   loadGraph();
 }
