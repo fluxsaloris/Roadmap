@@ -1,84 +1,97 @@
 (function () {
+  "use strict";
+
   function safeCall(name, ...args) {
     const fn = window[name];
     if (typeof fn === "function") {
       try {
         return fn(...args);
       } catch (err) {
-        console.error(`safeCall error in ${name}:`, err);
+        console.error(`[safeCall:${name}]`, err);
       }
     }
   }
 
   function ensureBaseState() {
     window.graphData = window.graphData || { nodes: [], edges: [] };
+    window.selectedNodeId = window.selectedNodeId ?? null;
+    window.selectedEdgeKey = window.selectedEdgeKey ?? null;
+    window.hasUnsavedChanges = window.hasUnsavedChanges ?? false;
 
-    window.selectedNodeId ??= null;
-    window.selectedEdgeKey ??= null;
-    window.currentSearch ??= "";
-
-    window.viewportState ??= {
+    window.viewportState = window.viewportState || {
       x: 80,
       y: 80,
-      scale: window.innerWidth <= 700 ? 0.55 : 1
+      scale: 1
     };
 
-    window.interaction ??= {
-      isPanning: false,
-      panMouseX: 0,
-      panMouseY: 0,
-      panStartX: 0,
-      panStartY: 0,
-      dragNodeId: null,
-      dragStartMouseX: 0,
-      dragStartMouseY: 0,
-      dragStartNodeX: 0,
-      dragStartNodeY: 0
-    };
+    window.undoStack ||= [];
+    window.redoStack ||= [];
+    window.snapshotCache ||= new Map();
   }
 
-  function bindWindowEvents() {
-    window.addEventListener("resize", () => {
-      safeCall("refreshGraph");
-      safeCall("fitToGraph");
-    });
+  function hideLoadingForever() {
+    const el = document.getElementById("loadingOverlay");
+    if (el) el.style.display = "none";
   }
 
-  function init() {
-    ensureBaseState();
+  function showFatalError(msg) {
+    const panel = document.getElementById("errorPanel");
+    const text = document.getElementById("errorPanelText");
 
-    safeCall("showLoading", "Loading graph...");
+    if (text) text.textContent = msg || "Unknown error";
+    if (panel) panel.style.display = "block";
 
-    // UI + input
-    safeCall("setupSearch");
+    hideLoadingForever();
+  }
 
-    // viewport (safe guarded)
-    if (typeof window.setupViewportInteractions === "function") {
-      window.setupViewportInteractions();
+  function boot() {
+    try {
+      ensureBaseState();
+
+      safeCall("showLoading", "Loading editor...");
+
+      // Step 1: UI setup (must never block boot)
+      safeCall("restoreMetaFromLocalStorage");
+      safeCall("setupSearch");
+      safeCall("setupViewportInteractions");
+
+      // Step 2: ALWAYS try to render something first
+      safeCall("refreshAllUI");
+
+      // Step 3: Load graph safely
+      const load = async () => {
+        try {
+          if (typeof window.reloadGraph === "function") {
+            await window.reloadGraph(true);
+          } else {
+            console.warn("reloadGraph missing → using fallback graph");
+          }
+
+          safeCall("fitToGraph");
+          safeCall("refreshChangeSummary");
+
+          safeCall("hideLoading");
+        } catch (err) {
+          console.error("Graph load failed:", err);
+          showFatalError("Graph failed to load. Using empty state.");
+          safeCall("refreshAllUI");
+        }
+      };
+
+      Promise.resolve(load());
+
+    } catch (err) {
+      console.error("BOOT FAILED:", err);
+      showFatalError("Editor failed to initialize.");
     }
-
-    bindWindowEvents();
-
-    // 🚨 CRITICAL: always ensure graph exists BEFORE rendering
-    if (!window.graphData) {
-      window.graphData = { nodes: [], edges: [] };
-    }
-
-    // 🚨 CRITICAL: force render immediately
-    queueMicrotask(() => {
-      if (typeof window.refreshGraph === "function") {
-        window.refreshGraph();
-      }
-
-      if (typeof window.fitToGraph === "function") {
-        window.fitToGraph();
-      }
-
-      safeCall("hideLoading");
-      safeCall("setStatus", "Editor ready.");
-    });
   }
 
-  window.initEditor = init;
-  document.addEventListener("DOMContentLoaded", init);
+  // 🔥 CRITICAL FIX: NEVER rely on DOMContentLoaded alone
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    queueMicrotask(boot);
+  }
+
+  window.initEditor = boot;
 })();
