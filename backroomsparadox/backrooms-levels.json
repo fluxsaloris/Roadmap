@@ -3,13 +3,13 @@
     {
       "id": "level-0",
       "label": "Level 0",
-      "subtitle": "\"The Yellow Paradox\"",
+      "subtitle": "\"The Office Paradox\"",
       "type": "dangerous",
-      "status": "draft",
-      "description": "[REDACTED]",
+      "status": "implemented",
+      "description": "The Office Paradox is a custom inspiration of the level known as the \"Yellow Rooms\" in the normal backrooms genre.\n\nTo begin, what makes ours specifically unique is the fact we aren't going with the fresh yellow feeling of an ancient office area and instead we are going with a very worn down version of the Yellow Rooms, the colour is very faded, there is mould but you are still a researcher trying to understand what happened to the levels after all the neglect from the past organisations.\n\nIn this part of the game you will be introduced to how it all began. Who you are and what is the organisation you are working for and in simple terms; you are the organisation which has come to replace an older one which seems to have been eliminated by the Backrooms over time. You try to dig up the history on what has happened but you can't even find a record of who they were...",
       "notes": "[WIP]",
       "tags": [],
-      "x": 166,
+      "x": 168,
       "y": 118
     },
     {
