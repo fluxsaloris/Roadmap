@@ -60,7 +60,6 @@
   function scenePointFromClient(clientX, clientY) {
     const rect = graphViewportRect();
     const offset = getSceneOffset();
-
     const scale = state.viewportState.scale || 1;
 
     return {
@@ -292,24 +291,6 @@
     return points[Math.floor(points.length / 2)];
   }
 
-  function pointToSegmentDistance(px, py, ax, ay, bx, by) {
-    const dx = bx - ax;
-    const dy = by - ay;
-
-    if (!dx && !dy) return Math.hypot(px - ax, py - ay);
-
-    const t = clamp(
-      ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy),
-      0,
-      1
-    );
-
-    const cx = ax + t * dx;
-    const cy = ay + t * dy;
-
-    return Math.hypot(px - cx, py - cy);
-  }
-
   function refreshGraph() {
     const nodeLayer = el.nodes();
     const svg = el.svg();
@@ -323,26 +304,24 @@
     const nodes = window.graphData.nodes || [];
     const edges = window.graphData.edges || [];
 
-    nodeLayer.innerHTML = nodes
-      .map((node) => {
-        const selected = node.id === window.selectedNodeId;
-        const typeClass = window.getTypeClass?.(node.type) || "stable";
+    nodeLayer.innerHTML = nodes.map((node) => {
+      const selected = node.id === window.selectedNodeId;
+      const typeClass = window.getTypeClass?.(node.type) || "stable";
 
-        const x = (Number(node.x) || 0) - offset.x;
-        const y = (Number(node.y) || 0) - offset.y;
+      const x = (Number(node.x) || 0) - offset.x;
+      const y = (Number(node.y) || 0) - offset.y;
 
-        return `
-          <div class="node ${typeClass} ${selected ? "selected" : ""}"
-               data-node-id="${node.id}"
-               style="left:${x}px; top:${y}px;">
-            <div class="nodeHeader">
-              <div class="nodeDot"></div>
-              <div class="nodeTitle">${node.label || "Unnamed"}</div>
-            </div>
+      return `
+        <div class="node ${typeClass} ${selected ? "selected" : ""}"
+             data-node-id="${node.id}"
+             style="left:${x}px; top:${y}px;">
+          <div class="nodeHeader">
+            <div class="nodeDot"></div>
+            <div class="nodeTitle">${node.label || "Unnamed"}</div>
           </div>
-        `;
-      })
-      .join("");
+        </div>
+      `;
+    }).join("");
 
     const svgParts = [];
 
@@ -354,6 +333,7 @@
       const key = window.edgeKeyOf?.(edge) || `${edge.from}|${edge.to}`;
 
       svgParts.push(`<path d="${d}" class="edge" pointer-events="none"></path>`);
+
       svgParts.push(`
         <path d="${d}"
               data-edge-key="${key}"
@@ -414,7 +394,7 @@
     if (!svg) return;
 
     svg.querySelectorAll('[data-edge-hit="1"]').forEach((elHit) => {
-      elHit.onclick = (e) => {
+      elHit.onclick = () => {
         window.selectedEdgeKey = elHit.dataset.edgeKey;
         refreshGraph();
       };
