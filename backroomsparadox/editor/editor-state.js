@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  window.graphData ||= { nodes: [], edges: [] };
+  // ✅ HARD GUARANTEE: always exists BEFORE anything else runs
+  window.graphData = window.graphData || { nodes: [], edges: [] };
 
   const setDefault = (obj, key, value) => {
     if (typeof obj[key] === "undefined") obj[key] = value;
@@ -39,9 +40,7 @@
 
   function cloneData(data) {
     try {
-      return structuredClone
-        ? structuredClone(data)
-        : JSON.parse(JSON.stringify(data));
+      return structuredClone ? structuredClone(data) : JSON.parse(JSON.stringify(data));
     } catch {
       return JSON.parse(JSON.stringify(data));
     }
@@ -72,9 +71,7 @@
   }
 
   function edgeKeyOf(edge) {
-    return `${edge.from}|${edge.to}|${edge.label || ""}|${
-      edge.oneWay === false ? "0" : "1"
-    }`;
+    return `${edge.from}|${edge.to}|${edge.label || ""}|${edge.oneWay === false ? "0" : "1"}`;
   }
 
   function normalizeWaypoints(value) {
@@ -100,38 +97,31 @@
     const rawKeyToId = new Map();
 
     rawNodes.forEach((n, i) => {
-      const explicitId =
-        n?.id != null && String(n.id).trim() !== ""
-          ? String(n.id).trim()
-          : null;
-
       const label = typeof n?.label === "string" ? n.label : "Unnamed";
 
       const finalId = makeUniqueId(
-        explicitId || slugifyLabel(label || `node-${i + 1}`),
+        n?.id || slugifyLabel(label || `node-${i + 1}`),
         usedIds
       );
 
       const node = {
         id: finalId,
         label,
-        subtitle: typeof n?.subtitle === "string" ? n.subtitle : "",
-        description: typeof n?.description === "string" ? n.description : "",
-        notes: typeof n?.notes === "string" ? n.notes : "",
+        subtitle: n?.subtitle || "",
+        description: n?.description || "",
+        notes: n?.notes || "",
         x: Number(n?.x) || 0,
         y: Number(n?.y) || 0,
         type: normalizeType(n?.type),
-        status: typeof n?.status === "string" ? n.status : "draft",
-        tags: Array.isArray(n?.tags)
-          ? n.tags.map(String)
-          : []
+        status: n?.status || "draft",
+        tags: Array.isArray(n?.tags) ? n.tags.map(String) : []
       };
 
       nodes.push(node);
 
       rawKeyToId.set(finalId, finalId);
       rawKeyToId.set(label, finalId);
-      if (explicitId) rawKeyToId.set(explicitId, finalId);
+      if (n?.id) rawKeyToId.set(n.id, finalId);
     });
 
     return { nodes, rawKeyToId };
@@ -141,18 +131,13 @@
     const rawNodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
     const { nodes, rawKeyToId } = buildNodeMapsFromRaw(rawNodes);
 
-    const validIds = new Set(nodes.map((n) => n.id));
+    const validIds = new Set(nodes.map(n => n.id));
     const edges = [];
     const seen = new Set();
 
-    const rawEdges = Array.isArray(raw?.edges) ? raw.edges : [];
-
-    for (const e of rawEdges) {
-      const fromKey = e?.from ? String(e.from).trim() : null;
-      const toKey = e?.to ? String(e.to).trim() : null;
-
-      const from = fromKey ? rawKeyToId.get(fromKey) : null;
-      const to = toKey ? rawKeyToId.get(toKey) : null;
+    for (const e of (raw?.edges || [])) {
+      const from = rawKeyToId.get(e?.from);
+      const to = rawKeyToId.get(e?.to);
 
       if (!from || !to) continue;
       if (!validIds.has(from) || !validIds.has(to)) continue;
@@ -162,7 +147,7 @@
         from,
         to,
         label: normalizeEdgeLabel(e.label),
-        oneWay: e.oneWay === false ? false : true,
+        oneWay: e.oneWay !== false,
         waypoints: normalizeWaypoints(e.waypoints)
       };
 
@@ -176,145 +161,16 @@
     return { nodes, edges };
   }
 
-  function sanitizeGraphDataForSave() {
-    const used = new Set();
-    const refMap = new Map();
-
-    for (const node of window.graphData.nodes) {
-      const oldId = node?.id ? String(node.id) : null;
-
-      const newId = makeUniqueId(
-        oldId || slugifyLabel(node.label || "node"),
-        used
-      );
-
-      if (oldId) refMap.set(oldId, newId);
-      refMap.set(newId, newId);
-
-      node.id = newId;
-    }
-
-    if (window.selectedNodeId && refMap.has(window.selectedNodeId)) {
-      window.selectedNodeId = refMap.get(window.selectedNodeId);
-    }
-
-    const valid = new Set(window.graphData.nodes.map((n) => n.id));
-    const seen = new Set();
-
-    window.graphData.edges = window.graphData.edges
-      .map((e) => ({
-        from: refMap.get(e.from) || e.from,
-        to: refMap.get(e.to) || e.to,
-        label: normalizeEdgeLabel(e.label),
-        oneWay: e.oneWay === false ? false : true,
-        waypoints: normalizeWaypoints(e.waypoints)
-      }))
-      .filter((e) => {
-        if (!e.from || !e.to) return false;
-        if (!valid.has(e.from) || !valid.has(e.to)) return false;
-        if (e.from === e.to) return false;
-
-        const key = edgeKeyOf(e);
-        if (seen.has(key)) return false;
-
-        seen.add(key);
-        return true;
-      });
-  }
-
-  function getSerializableGraphData() {
-    sanitizeGraphDataForSave();
-
-    return {
-      nodes: window.graphData.nodes.map((n) => ({
-        id: n.id,
-        label: n.label,
-        subtitle: n.subtitle,
-        type: n.type,
-        status: n.status,
-        description: n.description,
-        notes: n.notes,
-        tags: Array.isArray(n.tags) ? [...n.tags] : [],
-        x: n.x,
-        y: n.y
-      })),
-      edges: window.graphData.edges.map((e) => ({
-        from: e.from,
-        to: e.to,
-        label: e.label || "",
-        oneWay: e.oneWay === false ? false : true,
-        waypoints: normalizeWaypoints(e.waypoints)
-      }))
-    };
-  }
-
   const getNodeById = (id) =>
-    window.graphData.nodes.find((n) => n.id === String(id)) || null;
-
-  const getSelectedNode = () =>
-    window.selectedNodeId ? getNodeById(window.selectedNodeId) : null;
-
-  const getEdgeByKey = (key) =>
-    window.graphData.edges.find((e) => edgeKeyOf(e) === key) || null;
-
-  const getOutgoingEdges = (id) =>
-    window.graphData.edges.filter((e) => e.from === String(id));
-
-  const getIncomingEdges = (id) =>
-    window.graphData.edges.filter((e) => e.to === String(id));
-
-  const nodeMatchesSearch = (node, search) => {
-    if (!search) return true;
-
-    const haystack = [
-      node.id,
-      node.label,
-      node.subtitle,
-      node.description,
-      node.notes,
-      getTypeLabel(node.type),
-      ...(node.tags || [])
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(search);
-  };
-
-  const getVisibleNodeIds = () => {
-    const s = String(window.currentSearch || "").trim().toLowerCase();
-
-    const nodes = window.graphData.nodes || [];
-    if (!s) return new Set(nodes.map((n) => n.id));
-
-    return new Set(nodes.filter((n) => nodeMatchesSearch(n, s)).map((n) => n.id));
-  };
+    window.graphData.nodes.find(n => n.id === String(id)) || null;
 
   window.normalizeType = normalizeType;
-  window.getTypeLabel = getTypeLabel;
   window.getTypeClass = getTypeClass;
-  window.getTypeEdgeClass = getTypeEdgeClass;
+  window.getTypeLabel = getTypeLabel;
 
-  window.cloneData = cloneData;
-  window.normalizeEdgeLabel = normalizeEdgeLabel;
-  window.slugifyLabel = slugifyLabel;
-  window.makeUniqueId = makeUniqueId;
   window.edgeKeyOf = edgeKeyOf;
   window.normalizeWaypoints = normalizeWaypoints;
 
-  window.buildNodeMapsFromRaw = buildNodeMapsFromRaw;
   window.normalizeData = normalizeData;
-
-  window.sanitizeGraphDataForSave = sanitizeGraphDataForSave;
-  window.getSerializableGraphData = getSerializableGraphData;
-
   window.getNodeById = getNodeById;
-  window.getSelectedNode = getSelectedNode;
-  window.getEdgeByKey = getEdgeByKey;
-
-  window.getOutgoingEdges = getOutgoingEdges;
-  window.getIncomingEdges = getIncomingEdges;
-
-  window.nodeMatchesSearch = nodeMatchesSearch;
-  window.getVisibleNodeIds = getVisibleNodeIds;
 })();
