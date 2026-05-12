@@ -1,119 +1,79 @@
 (function () {
+  "use strict";
+
+  const isMac = () =>
+    navigator.platform?.toUpperCase().includes("MAC");
+
+  const modKey = (e) => (isMac() ? e.metaKey : e.ctrlKey);
+
   function safeCall(name, ...args) {
     const fn = window[name];
     if (typeof fn === "function") {
-      return fn(...args);
+      try {
+        return fn(...args);
+      } catch (err) {
+        console.error(`safeCall("${name}") failed`, err);
+      }
     }
     return undefined;
   }
 
+  function setDefault(obj, key, value) {
+    if (typeof obj[key] === "undefined") obj[key] = value;
+  }
+
   function ensureBaseState() {
-    if (!window.graphData) {
-      window.graphData = { nodes: [], edges: [] };
-    }
+    window.graphData ||= { nodes: [], edges: [] };
 
-    if (typeof window.selectedNodeId === "undefined") {
-      window.selectedNodeId = null;
-    }
+    setDefault(window, "selectedNodeId", null);
+    setDefault(window, "selectedEdgeKey", null);
+    setDefault(window, "currentSearch", "");
+    setDefault(window, "hasUnsavedChanges", false);
 
-    if (typeof window.selectedEdgeKey === "undefined") {
-      window.selectedEdgeKey = null;
-    }
+    setDefault(window, "lastLocalSaveAt", null);
+    setDefault(window, "lastRemoteSaveAt", null);
+    setDefault(window, "lastVersionId", null);
+    setDefault(window, "lastSnapshotPath", null);
 
-    if (typeof window.currentSearch === "undefined") {
-      window.currentSearch = "";
-    }
+    window.viewportState ||= {
+      x: window.innerWidth <= 700 ? 20 : 80,
+      y: window.innerWidth <= 700 ? 20 : 80,
+      scale: window.innerWidth <= 700 ? 0.55 : 1
+    };
 
-    if (typeof window.hasUnsavedChanges === "undefined") {
-      window.hasUnsavedChanges = false;
-    }
+    window.interaction ||= {
+      isPanning: false,
+      panMouseX: 0,
+      panMouseY: 0,
+      panStartX: 0,
+      panStartY: 0,
+      movedDuringPointer: false,
+      dragNodeId: null,
+      dragStartMouseX: 0,
+      dragStartMouseY: 0,
+      dragStartNodeX: 0,
+      dragStartNodeY: 0,
+      connectFromNodeId: null,
+      connectMouseSceneX: 0,
+      connectMouseSceneY: 0
+    };
 
-    if (typeof window.lastLocalSaveAt === "undefined") {
-      window.lastLocalSaveAt = null;
-    }
+    window.waypointDrag ||= {
+      edgeKey: null,
+      index: -1,
+      active: false
+    };
 
-    if (typeof window.lastRemoteSaveAt === "undefined") {
-      window.lastRemoteSaveAt = null;
-    }
+    window.undoStack ||= [];
+    window.redoStack ||= [];
+    window.snapshotCache ||= new Map();
 
-    if (typeof window.lastVersionId === "undefined") {
-      window.lastVersionId = null;
-    }
-
-    if (typeof window.lastSnapshotPath === "undefined") {
-      window.lastSnapshotPath = null;
-    }
-
-    if (!window.viewportState) {
-      window.viewportState = {
-        x: window.innerWidth <= 700 ? 20 : 80,
-        y: window.innerWidth <= 700 ? 20 : 80,
-        scale: window.innerWidth <= 700 ? 0.55 : 1
-      };
-    }
-
-    if (!window.interaction) {
-      window.interaction = {
-        isPanning: false,
-        panMouseX: 0,
-        panMouseY: 0,
-        panStartX: 0,
-        panStartY: 0,
-        movedDuringPointer: false,
-        dragNodeId: null,
-        dragStartMouseX: 0,
-        dragStartMouseY: 0,
-        dragStartNodeX: 0,
-        dragStartNodeY: 0,
-        connectFromNodeId: null,
-        connectMouseSceneX: 0,
-        connectMouseSceneY: 0
-      };
-    }
-
-    if (!window.waypointDrag) {
-      window.waypointDrag = {
-        edgeKey: null,
-        index: -1,
-        active: false
-      };
-    }
-
-    if (!window.undoStack) {
-      window.undoStack = [];
-    }
-
-    if (!window.redoStack) {
-      window.redoStack = [];
-    }
-
-    if (!window.snapshotCache) {
-      window.snapshotCache = new Map();
-    }
-
-    if (typeof window.historyIndexCache === "undefined") {
-      window.historyIndexCache = null;
-    }
-
-    if (typeof window.autosaveTimer === "undefined") {
-      window.autosaveTimer = null;
-    }
-
-    if (typeof window.diffTimer === "undefined") {
-      window.diffTimer = null;
-    }
-
-    if (typeof window.saveCooldownUntil === "undefined") {
-      window.saveCooldownUntil = 0;
-    }
-
-    if (typeof window.isSavingToGitHub === "undefined") {
-      window.isSavingToGitHub = false;
-    }
-
-    if (typeof window.latestDiffContext === "undefined") {
-      window.latestDiffContext = null;
-    }
+    setDefault(window, "historyIndexCache", null);
+    setDefault(window, "autosaveTimer", null);
+    setDefault(window, "diffTimer", null);
+    setDefault(window, "saveCooldownUntil", 0);
+    setDefault(window, "isSavingToGitHub", false);
+    setDefault(window, "latestDiffContext", null);
   }
 
   function bindWindowEvents() {
@@ -121,19 +81,22 @@
       safeCall("closeMobilePanels");
       safeCall("closeMobileInspector");
 
-      if (typeof window.isCompactEditorLayout === "function" && !window.isCompactEditorLayout()) {
+      const compact = safeCall("isCompactEditorLayout");
+
+      if (!compact) {
         safeCall("closeInspector");
       }
 
-      if (window.graphData && Array.isArray(window.graphData.nodes) && window.graphData.nodes.length) {
+      const nodes = window.graphData?.nodes;
+      if (Array.isArray(nodes) && nodes.length) {
         safeCall("fitToGraph");
         safeCall("refreshAllUI");
       }
     });
 
     window.addEventListener("keydown", (event) => {
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
-      const mod = isMac ? event.metaKey : event.ctrlKey;
+      const mod = modKey(event);
+      const key = event.key.toLowerCase();
 
       if (event.key === "Escape") {
         if (window.selectedNodeId || window.selectedEdgeKey) {
@@ -142,17 +105,15 @@
           safeCall("closeMobilePanels");
           safeCall("closeMobileInspector");
         }
+        return;
       }
 
-      if (mod && !event.shiftKey && event.key.toLowerCase() === "z") {
+      if (mod && !event.shiftKey && key === "z") {
         event.preventDefault();
         safeCall("undoAction");
       }
 
-      if (
-        (mod && event.shiftKey && event.key.toLowerCase() === "z") ||
-        (mod && event.key.toLowerCase() === "y")
-      ) {
+      if ((mod && event.shiftKey && key === "z") || (mod && key === "y")) {
         event.preventDefault();
         safeCall("redoAction");
       }
@@ -166,35 +127,37 @@
 
     window.addEventListener("beforeunload", (event) => {
       if (!window.hasUnsavedChanges) return;
+
       safeCall("saveDraftToLocal");
+
       event.preventDefault();
       event.returnValue = "";
     });
   }
 
   function restoreLocalDraftIfPresent() {
-    const localDraft = safeCall("loadDraftFromLocal");
-    if (!localDraft || !localDraft.data) return false;
+    const draft = safeCall("loadDraftFromLocal");
+    if (!draft?.data) return false;
 
-    window.graphData =
-      typeof window.normalizeData === "function"
-        ? window.normalizeData(localDraft.data)
-        : localDraft.data;
+    const normalize = window.normalizeData;
+
+    window.graphData = typeof normalize === "function"
+      ? normalize(draft.data)
+      : draft.data;
 
     window.selectedNodeId =
-      localDraft.selectedNodeId || window.graphData?.nodes?.[0]?.id || null;
+      draft.selectedNodeId || window.graphData?.nodes?.[0]?.id || null;
 
-    window.selectedEdgeKey = localDraft.selectedEdgeKey || null;
-    window.lastLocalSaveAt = localDraft.savedAt || null;
+    window.selectedEdgeKey = draft.selectedEdgeKey || null;
+    window.lastLocalSaveAt = draft.savedAt || null;
 
-    if (localDraft.viewportState) {
+    if (draft.viewportState) {
       window.viewportState = {
-        x: typeof localDraft.viewportState.x === "number" ? localDraft.viewportState.x : 0,
-        y: typeof localDraft.viewportState.y === "number" ? localDraft.viewportState.y : 0,
+        x: Number(draft.viewportState.x) || 0,
+        y: Number(draft.viewportState.y) || 0,
         scale:
-          typeof localDraft.viewportState.scale === "number"
-            ? localDraft.viewportState.scale
-            : ((typeof window.isMobileLayout === "function" && window.isMobileLayout()) ? 0.55 : 1)
+          Number(draft.viewportState.scale) ||
+          (window.innerWidth <= 700 ? 0.55 : 1)
       };
     }
 
@@ -204,17 +167,17 @@
     safeCall("hideErrorPanel");
 
     window.hasUnsavedChanges = true;
+
     safeCall("setSaveBadge", "save-dirty", "Recovered local draft");
 
-    if (!(typeof window.isMobileLayout === "function" && window.isMobileLayout())) {
-      safeCall("setStatus", "Recovered unsaved local draft.");
-    }
+    safeCall("setStatus", "Recovered unsaved draft.");
 
     safeCall("refreshChangeSummary");
+
     return true;
   }
 
-  function init() {
+  async function init() {
     try {
       ensureBaseState();
 
@@ -230,20 +193,12 @@
       }
 
       if (typeof window.reloadGraph === "function") {
-        Promise.resolve(window.reloadGraph(true))
-          .then(() => {
-            safeCall("refreshChangeSummary");
-          })
-          .catch((err) => {
-            console.error(err);
-            safeCall("hideLoading");
-            safeCall("showErrorPanel", err?.message || "Editor failed to load.");
-            safeCall("setStatus", "Editor failed to load.", true);
-          });
+        await window.reloadGraph(true);
+        safeCall("refreshChangeSummary");
       } else {
         safeCall("hideLoading");
         safeCall("showErrorPanel", "reloadGraph is missing.");
-        safeCall("setStatus", "Editor loaded, but reloadGraph is missing.", true);
+        safeCall("setStatus", "Editor failed to load.", true);
       }
     } catch (err) {
       console.error(err);
@@ -254,5 +209,6 @@
   }
 
   window.initEditor = init;
+
   document.addEventListener("DOMContentLoaded", init);
 })();
