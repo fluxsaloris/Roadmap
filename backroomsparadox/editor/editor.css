@@ -314,5 +314,5 @@ button:active {
 /* (continues exactly as provided...) */
 
 @media (max-width: 700px) {
-  /* unchanged */
+  /* responsive styles go here if needed */
 }
