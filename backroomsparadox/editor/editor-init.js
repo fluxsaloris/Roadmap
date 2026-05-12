@@ -8,183 +8,75 @@
         console.error(`safeCall error in ${name}:`, err);
       }
     }
-    return undefined;
   }
 
   function ensureBaseState() {
-    if (!window.graphData) window.graphData = { nodes: [], edges: [] };
-    if (typeof window.selectedNodeId === "undefined") window.selectedNodeId = null;
-    if (typeof window.selectedEdgeKey === "undefined") window.selectedEdgeKey = null;
-    if (typeof window.currentSearch === "undefined") window.currentSearch = "";
-    if (typeof window.hasUnsavedChanges === "undefined") window.hasUnsavedChanges = false;
-    if (typeof window.lastLocalSaveAt === "undefined") window.lastLocalSaveAt = null;
-    if (typeof window.lastRemoteSaveAt === "undefined") window.lastRemoteSaveAt = null;
-    if (typeof window.lastVersionId === "undefined") window.lastVersionId = null;
-    if (typeof window.lastSnapshotPath === "undefined") window.lastSnapshotPath = null;
+    window.graphData = window.graphData || { nodes: [], edges: [] };
 
-    if (!window.viewportState) {
-      window.viewportState = {
-        x: window.innerWidth <= 700 ? 20 : 80,
-        y: window.innerWidth <= 700 ? 20 : 80,
-        scale: window.innerWidth <= 700 ? 0.55 : 1
-      };
-    }
+    window.selectedNodeId ??= null;
+    window.selectedEdgeKey ??= null;
+    window.currentSearch ??= "";
 
-    if (!window.interaction) {
-      window.interaction = {
-        isPanning: false,
-        panMouseX: 0,
-        panMouseY: 0,
-        panStartX: 0,
-        panStartY: 0,
-        movedDuringPointer: false,
-        dragNodeId: null,
-        dragStartMouseX: 0,
-        dragStartMouseY: 0,
-        dragStartNodeX: 0,
-        dragStartNodeY: 0,
-        connectFromNodeId: null,
-        connectMouseSceneX: 0,
-        connectMouseSceneY: 0
-      };
-    }
+    window.viewportState ??= {
+      x: 80,
+      y: 80,
+      scale: window.innerWidth <= 700 ? 0.55 : 1
+    };
 
-    if (!window.undoStack) window.undoStack = [];
-    if (!window.redoStack) window.redoStack = [];
-    if (!window.snapshotCache) window.snapshotCache = new Map();
-
-    if (typeof window.autosaveTimer === "undefined") window.autosaveTimer = null;
-    if (typeof window.diffTimer === "undefined") window.diffTimer = null;
-    if (typeof window.saveCooldownUntil === "undefined") window.saveCooldownUntil = 0;
-    if (typeof window.isSavingToGitHub === "undefined") window.isSavingToGitHub = false;
+    window.interaction ??= {
+      isPanning: false,
+      panMouseX: 0,
+      panMouseY: 0,
+      panStartX: 0,
+      panStartY: 0,
+      dragNodeId: null,
+      dragStartMouseX: 0,
+      dragStartMouseY: 0,
+      dragStartNodeX: 0,
+      dragStartNodeY: 0
+    };
   }
 
   function bindWindowEvents() {
     window.addEventListener("resize", () => {
-      safeCall("closeMobilePanels");
-      safeCall("closeMobileInspector");
-      safeCall("closeInspector");
-
-      if (window.graphData?.nodes?.length) {
-        safeCall("fitToGraph");
-        safeCall("refreshAllUI");
-      }
+      safeCall("refreshGraph");
+      safeCall("fitToGraph");
     });
-
-    window.addEventListener("keydown", (event) => {
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
-      const mod = isMac ? event.metaKey : event.ctrlKey;
-
-      if (event.key === "Escape") {
-        if (window.selectedNodeId || window.selectedEdgeKey) {
-          safeCall("clearSelection");
-        } else {
-          safeCall("closeMobilePanels");
-          safeCall("closeMobileInspector");
-        }
-      }
-
-      if (mod && !event.shiftKey && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        safeCall("undoAction");
-      }
-
-      if (
-        (mod && event.shiftKey && event.key.toLowerCase() === "z") ||
-        (mod && event.key.toLowerCase() === "y")
-      ) {
-        event.preventDefault();
-        safeCall("redoAction");
-      }
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        safeCall("saveDraftToLocal");
-      }
-    });
-
-    window.addEventListener("beforeunload", (event) => {
-      if (!window.hasUnsavedChanges) return;
-      safeCall("saveDraftToLocal");
-      event.preventDefault();
-      event.returnValue = "";
-    });
-  }
-
-  function restoreLocalDraftIfPresent() {
-    const localDraft = safeCall("loadDraftFromLocal");
-    if (!localDraft?.data) return false;
-
-    window.graphData = typeof window.normalizeData === "function"
-      ? window.normalizeData(localDraft.data)
-      : localDraft.data;
-
-    window.selectedNodeId =
-      localDraft.selectedNodeId || window.graphData?.nodes?.[0]?.id || null;
-
-    window.selectedEdgeKey = localDraft.selectedEdgeKey || null;
-    window.lastLocalSaveAt = localDraft.savedAt || null;
-
-    if (localDraft.viewportState) {
-      window.viewportState = {
-        x: localDraft.viewportState.x ?? 0,
-        y: localDraft.viewportState.y ?? 0,
-        scale: localDraft.viewportState.scale ?? 1
-      };
-    }
-
-    safeCall("applyViewportTransform");
-    safeCall("refreshAllUI");
-    safeCall("hideLoading");
-
-    window.hasUnsavedChanges = true;
-    safeCall("setSaveBadge", "save-dirty", "Recovered local draft");
-    safeCall("setStatus", "Recovered unsaved local draft.");
-
-    safeCall("refreshChangeSummary");
-    return true;
   }
 
   function init() {
-    try {
-      ensureBaseState();
+    ensureBaseState();
 
-      safeCall("showLoading", "Loading editor...");
-      safeCall("restoreMetaFromLocalStorage");
-      safeCall("setupSearch");
-      safeCall("setupViewportInteractions");
+    safeCall("showLoading", "Loading graph...");
 
-      bindWindowEvents();
+    // UI + input
+    safeCall("setupSearch");
 
-      if (restoreLocalDraftIfPresent()) return;
+    // viewport (safe guarded)
+    if (typeof window.setupViewportInteractions === "function") {
+      window.setupViewportInteractions();
+    }
 
-      // 🔥 FIXED: prevent hard crash if reloadGraph is missing
-      if (typeof window.reloadGraph !== "function") {
-        console.warn("reloadGraph is missing - skipping graph load");
-        safeCall("hideLoading");
-        safeCall("setStatus", "Editor loaded (no graph loader found).", true);
-        safeCall("refreshChangeSummary");
-        return;
+    bindWindowEvents();
+
+    // 🚨 CRITICAL: always ensure graph exists BEFORE rendering
+    if (!window.graphData) {
+      window.graphData = { nodes: [], edges: [] };
+    }
+
+    // 🚨 CRITICAL: force render immediately
+    queueMicrotask(() => {
+      if (typeof window.refreshGraph === "function") {
+        window.refreshGraph();
       }
 
-      Promise.resolve(window.reloadGraph(true))
-        .then(() => {
-          safeCall("refreshChangeSummary");
-          safeCall("hideLoading");
-        })
-        .catch((err) => {
-          console.error("Graph load error:", err);
-          safeCall("hideLoading");
-          safeCall("showErrorPanel", "Failed to load graph data.");
-          safeCall("setStatus", "Graph load failed.", true);
-        });
+      if (typeof window.fitToGraph === "function") {
+        window.fitToGraph();
+      }
 
-    } catch (err) {
-      console.error("Init error:", err);
       safeCall("hideLoading");
-      safeCall("setStatus", "Editor init failed (check console).", true);
-    }
+      safeCall("setStatus", "Editor ready.");
+    });
   }
 
   window.initEditor = init;
