@@ -6,6 +6,7 @@
   <title>Backrooms Graph Editor</title>
   <link rel="stylesheet" href="editor.css" />
 </head>
+
 <body>
   <div id="loadingOverlay">
     <div id="loadingCard">
@@ -41,6 +42,7 @@
           type="text"
           placeholder="Search level name, tag, subtitle, description, or notes..."
           autocomplete="off"
+          spellcheck="false"
         />
 
         <div class="toolbar">
@@ -82,11 +84,11 @@
           </div>
 
           <div id="graphViewport" class="graphViewport">
-          <div id="graphScene" class="graphScene">
-            <svg id="graphSvg" class="graphSvg"></svg>
-            <div id="graphNodes" class="graphNodes"></div>
+            <div id="graphScene" class="graphScene">
+              <svg id="graphSvg" class="graphSvg"></svg>
+              <div id="graphNodes" class="graphNodes"></div>
+            </div>
           </div>
-        </div>
         </section>
 
         <section id="changeSummaryPanel" class="panel">
@@ -103,12 +105,12 @@
           <div class="fieldGrid">
             <div class="fieldBlock">
               <label class="fieldLabel" for="nodeLabel">Label</label>
-              <input id="nodeLabel" type="text" />
+              <input id="nodeLabel" type="text" spellcheck="false" />
             </div>
 
             <div class="fieldBlock">
               <label class="fieldLabel" for="nodeSubtitle">Subtitle</label>
-              <input id="nodeSubtitle" type="text" />
+              <input id="nodeSubtitle" type="text" spellcheck="false" />
             </div>
 
             <div class="fieldBlock">
@@ -144,17 +146,17 @@
 
             <div class="fieldBlock">
               <label class="fieldLabel" for="nodeTags">Tags (comma separated)</label>
-              <input id="nodeTags" type="text" />
+              <input id="nodeTags" type="text" spellcheck="false" />
             </div>
 
             <div class="fieldBlock">
               <label class="fieldLabel" for="nodeDescription">Description</label>
-              <textarea id="nodeDescription"></textarea>
+              <textarea id="nodeDescription" spellcheck="false"></textarea>
             </div>
 
             <div class="fieldBlock">
               <label class="fieldLabel" for="nodeNotes">Notes</label>
-              <textarea id="nodeNotes"></textarea>
+              <textarea id="nodeNotes" spellcheck="false"></textarea>
             </div>
 
             <div class="actionRow">
@@ -175,7 +177,7 @@
 
             <div class="fieldBlock">
               <label class="fieldLabel" for="linkLabel">Link Label</label>
-              <input id="linkLabel" type="text" placeholder="Trapdoor Puzzle" />
+              <input id="linkLabel" type="text" placeholder="Trapdoor Puzzle" spellcheck="false" />
             </div>
 
             <div class="fieldBlock">
@@ -208,7 +210,9 @@
 
         <section class="sidebarCard">
           <h2 class="sidebarTitle">Selected Link Bend Points</h2>
-          <div id="selectedEdgeHint" class="sidebarSub">Select a link from the outgoing list or click a line.</div>
+          <div id="selectedEdgeHint" class="sidebarSub">
+            Select a link from the outgoing list or click a line.
+          </div>
 
           <div class="actionRow">
             <button onclick="addWaypointToSelectedEdge()">Add Bend Point</button>
@@ -233,11 +237,12 @@
     </div>
   </div>
 
-  <script src="editor-config.js"></script>
-  <script src="editor-state.js"></script>
-  <script src="editor-ui.js"></script>
-  <script src="editor-graph.js"></script>
-  <script src="editor-actions.js"></script>
-  <script src="editor-init.js"></script>
+  <!-- Scripts (deferred for performance) -->
+  <script src="editor-config.js" defer></script>
+  <script src="editor-state.js" defer></script>
+  <script src="editor-ui.js" defer></script>
+  <script src="editor-graph.js" defer></script>
+  <script src="editor-actions.js" defer></script>
+  <script src="editor-init.js" defer></script>
 </body>
 </html>
