@@ -14,11 +14,13 @@
     const panel = el("errorPanel");
     const text = el("errorText") || el("errorPanelText");
     if (text) text.textContent = message || "Unknown error";
+    if (panel) panel.style.display = "block";
     if (panel) panel.classList.add("show");
   }
 
   function hideErrorPanel() {
     const panel = el("errorPanel");
+    if (panel) panel.style.display = "none";
     if (panel) panel.classList.remove("show");
   }
 
@@ -112,8 +114,7 @@
   function escapeJs(value) {
     return String(value ?? "")
       .replaceAll("\\", "\\\\")
-      .replaceAll("'", "\\'")
-      .replaceAll('"', '\\"');
+      .replaceAll("'", "\\'");
   }
 
   function renderLinkList(direction, nodeId, targetId) {
@@ -136,7 +137,20 @@
           const other = typeof window.getNodeById === "function" ? window.getNodeById(otherId) : null;
           const key = typeof window.edgeKeyOf === "function" ? window.edgeKeyOf(edge) : "";
           const isSelected = window.selectedEdgeKey === key;
-          const clickAttr = `onclick="selectEdgeByKey('${escapeJs(key)}')"`; // kept (minimal change)
+          const clickAttr = `onclick="selectEdgeByKey('${escapeJs(key)}')"`;
+
+          if (direction === "outgoing" && targetId === "outgoingList") {
+            return `
+              <li>
+                <button ${clickAttr} style="margin-right:6px;${isSelected ? "border-color:rgba(190,26,72,0.5);" : ""}">
+                  Select
+                </button>
+                ${escapeHtml(other?.label || otherId)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}
+                ${Array.isArray(edge.waypoints) && edge.waypoints.length ? ` <span style="color:#a7a7b5;">(${edge.waypoints.length} bend)</span>` : ""}
+                <button onclick="deleteEdge('${escapeJs(edge.from)}','${escapeJs(edge.to)}','${escapeJs(edge.label || "")}')" style="margin-left:6px;">Remove</button>
+              </li>
+            `;
+          }
 
           return `
             <li>
@@ -145,7 +159,6 @@
               </button>
               ${escapeHtml(other?.label || otherId)}${edge.label ? ` — ${escapeHtml(edge.label)}` : ""}
               ${Array.isArray(edge.waypoints) && edge.waypoints.length ? ` <span style="color:#a7a7b5;">(${edge.waypoints.length} bend)</span>` : ""}
-              ${direction === "outgoing" ? `<button onclick="deleteEdge('${escapeJs(edge.from)}','${escapeJs(edge.to)}','${escapeJs(edge.label || "")}')" style="margin-left:6px;">Remove</button>` : ""}
             </li>
           `;
         }).join("")
@@ -164,7 +177,9 @@
 
     if (!edge) {
       container.innerHTML = `<div class="changeEmpty">No link selected.</div>`;
-      if (selectedEdgeHint) selectedEdgeHint.textContent = "Select a link from the outgoing list or click a line.";
+      if (selectedEdgeHint) {
+        selectedEdgeHint.textContent = "Select a link from the outgoing list or click a line.";
+      }
       return;
     }
 
@@ -350,13 +365,12 @@
     return lines.join("\n");
   }
 
-  // ✅ FIXED: now uses edgeKeyOf instead of JSON.stringify (major perf + correctness win)
   function computeDiff(previousData, currentData) {
     const prevNodes = new Map(previousData.nodes.map(n => [n.id, n]));
     const currNodes = new Map(currentData.nodes.map(n => [n.id, n]));
 
-    const prevEdges = new Set(previousData.edges.map(edge => window.edgeKeyOf(edge)));
-    const currEdges = new Set(currentData.edges.map(edge => window.edgeKeyOf(edge)));
+    const prevEdges = new Set(previousData.edges.map(e => JSON.stringify(e)));
+    const currEdges = new Set(currentData.edges.map(e => JSON.stringify(e)));
 
     const addedNodes = [];
     const deletedNodes = [];
@@ -373,11 +387,6 @@
 
       const prev = prevNodes.get(id);
       const moved = prev.x !== curr.x || prev.y !== curr.y;
-
-      // small perf improvement: avoid JSON.stringify on tags
-      const prevTags = (prev.tags || []).join("|");
-      const currTags = (curr.tags || []).join("|");
-
       const updated =
         prev.label !== curr.label ||
         prev.subtitle !== curr.subtitle ||
@@ -385,7 +394,7 @@
         prev.notes !== curr.notes ||
         prev.type !== curr.type ||
         prev.status !== curr.status ||
-        prevTags !== currTags;
+        JSON.stringify(prev.tags || []) !== JSON.stringify(curr.tags || []);
 
       if (moved) movedNodes.push({ label: curr.label, from: `${prev.x}, ${prev.y}`, to: `${curr.x}, ${curr.y}` });
       if (updated) updatedNodes.push({ label: curr.label });
@@ -398,7 +407,7 @@
     }
 
     for (const edge of currentData.edges) {
-      const key = window.edgeKeyOf(edge);
+      const key = JSON.stringify(edge);
       if (!prevEdges.has(key)) {
         addedLinks.push({
           from: currNodes.get(edge.from)?.label || edge.from,
@@ -410,7 +419,7 @@
     }
 
     for (const edge of previousData.edges) {
-      const key = window.edgeKeyOf(edge);
+      const key = JSON.stringify(edge);
       if (!currEdges.has(key)) {
         deletedLinks.push({
           from: prevNodes.get(edge.from)?.label || edge.from,
@@ -535,6 +544,11 @@
     }
   }
 
+function refreshAllUI() {
+  updateMetaBadges();
+  updateStatsBar();
+  if (typeof window.refreshGraph === "function") {
+    window.refreshGraph();
   function refreshAllUI() {
     updateMetaBadges();
     updateStatsBar();
@@ -543,6 +557,8 @@
       window.refreshGraph();
     }
   }
+  updateSidebarForSelection();
+}
 
   window.setStatus = setStatus;
   window.showErrorPanel = showErrorPanel;
