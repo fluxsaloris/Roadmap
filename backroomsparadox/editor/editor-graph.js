@@ -3,22 +3,6 @@
 
   const isMobile = () => window.innerWidth <= 700;
 
-  const state = {
-    interaction: {
-      isPanning: false,
-      dragNodeId: null,
-      dragStartMouseX: 0,
-      dragStartMouseY: 0,
-      dragStartNodeX: 0,
-      dragStartNodeY: 0,
-      panMouseX: 0,
-      panMouseY: 0,
-      panStartX: 0,
-      panStartY: 0,
-      dragStarted: false
-    }
-  };
-
   const el = {
     viewport: () => document.getElementById("graphViewport"),
     canvas: () => document.getElementById("graphScene"),
@@ -26,13 +10,19 @@
     nodes: () => document.getElementById("graphNodes")
   };
 
-  const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
-
   const getVP = () =>
-    window.viewportState || (window.viewportState = { x: 0, y: 0, zoom: 1 });
+    window.viewportState || (window.viewportState = { x: 80, y: 80, scale: 1 });
 
   function rect() {
     return el.viewport()?.getBoundingClientRect() || { left: 0, top: 0, width: 0, height: 0 };
+  }
+
+  function offset() {
+    const c = el.canvas();
+    return {
+      x: Number(c?.dataset?.sceneMinX || 0),
+      y: Number(c?.dataset?.sceneMinY || 0)
+    };
   }
 
   function applyTransform() {
@@ -40,35 +30,65 @@
     if (!c) return;
 
     const vp = getVP();
-    c.style.transform = `translate(${vp.x}px, ${vp.y}px) scale(${vp.zoom})`;
+    c.style.transform = `translate(${vp.x}px, ${vp.y}px) scale(${vp.scale})`;
     c.style.transformOrigin = "0 0";
   }
 
   function sceneFromClient(x, y) {
     const r = rect();
+    const o = offset();
     const vp = getVP();
 
     return {
-      x: (x - r.left - vp.x) / vp.zoom,
-      y: (y - r.top - vp.y) / vp.zoom
+      x: (x - r.left - vp.x) / vp.scale + o.x,
+      y: (y - r.top - vp.y) / vp.scale + o.y
     };
   }
 
-  function zoomBy(factor, cx, cy) {
-    const vp = getVP();
-    const r = rect();
+  // REQUIRED EXPORTS FOR OTHER MODULES
+  window.graphViewportRect = rect;
+  window.scenePointFromClient = sceneFromClient;
 
-    const x = cx ?? r.left + r.width / 2;
-    const y = cy ?? r.top + r.height / 2;
+  let raf = false;
+  function requestRefresh() {
+    if (raf) return;
+    raf = true;
+    requestAnimationFrame(() => {
+      raf = false;
+      refresh();
+    });
+  }
 
-    const before = sceneFromClient(x, y);
+  function syncSize() {
+    const c = el.canvas();
+    const svg = el.svg();
+    const nodes = el.nodes();
+    if (!c || !svg || !nodes || !window.graphData) return;
 
-    vp.zoom = clamp(vp.zoom * factor, 0.2, isMobile() ? 1.8 : 2.4);
+    const ns = window.graphData.nodes || [];
 
-    vp.x = x - r.left - before.x * vp.zoom;
-    vp.y = y - r.top - before.y * vp.zoom;
+    let minX = 0, minY = 0, maxX = 1000, maxY = 600;
 
-    applyTransform();
+    if (ns.length) {
+      minX = Math.min(...ns.map(n => n.x || 0));
+      minY = Math.min(...ns.map(n => n.y || 0));
+      maxX = Math.max(...ns.map(n => n.x || 0));
+      maxY = Math.max(...ns.map(n => n.y || 0));
+    }
+
+    const pad = isMobile() ? 240 : 360;
+
+    const w = Math.max(1600, maxX - minX + pad * 2);
+    const h = Math.max(1100, maxY - minY + pad * 2);
+
+    c.dataset.sceneMinX = String(minX - pad);
+    c.dataset.sceneMinY = String(minY - pad);
+
+    Object.assign(c.style, { width: w + "px", height: h + "px" });
+    svg.setAttribute("width", w);
+    svg.setAttribute("height", h);
+    nodes.style.width = w + "px";
+    nodes.style.height = h + "px";
   }
 
   function refresh() {
@@ -76,14 +96,18 @@
     const svg = el.svg();
     if (!nodesEl || !svg || !window.graphData) return;
 
-    const nodes = window.graphData.nodes;
-    const edges = window.graphData.edges;
+    syncSize();
+    applyTransform();
+
+    const off = offset();
+    const nodes = window.graphData.nodes || [];
+    const edges = window.graphData.edges || [];
 
     nodesEl.innerHTML = nodes.map(n => `
       <div class="node ${n.id === window.selectedNodeId ? "selected" : ""}"
            data-node-id="${n.id}"
-           style="left:${n.x}px; top:${n.y}px;">
-        <div class="nodeTitle">${n.label}</div>
+           style="left:${(n.x || 0) - off.x}px; top:${(n.y || 0) - off.y}px;">
+        <div class="nodeTitle">${n.label || "Unnamed"}</div>
       </div>
     `).join("");
 
@@ -96,42 +120,38 @@
 
       const d = `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
 
-      const key = window.edgeKeyOf(e);
-
       out.push(`<path d="${d}" class="edge"></path>`);
-      out.push(`<path d="${d}" data-edge-key="${key}" class="edge-hit" stroke="transparent" stroke-width="30"></path>`);
+      out.push(`<path d="${d}" data-edge-key="${window.edgeKeyOf(e)}" class="edge-hit" stroke="transparent" stroke-width="30"></path>`);
     }
 
     svg.innerHTML = out.join("");
 
-    bind();
+    bindNodes();
+    bindEdges();
   }
 
-  function bind() {
+  function bindNodes() {
     el.nodes()?.querySelectorAll(".node").forEach(nodeEl => {
+      const id = nodeEl.dataset.nodeId;
+
       nodeEl.onpointerdown = (e) => {
-        const id = nodeEl.dataset.nodeId;
         const n = window.getNodeById?.(id);
         if (!n) return;
 
-        // ✅ FIX: snapshot ONCE at drag start
-        if (!state.interaction.dragStarted && window.pushUndoState) {
-          window.pushUndoState("Move node");
-          state.interaction.dragStarted = true;
-        }
-
-        state.interaction.dragNodeId = id;
-
-        state.interaction.dragStartMouseX = e.clientX;
-        state.interaction.dragStartMouseY = e.clientY;
-
-        state.interaction.dragStartNodeX = n.x;
-        state.interaction.dragStartNodeY = n.y;
+        window._drag = {
+          id,
+          startX: e.clientX,
+          startY: e.clientY,
+          nodeX: n.x,
+          nodeY: n.y
+        };
 
         window.selectedNodeId = id;
       };
     });
+  }
 
+  function bindEdges() {
     el.svg()?.querySelectorAll(".edge-hit").forEach(e => {
       e.onclick = () => {
         window.selectedEdgeKey = e.dataset.edgeKey;
@@ -144,36 +164,28 @@
     const v = el.viewport();
     if (!v) return;
 
-    v.onwheel = (e) => {
-      e.preventDefault();
-      zoomBy(e.deltaY < 0 ? 1.08 : 1 / 1.08, e.clientX, e.clientY);
-    };
-
     v.onpointermove = (e) => {
       const vp = getVP();
 
-      if (state.interaction.dragNodeId) {
-        const n = window.getNodeById?.(state.interaction.dragNodeId);
+      if (window._drag) {
+        const n = window.getNodeById?.(window._drag.id);
         if (!n) return;
 
-        const dx = (e.clientX - state.interaction.dragStartMouseX) / vp.zoom;
-        const dy = (e.clientY - state.interaction.dragStartMouseY) / vp.zoom;
+        const dx = (e.clientX - window._drag.startX) / vp.scale;
+        const dy = (e.clientY - window._drag.startY) / vp.scale;
 
-        n.x = state.interaction.dragStartNodeX + dx;
-        n.y = state.interaction.dragStartNodeY + dy;
+        n.x = window._drag.nodeX + dx;
+        n.y = window._drag.nodeY + dy;
 
-        refresh();
+        requestRefresh();
       }
     };
 
     v.onpointerup = () => {
-      state.interaction.dragNodeId = null;
-      state.interaction.dragStarted = false;
-      state.interaction.isPanning = false;
+      window._drag = null;
     };
   }
 
-  window.zoomBy = zoomBy;
   window.refreshGraph = refresh;
   window.setupViewportInteractions = setup;
 
