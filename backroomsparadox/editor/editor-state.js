@@ -1,42 +1,37 @@
 (function () {
   "use strict";
 
-  window.graphData ||= { nodes: [], edges: [], metadata: {} };
+  window.graphData = window.graphData ?? { nodes: [], edges: [] };
 
-  window.selectedNodeId ??= null;
-  window.selectedEdgeKey ??= null;
-  window.currentSearch ??= "";
+  window.selectedNodeId = window.selectedNodeId ?? null;
+  window.selectedEdgeKey = window.selectedEdgeKey ?? null;
+  window.currentSearch = window.currentSearch ?? "";
 
-  // ----------------------------
-  // EDGE KEY
-  // ----------------------------
+  function normalizeType(type) {
+    const v = String(type || "").toLowerCase().trim();
+
+    if (["stable", "start"].includes(v)) return "stable";
+    if (["dangerous", "progression"].includes(v)) return "dangerous";
+    if (["corrupted", "danger"].includes(v)) return "corrupted";
+    if (["anomalous", "weird"].includes(v)) return "anomalous";
+
+    return "stable";
+  }
+
+  function getTypeClass(type) {
+    return normalizeType(type);
+  }
 
   function edgeKeyOf(edge) {
-    if (!edge) return "";
     return `${edge.from ?? ""}|${edge.to ?? ""}|${edge.label ?? ""}|${edge.oneWay ? 1 : 0}`;
   }
 
-  // ----------------------------
-  // WAYPOINTS
-  // ----------------------------
-
   function normalizeWaypoints(points) {
     if (!Array.isArray(points)) return [];
-
-    const out = [];
-    for (const p of points) {
-      const x = Number(p?.x);
-      const y = Number(p?.y);
-      if (Number.isFinite(x) && Number.isFinite(y)) {
-        out.push({ x, y });
-      }
-    }
-    return out;
+    return points
+      .map(p => ({ x: Number(p?.x), y: Number(p?.y) }))
+      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
   }
-
-  // ----------------------------
-  // ID HELPERS
-  // ----------------------------
 
   function slugify(str) {
     return String(str || "node")
@@ -53,21 +48,18 @@
     return id;
   }
 
-  // ----------------------------
-  // NORMALIZATION
-  // ----------------------------
-
   function normalizeData(raw) {
     const nodesRaw = Array.isArray(raw?.nodes) ? raw.nodes : [];
     const edgesRaw = Array.isArray(raw?.edges) ? raw.edges : [];
 
-    const used = new Set();
-    const nodes = [];
+    const usedIds = new Set();
     const idMap = new Map();
 
+    const nodes = [];
+
     for (const n of nodesRaw) {
-      const base = n?.id?.trim() || slugify(n?.label);
-      const id = makeUniqueId(base, used);
+      const baseId = n?.id?.trim?.() || slugify(n?.label);
+      const id = makeUniqueId(baseId, usedIds);
 
       const node = {
         id,
@@ -77,11 +69,9 @@
         notes: String(n?.notes || ""),
         x: Number(n?.x) || 0,
         y: Number(n?.y) || 0,
-        type: window.normalizeType?.(n?.type) || "stable",
-        status: window.normalizeStatus?.(n?.status) || "draft",
-        tags: Array.isArray(n?.tags) ? n.tags.map(String) : [],
-        createdAt: Number(n?.createdAt) || Date.now(),
-        updatedAt: Number(n?.updatedAt) || Date.now()
+        type: normalizeType(n?.type),
+        status: String(n?.status || "draft"),
+        tags: Array.isArray(n?.tags) ? n.tags.map(String) : []
       };
 
       nodes.push(node);
@@ -95,6 +85,7 @@
     for (const e of edgesRaw) {
       const from = idMap.get(e?.from);
       const to = idMap.get(e?.to);
+
       if (!from || !to || from === to) continue;
 
       const edge = {
@@ -115,37 +106,19 @@
     return { nodes, edges };
   }
 
-  // ----------------------------
-  // ACCESSORS
-  // ----------------------------
+  function getNodeById(id) {
+    return window.graphData.nodes.find(n => n.id === String(id)) || null;
+  }
 
-  const getNodeById = (id) =>
-    window.graphData.nodes.find(n => n.id === String(id)) || null;
+  function getEdgeByKey(key) {
+    return window.graphData.edges.find(e => edgeKeyOf(e) === key) || null;
+  }
 
-  const getEdgeByKey = (key) =>
-    window.graphData.edges.find(e => edgeKeyOf(e) === key) || null;
-
-  const getSelectedNode = () =>
-    getNodeById(window.selectedNodeId);
-
-  const getSelectedEdge = () =>
-    getEdgeByKey(window.selectedEdgeKey);
-
-  const getSerializableGraphData = () =>
-    JSON.parse(JSON.stringify(window.graphData));
-
-  // ----------------------------
-  // EXPORT
-  // ----------------------------
-
-  Object.assign(window, {
-    edgeKeyOf,
-    normalizeWaypoints,
-    normalizeData,
-    getNodeById,
-    getEdgeByKey,
-    getSelectedNode,
-    getSelectedEdge,
-    getSerializableGraphData
-  });
+  window.normalizeType = normalizeType;
+  window.getTypeClass = getTypeClass;
+  window.edgeKeyOf = edgeKeyOf;
+  window.normalizeWaypoints = normalizeWaypoints;
+  window.normalizeData = normalizeData;
+  window.getNodeById = getNodeById;
+  window.getEdgeByKey = getEdgeByKey;
 })();
