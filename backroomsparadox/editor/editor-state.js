@@ -1,395 +1,151 @@
 (function () {
   "use strict";
 
-  // --------------------------------------------------
-  // SAFE GLOBAL DEFAULTS
-  // --------------------------------------------------
-
-  window.graphData ||= window.createEmptyGraphData
-    ? window.createEmptyGraphData()
-    : {
-        nodes: [],
-        edges: [],
-        metadata: {}
-      };
+  window.graphData ||= { nodes: [], edges: [], metadata: {} };
 
   window.selectedNodeId ??= null;
   window.selectedEdgeKey ??= null;
   window.currentSearch ??= "";
 
-  // --------------------------------------------------
-  // TYPE HELPERS
-  // (delegates to editor-config)
-  // --------------------------------------------------
-
-  function normalizeType(type) {
-    if (typeof window.normalizeType === "function") {
-      return window.normalizeType(type);
-    }
-
-    return "stable";
-  }
-
-  function normalizeStatus(status) {
-    if (typeof window.normalizeStatus === "function") {
-      return window.normalizeStatus(status);
-    }
-
-    return "draft";
-  }
-
-  function getTypeClass(type) {
-    const meta =
-      typeof window.getTypeMeta === "function"
-        ? window.getTypeMeta(type)
-        : null;
-
-    return meta?.className || "stable";
-  }
-
-  // --------------------------------------------------
-  // EDGE HELPERS
-  // --------------------------------------------------
+  // ----------------------------
+  // EDGE KEY
+  // ----------------------------
 
   function edgeKeyOf(edge) {
     if (!edge) return "";
-
-    return [
-      edge.from ?? "",
-      edge.to ?? "",
-      edge.label ?? "",
-      edge.oneWay ? 1 : 0
-    ].join("|");
+    return `${edge.from ?? ""}|${edge.to ?? ""}|${edge.label ?? ""}|${edge.oneWay ? 1 : 0}`;
   }
 
+  // ----------------------------
+  // WAYPOINTS
+  // ----------------------------
+
   function normalizeWaypoints(points) {
-    if (!Array.isArray(points)) {
-      return [];
-    }
+    if (!Array.isArray(points)) return [];
 
     const out = [];
-
-    for (const point of points) {
-      const x = Number(point?.x);
-      const y = Number(point?.y);
-
-      if (
-        Number.isFinite(x) &&
-        Number.isFinite(y)
-      ) {
+    for (const p of points) {
+      const x = Number(p?.x);
+      const y = Number(p?.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
         out.push({ x, y });
       }
     }
-
     return out;
   }
 
-  // --------------------------------------------------
+  // ----------------------------
   // ID HELPERS
-  // --------------------------------------------------
+  // ----------------------------
 
-  function slugify(value) {
-    return String(value || "node")
+  function slugify(str) {
+    return String(str || "node")
       .toLowerCase()
-      .trim()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "node";
   }
 
-  function makeUniqueId(base, usedIds) {
+  function makeUniqueId(base, used) {
     let id = String(base || "node");
-    let index = 2;
-
-    while (usedIds.has(id)) {
-      id = `${base}-${index++}`;
-    }
-
-    usedIds.add(id);
-
+    let i = 2;
+    while (used.has(id)) id = `${base}-${i++}`;
+    used.add(id);
     return id;
   }
 
-  // --------------------------------------------------
+  // ----------------------------
   // NORMALIZATION
-  // --------------------------------------------------
-
-  function normalizeNode(rawNode, usedIds) {
-    const originalId =
-      rawNode?.id &&
-      String(rawNode.id).trim()
-        ? String(rawNode.id).trim()
-        : slugify(rawNode?.label);
-
-    const id = makeUniqueId(
-      originalId,
-      usedIds
-    );
-
-    return {
-      id,
-
-      label: String(
-        rawNode?.label || "Unnamed"
-      ),
-
-      subtitle: String(
-        rawNode?.subtitle || ""
-      ),
-
-      description: String(
-        rawNode?.description || ""
-      ),
-
-      notes: String(
-        rawNode?.notes || ""
-      ),
-
-      x: Number(rawNode?.x) || 0,
-      y: Number(rawNode?.y) || 0,
-
-      type: normalizeType(rawNode?.type),
-
-      status: normalizeStatus(
-        rawNode?.status
-      ),
-
-      tags: Array.isArray(rawNode?.tags)
-        ? rawNode.tags.map(String)
-        : [],
-
-      createdAt:
-        Number(rawNode?.createdAt) ||
-        Date.now(),
-
-      updatedAt:
-        Number(rawNode?.updatedAt) ||
-        Date.now()
-    };
-  }
-
-  function normalizeEdge(rawEdge, validNodeIds) {
-    const from = String(rawEdge?.from || "");
-    const to = String(rawEdge?.to || "");
-
-    if (!from || !to) {
-      return null;
-    }
-
-    if (!validNodeIds.has(from)) {
-      return null;
-    }
-
-    if (!validNodeIds.has(to)) {
-      return null;
-    }
-
-    if (from === to) {
-      return null;
-    }
-
-    return {
-      from,
-      to,
-
-      label: String(
-        rawEdge?.label || ""
-      ),
-
-      oneWay:
-        rawEdge?.oneWay !== false,
-
-      waypoints: normalizeWaypoints(
-        rawEdge?.waypoints
-      ),
-
-      createdAt:
-        Number(rawEdge?.createdAt) ||
-        Date.now(),
-
-      updatedAt:
-        Number(rawEdge?.updatedAt) ||
-        Date.now()
-    };
-  }
+  // ----------------------------
 
   function normalizeData(raw) {
-    const nodesRaw = Array.isArray(raw?.nodes)
-      ? raw.nodes
-      : [];
+    const nodesRaw = Array.isArray(raw?.nodes) ? raw.nodes : [];
+    const edgesRaw = Array.isArray(raw?.edges) ? raw.edges : [];
 
-    const edgesRaw = Array.isArray(raw?.edges)
-      ? raw.edges
-      : [];
+    const used = new Set();
+    const nodes = [];
+    const idMap = new Map();
 
-    const metadata =
-      raw?.metadata &&
-      typeof raw.metadata === "object"
-        ? { ...raw.metadata }
-        : {};
+    for (const n of nodesRaw) {
+      const base = n?.id?.trim() || slugify(n?.label);
+      const id = makeUniqueId(base, used);
 
-    const usedIds = new Set();
+      const node = {
+        id,
+        label: String(n?.label || "Unnamed"),
+        subtitle: String(n?.subtitle || ""),
+        description: String(n?.description || ""),
+        notes: String(n?.notes || ""),
+        x: Number(n?.x) || 0,
+        y: Number(n?.y) || 0,
+        type: window.normalizeType?.(n?.type) || "stable",
+        status: window.normalizeStatus?.(n?.status) || "draft",
+        tags: Array.isArray(n?.tags) ? n.tags.map(String) : [],
+        createdAt: Number(n?.createdAt) || Date.now(),
+        updatedAt: Number(n?.updatedAt) || Date.now()
+      };
 
-    const nodes = nodesRaw.map((node) =>
-      normalizeNode(node, usedIds)
-    );
+      nodes.push(node);
+      idMap.set(n?.id, id);
+    }
 
-    const nodeIds = new Set(
-      nodes.map((node) => node.id)
-    );
-
+    const nodeIds = new Set(nodes.map(n => n.id));
     const edges = [];
     const seen = new Set();
 
-    for (const edgeRaw of edgesRaw) {
-      const edge = normalizeEdge(
-        edgeRaw,
-        nodeIds
-      );
+    for (const e of edgesRaw) {
+      const from = idMap.get(e?.from);
+      const to = idMap.get(e?.to);
+      if (!from || !to || from === to) continue;
 
-      if (!edge) {
-        continue;
-      }
+      const edge = {
+        from,
+        to,
+        label: String(e?.label || ""),
+        oneWay: e?.oneWay !== false,
+        waypoints: normalizeWaypoints(e?.waypoints)
+      };
 
       const key = edgeKeyOf(edge);
-
-      if (seen.has(key)) {
-        continue;
-      }
+      if (seen.has(key)) continue;
 
       seen.add(key);
       edges.push(edge);
     }
 
-    return {
-      nodes,
-      edges,
-
-      metadata: {
-        project:
-          metadata.project ||
-          window.PROJECT ||
-          "project",
-
-        version:
-          metadata.version ||
-          window.APP_INFO?.version ||
-          "1.0.0",
-
-        createdAt:
-          Number(metadata.createdAt) ||
-          Date.now(),
-
-        updatedAt:
-          Number(metadata.updatedAt) ||
-          Date.now()
-      }
-    };
+    return { nodes, edges };
   }
 
-  // --------------------------------------------------
+  // ----------------------------
   // ACCESSORS
-  // --------------------------------------------------
+  // ----------------------------
 
-  function getNodeById(id) {
-    return (
-      window.graphData?.nodes?.find(
-        (node) =>
-          node.id === String(id)
-      ) || null
-    );
-  }
+  const getNodeById = (id) =>
+    window.graphData.nodes.find(n => n.id === String(id)) || null;
 
-  function getEdgeByKey(key) {
-    return (
-      window.graphData?.edges?.find(
-        (edge) =>
-          edgeKeyOf(edge) === key
-      ) || null
-    );
-  }
+  const getEdgeByKey = (key) =>
+    window.graphData.edges.find(e => edgeKeyOf(e) === key) || null;
 
-  function getSelectedNode() {
-    return getNodeById(
-      window.selectedNodeId
-    );
-  }
+  const getSelectedNode = () =>
+    getNodeById(window.selectedNodeId);
 
-  function getSelectedEdge() {
-    return getEdgeByKey(
-      window.selectedEdgeKey
-    );
-  }
+  const getSelectedEdge = () =>
+    getEdgeByKey(window.selectedEdgeKey);
 
-  // --------------------------------------------------
-  // SERIALIZATION
-  // --------------------------------------------------
+  const getSerializableGraphData = () =>
+    JSON.parse(JSON.stringify(window.graphData));
 
-  function getSerializableGraphData() {
-    return JSON.parse(
-      JSON.stringify(
-        normalizeData(window.graphData)
-      )
-    );
-  }
-
-  // --------------------------------------------------
-  // SEARCH
-  // --------------------------------------------------
-
-  function matchesSearch(node, query) {
-    if (!query) {
-      return true;
-    }
-
-    const q = String(query)
-      .trim()
-      .toLowerCase();
-
-    if (!q) {
-      return true;
-    }
-
-    const haystack = [
-      node.id,
-      node.label,
-      node.subtitle,
-      node.description,
-      node.notes,
-      ...(node.tags || [])
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(q);
-  }
-
-  // --------------------------------------------------
-  // EXPORTS
-  // --------------------------------------------------
+  // ----------------------------
+  // EXPORT
+  // ----------------------------
 
   Object.assign(window, {
-    normalizeType,
-    normalizeStatus,
-    getTypeClass,
-
     edgeKeyOf,
     normalizeWaypoints,
-
-    slugify,
-    makeUniqueId,
-
-    normalizeNode,
-    normalizeEdge,
     normalizeData,
-
     getNodeById,
     getEdgeByKey,
-
     getSelectedNode,
     getSelectedEdge,
-
-    getSerializableGraphData,
-
-    matchesSearch
+    getSerializableGraphData
   });
 })();
