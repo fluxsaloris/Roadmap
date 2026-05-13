@@ -5,21 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Backrooms Graph Editor</title>
   <link rel="stylesheet" href="editor.css" />
-
-  <script>
-    // 🔥 Prevent full UI deadlock if scripts fail
-    window.addEventListener("error", (e) => {
-      console.error("Runtime error:", e.error);
-
-      const panel = document.getElementById("errorPanel");
-      if (panel) panel.style.display = "block";
-
-      const overlay = document.getElementById("loadingOverlay");
-      if (overlay) overlay.style.display = "none";
-    });
-  </script>
 </head>
-
 <body>
   <div id="loadingOverlay">
     <div id="loadingCard">
@@ -28,9 +14,9 @@
     </div>
   </div>
 
-  <div id="errorPanel" style="display:none;">
+  <div id="errorPanel">
     <div id="errorPanelTitle">Couldn’t load editor</div>
-    <div id="errorPanelText">Check console for errors or refresh.</div>
+    <div id="errorPanelText">Try refreshing or check your connection.</div>
   </div>
 
   <div id="app">
@@ -50,28 +36,26 @@
       </div>
 
       <div class="heroControls">
-        <input id="searchInput" type="text" placeholder="Search..." />
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search level name, tag, subtitle, description, or notes..."
+          autocomplete="off"
+        />
 
         <div class="toolbar">
-          <button onclick="window.zoomBy?.(1.12)">Zoom In</button>
-          <button onclick="window.zoomBy?.(1 / 1.12)">Zoom Out</button>
-          <button onclick="window.resetView?.()">Reset View</button>
-          <button onclick="window.fitToGraph?.()">Fit Graph</button>
-
-          <button onclick="window.autoLayout?.()">Auto Layout</button>
-
-          <button onclick="window.undoAction?.()">Undo</button>
-          <button onclick="window.redoAction?.()">Redo</button>
-
-          <button onclick="window.addNode?.()">Add Level</button>
-
-          <button onclick="window.refreshChangeSummary?.()">Refresh Diff</button>
-
-          <button onclick="window.previewLatestSnapshot?.()">Preview Snapshot</button>
-
-          <button class="primaryBtn" onclick="window.saveGraph?.()">Save to GitHub</button>
-
-          <button class="dangerBtn" onclick="window.discardLocalDraft?.()">Discard Local Draft</button>
+          <button onclick="zoomBy(1.12)">Zoom In</button>
+          <button onclick="zoomBy(1 / 1.12)">Zoom Out</button>
+          <button onclick="resetView()">Reset View</button>
+          <button onclick="fitToGraph()">Fit Graph</button>
+          <button onclick="autoLayout()">Auto Layout</button>
+          <button onclick="undoAction()">Undo</button>
+          <button onclick="redoAction()">Redo</button>
+          <button onclick="addNode()">Add Level</button>
+          <button onclick="refreshChangeSummary()">Refresh Diff</button>
+          <button onclick="previewLatestSnapshot()">Preview Snapshot</button>
+          <button class="primaryBtn" onclick="saveGraph()">Save to GitHub</button>
+          <button class="dangerBtn" onclick="discardLocalDraft()">Discard Local Draft</button>
         </div>
       </div>
 
@@ -80,7 +64,6 @@
 
     <div class="workspaceRow">
       <div class="leftColumn">
-
         <section class="panel">
           <div class="statsBar">
             <span class="metaChip" id="statNodes">0 nodes</span>
@@ -93,59 +76,172 @@
         </section>
 
         <section class="panel canvasPanel">
+          <div class="canvasToolbar">
+            <div class="canvasHint">Pan: drag empty space • Zoom: mouse wheel • Select: click node</div>
+            <div class="canvasHint">Shift + drag node to node to connect • Drag white bend points to shape lines</div>
+          </div>
+
           <div id="graphViewport" class="graphViewport">
             <div id="graphScene" class="graphScene">
               <svg id="graphSvg" class="graphSvg"></svg>
               <div id="graphNodes" class="graphNodes"></div>
             </div>
+          <div id="graphScene" class="graphScene">
+            <svg id="graphSvg" class="graphSvg"></svg>
+            <div id="graphNodes" class="graphNodes"></div>
+          </div>
+        </div>
+        </section>
+
+        <section id="changeSummaryPanel" class="panel">
+          <h2 class="changeTitle">Change Summary</h2>
+          <div class="changeSub">No diff loaded yet.</div>
+        </section>
+      </div>
+
+      <div class="rightColumn" id="desktopInspector">
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Selected Level</h2>
+          <div id="selectedHint" class="sidebarSub">Click a node in the graph to edit it.</div>
+
+          <div class="fieldGrid">
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeLabel">Label</label>
+              <input id="nodeLabel" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeSubtitle">Subtitle</label>
+              <input id="nodeSubtitle" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeType">Type</label>
+              <select id="nodeType">
+                <option value="stable">Stable</option>
+                <option value="dangerous">Dangerous</option>
+                <option value="corrupted">Corrupted</option>
+                <option value="anomalous">Anomalous</option>
+              </select>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeStatus">Status</label>
+              <select id="nodeStatus">
+                <option value="draft">Draft</option>
+                <option value="planned">Planned</option>
+                <option value="in-progress">In Progress</option>
+                <option value="implemented">Implemented</option>
+                <option value="cut">Cut</option>
+              </select>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeX">X</label>
+              <input id="nodeX" type="number" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeY">Y</label>
+              <input id="nodeY" type="number" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeTags">Tags (comma separated)</label>
+              <input id="nodeTags" type="text" />
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeDescription">Description</label>
+              <textarea id="nodeDescription"></textarea>
+            </div>
+
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="nodeNotes">Notes</label>
+              <textarea id="nodeNotes"></textarea>
+            </div>
+
+            <div class="actionRow">
+              <button onclick="applySelectedNodeChanges()">Apply Node Changes</button>
+              <button class="dangerBtn" onclick="deleteSelectedNode()">Delete Node</button>
+            </div>
           </div>
         </section>
 
-      </div>
-
-      <div class="rightColumn">
-
         <section class="sidebarCard">
-          <h2>Selected Level</h2>
+          <h2 class="sidebarTitle">Connections</h2>
 
-          <input id="nodeLabel" />
-          <input id="nodeSubtitle" />
-          <select id="nodeType"></select>
-          <select id="nodeStatus"></select>
+          <div class="fieldGrid">
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkTarget">Target Level</label>
+              <select id="linkTarget"></select>
+            </div>
 
-          <input id="nodeX" type="number" />
-          <input id="nodeY" type="number" />
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkLabel">Link Label</label>
+              <input id="linkLabel" type="text" placeholder="Trapdoor Puzzle" />
+            </div>
 
-          <input id="nodeTags" />
-          <textarea id="nodeDescription"></textarea>
-          <textarea id="nodeNotes"></textarea>
+            <div class="fieldBlock">
+              <label class="fieldLabel" for="linkOneWay">One Way</label>
+              <select id="linkOneWay">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
 
-          <button onclick="window.applySelectedNodeChanges?.()">Apply</button>
-          <button onclick="window.deleteSelectedNode?.()">Delete</button>
+            <div class="actionRow">
+              <button onclick="addConnectionFromSidebar()">Add Link</button>
+            </div>
+
+            <div>
+              <div class="fieldLabel" style="margin-bottom:6px;">Outgoing</div>
+              <ul id="outgoingList" class="linkList">
+                <li>No level selected.</li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="fieldLabel" style="margin-bottom:6px;">Incoming</div>
+              <ul id="incomingList" class="linkList">
+                <li>No level selected.</li>
+              </ul>
+            </div>
+          </div>
         </section>
 
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Selected Link Bend Points</h2>
+          <div id="selectedEdgeHint" class="sidebarSub">Select a link from the outgoing list or click a line.</div>
+
+          <div class="actionRow">
+            <button onclick="addWaypointToSelectedEdge()">Add Bend Point</button>
+            <button class="dangerBtn" onclick="clearWaypointsFromSelectedEdge()">Clear Bend Points</button>
+          </div>
+
+          <div id="waypointList" class="waypointList" style="margin-top:10px;">
+            <div class="changeEmpty">No link selected.</div>
+          </div>
+        </section>
+
+        <section class="sidebarCard">
+          <h2 class="sidebarTitle">Legend</h2>
+          <ul class="linkList">
+            <li><span style="color:#4CAF50;">●</span> Stable</li>
+            <li><span style="color:#E53935;">●</span> Dangerous</li>
+            <li><span style="color:#3E5F3A;">●</span> Corrupted</li>
+            <li><span style="color:#8E44AD;">●</span> Anomalous</li>
+          </ul>
+        </section>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="editor-config.js" defer></script>
-  <script src="editor-state.js" defer></script>
-  <script src="editor-ui.js" defer></script>
-  <script src="editor-graph.js" defer></script>
-  <script src="editor-actions.js" defer></script>
-  <script src="editor-init.js" defer></script>
-
-  <script>
-    // 🔥 Safe init trigger (prevents silent failure)
-    window.addEventListener("DOMContentLoaded", () => {
-      if (typeof window.initEditor === "function") {
-        window.initEditor();
-      } else {
-        console.warn("initEditor not found - check editor-init.js");
-      }
-    });
-  </script>
-
+  <script src="editor-config.js"></script>
+  <script src="editor-state.js"></script>
+  <script src="editor-ui.js"></script>
+  <script src="editor-graph.js"></script>
+  <script src="editor-actions.js"></script>
+  <script src="editor-init.js"></script>
 </body>
 </html>
