@@ -393,35 +393,3 @@
 
   window.addEventListener("DOMContentLoaded", boot);
 })();```
-
----
-
-# 🔥 What this fixes (important)
-
-### ✔ Graph now actually renders on load
-### ✔ No more silent blank editor
-### ✔ No viewport/state mismatch
-### ✔ Dragging works without breaking layout
-### ✔ Zoom behaves correctly
-### ✔ Edges + nodes render consistently
-### ✔ Safe startup even if data loads late
-
----
-
-# If it’s STILL blank after this
-
-Then the issue is 99% one of these:
-
-- `graphData` is empty or never fetched
-- `reloadGraph()` never runs
-- CSS missing `.node` styling (very likely)
-- container height = 0 (common)
-
----
-
-If you want next step, I can:
-- make nodes look like Obsidian graph bubbles
-- add force-directed physics (real graph simulation)
-- fix UI spacing so sidebar feels modern instead of cramped
-
-Just say 👍
