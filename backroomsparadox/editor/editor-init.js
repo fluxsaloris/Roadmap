@@ -7,365 +7,143 @@
     const fn = window[name];
 
     if (typeof fn !== "function") {
-      console.warn(
-        `[safeCall] missing function: ${name}`
-      );
-
+      console.warn(`[safeCall] missing: ${name}`);
       return;
     }
 
     try {
-      console.log(
-        `[safeCall] ${name}`,
-        args
-      );
-
       return fn(...args);
-
     } catch (err) {
-      console.error(
-        `[safeCall:${name}]`,
-        err
-      );
+      console.error(`[safeCall:${name}]`, err);
     }
   }
 
-  function ensureBaseState() {
-
-    console.log(
-      "[ensureBaseState] checking globals"
-    );
-
-    if (!window.graphData) {
-      console.warn(
-        "[ensureBaseState] graphData missing → creating"
-      );
-
-      window.graphData = {
-        nodes: [],
-        edges: []
-      };
-    }
-
-    if (
-      typeof window.selectedNodeId ===
-      "undefined"
-    ) {
-      window.selectedNodeId = null;
-    }
-
-    if (
-      typeof window.selectedEdgeKey ===
-      "undefined"
-    ) {
-      window.selectedEdgeKey = null;
-    }
-
-    if (
-      typeof window.hasUnsavedChanges ===
-      "undefined"
-    ) {
-      window.hasUnsavedChanges = false;
-    }
-
-    if (!window.viewportState) {
-      console.warn(
-        "[ensureBaseState] viewportState missing → creating"
-      );
-
-      window.viewportState = {
-        x: 80,
-        y: 80,
-        scale: 1
-      };
-    }
-
-    if (!Array.isArray(window.undoStack)) {
-      console.warn(
-        "[ensureBaseState] undoStack missing → creating"
-      );
-
-      window.undoStack = [];
-    }
-
-    if (!Array.isArray(window.redoStack)) {
-      console.warn(
-        "[ensureBaseState] redoStack missing → creating"
-      );
-
-      window.redoStack = [];
-    }
-
-    if (!(window.snapshotCache instanceof Map)) {
-      console.warn(
-        "[ensureBaseState] snapshotCache missing → creating"
-      );
-
-      window.snapshotCache = new Map();
-    }
-
-    console.log(
-      "[ensureBaseState] complete",
-      {
-        nodes:
-          window.graphData.nodes
-            ?.length || 0,
-
-        edges:
-          window.graphData.edges
-            ?.length || 0
-      }
-    );
+  function ensureRuntime() {
+    window.editorRuntime ??= {
+      hasUnsavedChanges: false,
+      isSavingToGitHub: false,
+      lastLocalSaveAt: null,
+      lastRemoteSaveAt: null,
+      lastVersionId: null,
+      lastSnapshotPath: null,
+      historyIndexCache: null,
+      latestDiffContext: null,
+      autosaveTimer: null,
+      diffTimer: null,
+      saveCooldownUntil: 0,
+      currentSearch: "",
+      snapshotCache: new Map(),
+      undoStack: [],
+      redoStack: []
+    };
   }
 
-  function hideLoadingForever() {
+  function ensureGraph() {
+    window.graphData ??= { nodes: [], edges: [] };
+    window.selectedNodeId ??= null;
+    window.selectedEdgeKey ??= null;
 
-    const overlay =
-      document.getElementById(
-        "loadingOverlay"
-      );
-
-    if (!overlay) {
-      console.warn(
-        "[hideLoadingForever] loadingOverlay missing"
-      );
-
-      return;
-    }
-
-    overlay.style.display = "none";
-
-    console.log(
-      "[hideLoadingForever] hidden"
-    );
+    window.viewportState ??= {
+      x: 80,
+      y: 80,
+      scale: 1
+    };
   }
 
-  function showFatalError(message) {
-
-    console.error(
-      "[showFatalError]",
-      message
-    );
-
-    const panel =
-      document.getElementById(
-        "errorPanel"
-      );
-
-    const text =
-      document.getElementById(
-        "errorPanelText"
-      );
-
-    if (text) {
-      text.textContent =
-        message ||
-        "Unknown error";
-    }
-
-    if (panel) {
-      panel.style.display =
-        "block";
-    }
-
-    hideLoadingForever();
+  function hideLoadingSafe() {
+    const el = document.getElementById("loadingOverlay");
+    if (el) el.style.display = "none";
   }
 
-  async function loadInitialGraph() {
+  function showFatal(msg) {
+    console.error("[fatal]", msg);
 
-    console.log(
-      "[loadInitialGraph] starting"
-    );
+    const panel = document.getElementById("errorPanel");
+    const text = document.getElementById("errorPanelText");
 
-    try {
+    if (text) text.textContent = msg || "Unknown error";
+    if (panel) panel.style.display = "block";
 
-      if (
-        typeof window.reloadGraph ===
-        "function"
-      ) {
-
-        console.log(
-          "[loadInitialGraph] reloadGraph found"
-        );
-
-        await window.reloadGraph(true);
-
-      } else {
-
-        console.warn(
-          "[loadInitialGraph] reloadGraph missing → fallback state"
-        );
-      }
-
-      safeCall("fitToGraph");
-
-      safeCall(
-        "refreshChangeSummary"
-      );
-
-      safeCall("hideLoading");
-
-      console.log(
-        "[loadInitialGraph] complete"
-      );
-
-    } catch (err) {
-
-      console.error(
-        "[loadInitialGraph] failed",
-        err
-      );
-
-      showFatalError(
-        "Graph failed to load. Using empty state."
-      );
-
-      safeCall("refreshAllUI");
-    }
+    hideLoadingSafe();
   }
 
-  function validateDependencies() {
-
-    console.log(
-      "[validateDependencies]"
-    );
-
+  function validateCore() {
     const required = [
+      "refreshAllUI",
       "refreshGraph",
       "setupViewportInteractions",
       "reloadGraph"
     ];
 
-    const missing =
-      required.filter(
-        (name) =>
-          typeof window[name] !==
-          "function"
-      );
+    const missing = required.filter(fn => typeof window[fn] !== "function");
 
     if (missing.length) {
-
-      console.warn(
-        "[validateDependencies] missing",
-        missing
-      );
-
+      console.warn("[init] missing functions:", missing);
       return false;
     }
-
-    console.log(
-      "[validateDependencies] ok"
-    );
 
     return true;
   }
 
   async function boot() {
-
-    console.log(
-      "[editor-init] boot start"
-    );
+    console.log("[editor-init] boot start");
 
     try {
+      ensureRuntime();
+      ensureGraph();
 
-      ensureBaseState();
+      validateCore();
 
-      validateDependencies();
+      safeCall("showLoading", "Loading editor...");
 
-      safeCall(
-        "showLoading",
-        "Loading editor..."
-      );
-
-      console.log(
-        "[boot] phase 1 → setup"
-      );
-
-      safeCall(
-        "restoreMetaFromLocalStorage"
-      );
-
+      // Phase 1: safe UI setup
+      safeCall("restoreMetaFromLocalStorage");
       safeCall("setupSearch");
+      safeCall("setupViewportInteractions");
 
-      safeCall(
-        "setupViewportInteractions"
-      );
-
-      console.log(
-        "[boot] phase 2 → initial render"
-      );
-
+      // Phase 2: initial render (must always succeed)
       safeCall("refreshAllUI");
 
-      console.log(
-        "[boot] phase 3 → graph load"
-      );
+      // Phase 3: graph load
+      await loadGraph();
 
-      await loadInitialGraph();
-
-      console.log(
-        "[editor-init] boot complete"
-      );
-
+      console.log("[editor-init] boot complete");
     } catch (err) {
-
-      console.error(
-        "[editor-init] BOOT FAILED",
-        err
-      );
-
-      showFatalError(
-        "Editor failed to initialize."
-      );
+      console.error("[editor-init] BOOT FAILED", err);
+      showFatal("Editor failed to initialize.");
     }
   }
 
-  /*
-    CRITICAL:
-    Never rely solely on DOMContentLoaded.
-    Scripts may load after DOM ready.
-  */
+  async function loadGraph() {
+    console.log("[editor-init] loading graph");
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    console.log(
-      "[editor-init] waiting for DOMContentLoaded"
-    );
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      () => {
-
-        console.log(
-          "[editor-init] DOMContentLoaded fired"
-        );
-
-        boot();
+    try {
+      if (typeof window.reloadGraph === "function") {
+        await window.reloadGraph(true);
       }
-    );
 
+      safeCall("fitToGraph");
+      safeCall("refreshChangeSummary");
+
+      if (typeof window.hideLoading === "function") {
+        window.hideLoading();
+      }
+
+    } catch (err) {
+      console.error("[loadGraph]", err);
+      showFatal("Graph failed to load.");
+      safeCall("refreshAllUI");
+    }
+  }
+
+  // DOM bootstrap safety
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
   } else {
-
-    console.log(
-      "[editor-init] DOM already ready"
-    );
-
-    queueMicrotask(() => {
-
-      console.log(
-        "[editor-init] microtask boot"
-      );
-
-      boot();
-    });
+    queueMicrotask(boot);
   }
 
   window.initEditor = boot;
 
-  console.log(
-    "[editor-init] ready"
-  );
+  console.log("[editor-init] ready");
 })();
