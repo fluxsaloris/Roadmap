@@ -1,11 +1,11 @@
 (function () {
   "use strict";
 
-  window.graphData = window.graphData ?? { nodes: [], edges: [] };
+  window.graphData ??= { nodes: [], edges: [] };
 
-  window.selectedNodeId = window.selectedNodeId ?? null;
-  window.selectedEdgeKey = window.selectedEdgeKey ?? null;
-  window.currentSearch = window.currentSearch ?? "";
+  window.selectedNodeId ??= null;
+  window.selectedEdgeKey ??= null;
+  window.currentSearch ??= "";
 
   function normalizeType(type) {
     const v = String(type || "").toLowerCase().trim();
@@ -28,9 +28,16 @@
 
   function normalizeWaypoints(points) {
     if (!Array.isArray(points)) return [];
-    return points
-      .map(p => ({ x: Number(p?.x), y: Number(p?.y) }))
-      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+
+    const out = [];
+    for (const p of points) {
+      const x = Number(p?.x);
+      const y = Number(p?.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        out.push({ x, y });
+      }
+    }
+    return out;
   }
 
   function slugify(str) {
@@ -43,7 +50,11 @@
   function makeUniqueId(base, used) {
     let id = String(base || "node");
     let i = 2;
-    while (used.has(id)) id = `${base}-${i++}`;
+
+    while (used.has(id)) {
+      id = `${base}-${i++}`;
+    }
+
     used.add(id);
     return id;
   }
@@ -57,8 +68,12 @@
 
     const nodes = [];
 
+    // ---------------- NODES ----------------
     for (const n of nodesRaw) {
-      const baseId = n?.id?.trim?.() || slugify(n?.label);
+      const baseId =
+        (typeof n?.id === "string" && n.id.trim()) ||
+        slugify(n?.label);
+
       const id = makeUniqueId(baseId, usedIds);
 
       const node = {
@@ -75,18 +90,25 @@
       };
 
       nodes.push(node);
-      idMap.set(n?.id, id);
+
+      // 🔥 IMPORTANT: multiple mappings for robustness
+      if (n?.id) idMap.set(String(n.id), id);
+      if (n?.label) idMap.set(String(n.label), id);
+      idMap.set(baseId, id);
     }
 
     const nodeIds = new Set(nodes.map(n => n.id));
     const edges = [];
     const seen = new Set();
 
+    // ---------------- EDGES ----------------
     for (const e of edgesRaw) {
-      const from = idMap.get(e?.from);
-      const to = idMap.get(e?.to);
+      const from = idMap.get(String(e?.from));
+      const to = idMap.get(String(e?.to));
 
-      if (!from || !to || from === to) continue;
+      if (!from || !to) continue;
+      if (!nodeIds.has(from) || !nodeIds.has(to)) continue;
+      if (from === to) continue;
 
       const edge = {
         from,
