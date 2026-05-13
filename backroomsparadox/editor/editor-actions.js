@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  console.log("[editor-actions] booting");
+
   const DEFAULT_AUTOSAVE_DELAY = 500;
   const DEFAULT_DIFF_DELAY = 200;
   const DEFAULT_SAVE_COOLDOWN = 1500;
@@ -12,7 +14,9 @@
     if (typeof structuredClone === "function") {
       try {
         return structuredClone(value);
-      } catch {}
+      } catch (err) {
+        console.warn("[deepClone] structuredClone failed", err);
+      }
     }
 
     return JSON.parse(JSON.stringify(value));
@@ -23,7 +27,10 @@
 
     return (...args) => {
       clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), delay);
+
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
     };
   };
 
@@ -31,9 +38,12 @@
     get(key, fallback = null) {
       try {
         const value = localStorage.getItem(key);
+
+        console.log("[safeStorage.get]", key, value);
+
         return value === null ? fallback : value;
       } catch (err) {
-        console.error(err);
+        console.error("[safeStorage.get]", err);
         return fallback;
       }
     },
@@ -41,9 +51,12 @@
     set(key, value) {
       try {
         localStorage.setItem(key, value);
+
+        console.log("[safeStorage.set]", key);
+
         return true;
       } catch (err) {
-        console.error(err);
+        console.error("[safeStorage.set]", err);
         return false;
       }
     },
@@ -51,39 +64,59 @@
     remove(key) {
       try {
         localStorage.removeItem(key);
+
+        console.log("[safeStorage.remove]", key);
+
         return true;
       } catch (err) {
-        console.error(err);
+        console.error("[safeStorage.remove]", err);
         return false;
       }
     }
   };
 
-  const app = {
-    hasUnsavedChanges: false,
-    isSavingToGitHub: false,
-    lastLocalSaveAt: null,
-    lastRemoteSaveAt: null,
-    lastVersionId: null,
-    lastSnapshotPath: null,
-    historyIndexCache: null,
-    latestDiffContext: null,
-    autosaveTimer: null,
-    diffTimer: null,
-    saveCooldownUntil: 0,
-    currentSearch: "",
-    snapshotCache: new Map(),
-    undoStack: [],
-    redoStack: []
-  };
+  if (!window.editorRuntime) {
+    window.editorRuntime = {
+      hasUnsavedChanges: false,
+      isSavingToGitHub: false,
+      lastLocalSaveAt: null,
+      lastRemoteSaveAt: null,
+      lastVersionId: null,
+      lastSnapshotPath: null,
+      historyIndexCache: null,
+      latestDiffContext: null,
+      autosaveTimer: null,
+      diffTimer: null,
+      saveCooldownUntil: 0,
+      currentSearch: "",
+      snapshotCache: new Map(),
+      undoStack: [],
+      redoStack: []
+    };
 
-  Object.entries(app).forEach(([key, value]) => {
-    if (typeof window[key] === "undefined") {
-      window[key] = value;
+    console.log("[editor-actions] editorRuntime created");
+  }
+
+  function assertDependency(name) {
+    if (typeof window[name] === "undefined") {
+      console.error(`[editor-actions] Missing dependency: ${name}`);
     }
-  });
+  }
+
+  [
+    "graphData",
+    "normalizeData",
+    "refreshAllUI",
+    "getSerializableGraphData"
+  ].forEach(assertDependency);
 
   function updateUIState(status, message, isError = false) {
+    console.log("[updateUIState]", {
+      status,
+      message,
+      isError
+    });
+
     if (window.setSaveBadge && status) {
       window.setSaveBadge(status, message);
     }
@@ -98,47 +131,111 @@
   }
 
   function buildSnapshot(label = "Edit") {
+    console.log("[buildSnapshot]", label);
+
     return {
-      id: crypto.randomUUID?.() || `${safeNow()}-${Math.random()}`,
+      id:
+        crypto.randomUUID?.() ||
+        `${safeNow()}-${Math.random()}`,
+
       label,
+
       timestamp: safeNow(),
+
       data: deepClone(window.graphData),
-      selectedNodeId: window.selectedNodeId || null,
-      selectedEdgeKey: window.selectedEdgeKey || null
+
+      selectedNodeId:
+        window.selectedNodeId || null,
+
+      selectedEdgeKey:
+        window.selectedEdgeKey || null
     };
   }
 
   function pushUndoState(label = "Edit") {
+    console.log("[pushUndoState]", label);
+
     const snapshot = buildSnapshot(label);
 
-    const lastSnapshot = window.undoStack[window.undoStack.length - 1];
+    const stack =
+      window.editorRuntime.undoStack;
+
+    const lastSnapshot =
+      stack[stack.length - 1];
 
     if (
       lastSnapshot &&
-      JSON.stringify(lastSnapshot.data) === JSON.stringify(snapshot.data)
+      JSON.stringify(lastSnapshot.data) ===
+        JSON.stringify(snapshot.data)
     ) {
+      console.log(
+        "[pushUndoState] duplicate skipped"
+      );
+
       return;
     }
 
-    window.undoStack.push(snapshot);
+    stack.push(snapshot);
 
-    if (window.undoStack.length > MAX_HISTORY) {
-      window.undoStack.shift();
+    if (stack.length > MAX_HISTORY) {
+      stack.shift();
     }
 
-    window.redoStack.length = 0;
+    window.editorRuntime.redoStack.length = 0;
+
+    console.log(
+      "[pushUndoState] undo stack size",
+      stack.length
+    );
 
     if (window.updateStatsBar) {
       window.updateStatsBar();
     }
   }
 
-  function restoreState(snapshot, reason = "State restored.") {
-    if (!snapshot?.data) return;
+  function restoreState(
+    snapshot,
+    reason = "State restored."
+  ) {
+    console.log("[restoreState]", reason);
 
-    window.graphData = window.normalizeData(deepClone(snapshot.data));
-    window.selectedNodeId = snapshot.selectedNodeId || null;
-    window.selectedEdgeKey = snapshot.selectedEdgeKey || null;
+    if (!snapshot?.data) {
+      console.warn(
+        "[restoreState] invalid snapshot"
+      );
+
+      return;
+    }
+
+    const normalized =
+      window.normalizeData(
+        deepClone(snapshot.data)
+      );
+
+    if (!window.graphData) {
+      window.graphData = {
+        nodes: [],
+        edges: []
+      };
+    }
+
+    window.graphData.nodes.splice(
+      0,
+      window.graphData.nodes.length,
+      ...normalized.nodes
+    );
+
+    window.graphData.edges.splice(
+      0,
+      window.graphData.edges.length,
+      ...normalized.edges
+    );
+
+    window.selectedNodeId =
+      snapshot.selectedNodeId || null;
+
+    window.selectedEdgeKey =
+      snapshot.selectedEdgeKey || null;
 
     if (window.refreshAllUI) {
       window.refreshAllUI();
@@ -148,40 +245,80 @@
   }
 
   function undoAction() {
-    if (!window.undoStack.length) return;
+    console.log("[undoAction]");
 
-    const currentState = buildSnapshot("Redo");
-    window.redoStack.push(currentState);
+    const undoStack =
+      window.editorRuntime.undoStack;
 
-    const snapshot = window.undoStack.pop();
+    if (!undoStack.length) {
+      console.warn("[undoAction] empty");
+
+      return;
+    }
+
+    const currentState =
+      buildSnapshot("Redo");
+
+    window.editorRuntime.redoStack.push(
+      currentState
+    );
+
+    const snapshot = undoStack.pop();
+
     restoreState(snapshot, "Undo applied.");
 
     markDirtyNoHistory("Undo applied.");
   }
 
   function redoAction() {
-    if (!window.redoStack.length) return;
+    console.log("[redoAction]");
 
-    const currentState = buildSnapshot("Undo");
-    window.undoStack.push(currentState);
+    const redoStack =
+      window.editorRuntime.redoStack;
 
-    const snapshot = window.redoStack.pop();
+    if (!redoStack.length) {
+      console.warn("[redoAction] empty");
+
+      return;
+    }
+
+    const currentState =
+      buildSnapshot("Undo");
+
+    window.editorRuntime.undoStack.push(
+      currentState
+    );
+
+    const snapshot = redoStack.pop();
+
     restoreState(snapshot, "Redo applied.");
 
     markDirtyNoHistory("Redo applied.");
   }
 
   function getDraftPayload() {
+    console.log("[getDraftPayload]");
+
     return {
       savedAt: safeNow(),
-      data: window.getSerializableGraphData(),
-      selectedNodeId: window.selectedNodeId || null,
-      selectedEdgeKey: window.selectedEdgeKey || null,
-      viewportState: window.viewportState || null
+
+      data:
+        window.getSerializableGraphData(),
+
+      selectedNodeId:
+        window.selectedNodeId || null,
+
+      selectedEdgeKey:
+        window.selectedEdgeKey || null,
+
+      viewportState:
+        window.viewportState || null
     };
   }
 
   function saveDraftToLocal() {
+    console.log("[saveDraftToLocal]");
+
     const payload = getDraftPayload();
 
     const success = safeStorage.set(
@@ -190,7 +327,8 @@
     );
 
     if (success) {
-      window.lastLocalSaveAt = payload.savedAt;
+      window.editorRuntime.lastLocalSaveAt =
+        payload.savedAt;
 
       if (window.updateStatsBar) {
         window.updateStatsBar();
@@ -199,9 +337,19 @@
   }
 
   function loadDraftFromLocal() {
-    const raw = safeStorage.get(window.LOCAL_DRAFT_KEY);
+    console.log("[loadDraftFromLocal]");
 
-    if (!raw) return null;
+    const raw = safeStorage.get(
+      window.LOCAL_DRAFT_KEY
+    );
+
+    if (!raw) {
+      console.warn(
+        "[loadDraftFromLocal] no draft"
+      );
+
+      return null;
+    }
 
     try {
       const parsed = JSON.parse(raw);
@@ -212,87 +360,48 @@
 
       return parsed;
     } catch (err) {
-      console.error(err);
+      console.error(
+        "[loadDraftFromLocal]",
+        err
+      );
+
       return null;
     }
   }
 
   function clearLocalDraft() {
-    safeStorage.remove(window.LOCAL_DRAFT_KEY);
-  }
+    console.log("[clearLocalDraft]");
 
-  function restoreMetaFromLocalStorage() {
-    const savedRemote = safeStorage.get(window.LAST_REMOTE_SAVE_KEY);
-    const savedSnapshot = safeStorage.get(window.LAST_SNAPSHOT_META_KEY);
-
-    if (savedRemote) {
-      const parsed = Number(savedRemote);
-
-      if (!Number.isNaN(parsed) && parsed > 0) {
-        window.lastRemoteSaveAt = parsed;
-      }
-    }
-
-    if (savedSnapshot) {
-      try {
-        const parsed = JSON.parse(savedSnapshot);
-
-        window.lastVersionId = parsed?.version || null;
-        window.lastSnapshotPath = parsed?.snapshotPath || null;
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    if (window.updateMetaBadges) {
-      window.updateMetaBadges();
-    }
-  }
-
-  function persistMetaToLocalStorage() {
-    if (window.lastRemoteSaveAt) {
-      safeStorage.set(
-        window.LAST_REMOTE_SAVE_KEY,
-        String(window.lastRemoteSaveAt)
-      );
-    }
-
-    safeStorage.set(
-      window.LAST_SNAPSHOT_META_KEY,
-      JSON.stringify({
-        version: window.lastVersionId,
-        snapshotPath: window.lastSnapshotPath
-      })
+    safeStorage.remove(
+      window.LOCAL_DRAFT_KEY
     );
   }
 
   const scheduleAutosave = debounce(() => {
+    console.log("[scheduleAutosave]");
     saveDraftToLocal();
   }, DEFAULT_AUTOSAVE_DELAY);
 
   const scheduleDiffRefresh = debounce(() => {
+    console.log("[scheduleDiffRefresh]");
+
     if (window.refreshChangeSummary) {
       window.refreshChangeSummary();
     }
   }, DEFAULT_DIFF_DELAY);
 
-  function markDirty(reason = "Unsaved changes") {
-    window.hasUnsavedChanges = true;
+  function markDirty(
+    reason = "Unsaved changes"
+  ) {
+    console.log("[markDirty]", reason);
 
-    updateUIState("save-dirty", "Unsaved changes");
+    window.editorRuntime.hasUnsavedChanges =
+      true;
 
-    scheduleAutosave();
-    scheduleDiffRefresh();
-
-    if (reason && window.setStatus) {
-      window.setStatus(reason);
-    }
-  }
-
-  function markDirtyNoHistory(reason = "Unsaved changes") {
-    window.hasUnsavedChanges = true;
-
-    updateUIState("save-dirty", "Unsaved changes");
+    updateUIState(
+      "save-dirty",
+      "Unsaved changes"
+    );
 
     scheduleAutosave();
     scheduleDiffRefresh();
@@ -302,27 +411,82 @@
     }
   }
 
-  function markClean(message = "All changes saved") {
-    window.hasUnsavedChanges = false;
+  function markDirtyNoHistory(
+    reason = "Unsaved changes"
+  ) {
+    console.log(
+      "[markDirtyNoHistory]",
+      reason
+    );
 
-    updateUIState("save-clean", message);
+    window.editorRuntime.hasUnsavedChanges =
+      true;
+
+    updateUIState(
+      "save-dirty",
+      "Unsaved changes"
+    );
+
+    scheduleAutosave();
+    scheduleDiffRefresh();
+  }
+
+  function markClean(
+    message = "All changes saved"
+  ) {
+    console.log("[markClean]", message);
+
+    window.editorRuntime.hasUnsavedChanges =
+      false;
+
+    updateUIState(
+      "save-clean",
+      message
+    );
 
     scheduleDiffRefresh();
   }
 
-  function edgeExists(from, to, label = "") {
-    return (window.graphData.edges || []).some(
+  function edgeExists(
+    from,
+    to,
+    label = ""
+  ) {
+    return (
+      window.graphData.edges || []
+    ).some(
       (edge) =>
         edge.from === from &&
         edge.to === to &&
-        (edge.label || "") === (label || "")
+        (edge.label || "") ===
+          (label || "")
     );
   }
 
-  function addEdge(from, to, label = "", oneWay = true) {
-    if (!from || !to || from === to) return false;
+  function addEdge(
+    from,
+    to,
+    label = "",
+    oneWay = true
+  ) {
+    console.log("[addEdge]", {
+      from,
+      to,
+      label,
+      oneWay
+    });
 
-    if (edgeExists(from, to, label)) return false;
+    if (!from || !to || from === to) {
+      return false;
+    }
+
+    if (edgeExists(from, to, label)) {
+      console.warn(
+        "[addEdge] duplicate"
+      );
+
+      return false;
+    }
 
     const edge = {
       from,
@@ -334,7 +498,10 @@
 
     window.graphData.edges.push(edge);
 
-    if (!oneWay && !edgeExists(to, from, label)) {
+    if (
+      !oneWay &&
+      !edgeExists(to, from, label)
+    ) {
       window.graphData.edges.push({
         from: to,
         to: from,
@@ -348,25 +515,47 @@
   }
 
   function generateNodeId() {
+    console.log("[generateNodeId]");
+
     const usedIds = new Set(
-      (window.graphData.nodes || []).map((node) =>
-        String(node.id || "")
+      (window.graphData.nodes || []).map(
+        (node) =>
+          String(node.id || "")
       )
     );
 
-    return window.makeUniqueId("level", usedIds);
+    return window.makeUniqueId(
+      "level",
+      usedIds
+    );
   }
 
   function addNode() {
+    console.log("[addNode]");
+
+    if (
+      !window.graphViewportRect ||
+      !window.scenePointFromClient
+    ) {
+      console.error(
+        "[addNode] viewport helpers missing"
+      );
+
+      return;
+    }
+
     pushUndoState("Add node");
 
     const nextId = generateNodeId();
 
-    const rect = window.graphViewportRect();
-    const center = window.scenePointFromClient(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2
-    );
+    const rect =
+      window.graphViewportRect();
+
+    const center =
+      window.scenePointFromClient(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
 
     const node = {
       id: nextId,
@@ -395,244 +584,39 @@
     markDirty("Added new node.");
   }
 
-  function getInputValue(id, fallback = "") {
-    return document.getElementById(id)?.value ?? fallback;
-  }
+  async function fetchJSON(
+    url,
+    options = {}
+  ) {
+    console.log("[fetchJSON]", url);
 
-  function getActiveNodeFormValues() {
-    return {
-      label: getInputValue("nodeLabel"),
-      subtitle: getInputValue("nodeSubtitle"),
-      type: getInputValue("nodeType", "stable"),
-      status: getInputValue("nodeStatus", "draft"),
-      x: getInputValue("nodeX", 0),
-      y: getInputValue("nodeY", 0),
-      tags: getInputValue("nodeTags"),
-      description: getInputValue("nodeDescription"),
-      notes: getInputValue("nodeNotes")
-    };
-  }
-
-  function getActiveLinkFormValues() {
-    return {
-      targetId: getInputValue("linkTarget"),
-      label: getInputValue("linkLabel"),
-      oneWay: getInputValue("linkOneWay", "yes") === "yes"
-    };
-  }
-
-  function applySelectedNodeChanges() {
-    const node = window.getSelectedNode();
-
-    if (!node) return;
-
-    pushUndoState("Update node");
-
-    const values = getActiveNodeFormValues();
-
-    Object.assign(node, {
-      label: values.label.trim() || "Unnamed",
-      subtitle: values.subtitle.trim(),
-      type: window.normalizeType(values.type),
-      status: values.status,
-      x: Number(values.x || 0),
-      y: Number(values.y || 0),
-      tags: values.tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-      description: values.description,
-      notes: values.notes,
-      updatedAt: safeNow()
-    });
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Node updated.");
-  }
-
-  function deleteSelectedNode() {
-    const node = window.getSelectedNode();
-
-    if (!node) return;
-
-    if (!confirm(`Delete "${node.label}"?`)) {
-      return;
-    }
-
-    pushUndoState("Delete node");
-
-    window.graphData.nodes = window.graphData.nodes.filter(
-      (n) => n.id !== node.id
-    );
-
-    window.graphData.edges = window.graphData.edges.filter(
-      (edge) =>
-        edge.from !== node.id &&
-        edge.to !== node.id
-    );
-
-    window.selectedNodeId = null;
-    window.selectedEdgeKey = null;
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Deleted node.");
-  }
-
-  function addConnectionFromSidebar() {
-    const node = window.getSelectedNode();
-
-    if (!node) return;
-
-    const values = getActiveLinkFormValues();
-
-    if (!values.targetId) return;
-
-    pushUndoState("Add link");
-
-    const added = addEdge(
-      node.id,
-      values.targetId,
-      values.label,
-      values.oneWay
-    );
-
-    if (!added) return;
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Added link.");
-  }
-
-  function deleteEdge(from, to, label = "") {
-    pushUndoState("Delete link");
-
-    const before = window.graphData.edges.length;
-
-    window.graphData.edges = window.graphData.edges.filter(
-      (edge) =>
-        !(
-          edge.from === from &&
-          edge.to === to &&
-          (edge.label || "") === (label || "")
-        )
-    );
-
-    if (before === window.graphData.edges.length) {
-      return;
-    }
-
-    if (window.selectedEdgeKey) {
-      const exists = window.graphData.edges.some(
-        (edge) =>
-          window.edgeKeyOf(edge) === window.selectedEdgeKey
-      );
-
-      if (!exists) {
-        window.selectedEdgeKey = null;
-      }
-    }
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Deleted link.");
-  }
-
-  function selectEdgeByKey(key) {
-    const edge = window.getEdgeByKey(key);
-
-    window.selectedEdgeKey = edge ? key : null;
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-  }
-
-  function addWaypointToSelectedEdge() {
-    const edge = window.getEdgeByKey(window.selectedEdgeKey);
-
-    if (!edge) return;
-
-    pushUndoState("Add bend point");
-
-    const points = window.buildEdgePoints(edge);
-    const midpoint = window.getEdgeMidpoint(points);
-
-    edge.waypoints = window.normalizeWaypoints(edge.waypoints);
-
-    edge.waypoints.push({
-      x: Math.round(midpoint.x),
-      y: Math.round(midpoint.y)
-    });
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Added bend point.");
-  }
-
-  function removeWaypointFromSelectedEdge(index) {
-    const edge = window.getEdgeByKey(window.selectedEdgeKey);
-
-    if (!edge) return;
-
-    if (!Array.isArray(edge.waypoints)) return;
-
-    if (!edge.waypoints[index]) return;
-
-    pushUndoState("Remove bend point");
-
-    edge.waypoints.splice(index, 1);
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Removed bend point.");
-  }
-
-  function clearWaypointsFromSelectedEdge() {
-    const edge = window.getEdgeByKey(window.selectedEdgeKey);
-
-    if (!edge) return;
-
-    pushUndoState("Clear bend points");
-
-    edge.waypoints = [];
-
-    if (window.refreshAllUI) {
-      window.refreshAllUI();
-    }
-
-    markDirty("Cleared bend points.");
-  }
-
-  async function fetchJSON(url, options = {}) {
     const response = await fetch(url, {
       cache: "no-store",
       ...options
     });
 
-    const json = await response.json().catch(() => null);
+    const json = await response
+      .json()
+      .catch(() => null);
+
+    console.log("[fetchJSON result]", {
+      status: response.status,
+      json
+    });
 
     if (!response.ok) {
-      throw new Error(json?.error || "Request failed");
+      throw new Error(
+        json?.error ||
+          `Request failed (${response.status})`
+      );
     }
 
     return json;
   }
 
   async function fetchRemoteGraph() {
+    console.log("[fetchRemoteGraph]");
+
     const data = await fetchJSON(
       `${window.RAW_JSON_URL}?v=${safeNow()}`
     );
@@ -640,23 +624,54 @@
     return window.normalizeData(data);
   }
 
-  async function reloadGraph(force = false) {
+  async function reloadGraph(
+    force = false
+  ) {
+    console.log("[reloadGraph]", force);
+
     try {
-      if (window.hasUnsavedChanges && !force) {
-        updateUIState(null, "Reload blocked due to unsaved changes.");
+      if (
+        window.editorRuntime
+          .hasUnsavedChanges &&
+        !force
+      ) {
+        updateUIState(
+          null,
+          "Reload blocked due to unsaved changes."
+        );
+
         return;
       }
 
       if (window.showLoading) {
-        window.showLoading("Loading graph...");
+        window.showLoading(
+          "Loading graph..."
+        );
       }
 
-      updateUIState("save-loading", "Loading latest graph...");
+      updateUIState(
+        "save-loading",
+        "Loading latest graph..."
+      );
 
-      const graph = await fetchRemoteGraph();
+      const graph =
+        await fetchRemoteGraph();
 
-      window.graphData = graph;
-      window.selectedNodeId = graph.nodes?.[0]?.id || null;
+      window.graphData.nodes.splice(
+        0,
+        window.graphData.nodes.length,
+        ...graph.nodes
+      );
+
+      window.graphData.edges.splice(
+        0,
+        window.graphData.edges.length,
+        ...graph.edges
+      );
+
+      window.selectedNodeId =
+        graph.nodes?.[0]?.id || null;
+
       window.selectedEdgeKey = null;
 
       if (window.refreshAllUI) {
@@ -671,175 +686,105 @@
         window.hideLoading();
       }
 
-      if (window.hideErrorPanel) {
-        window.hideErrorPanel();
-      }
-
-      markClean("Loaded latest graph.");
+      markClean(
+        "Loaded latest graph."
+      );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "[reloadGraph]",
+        err
+      );
 
       if (window.hideLoading) {
         window.hideLoading();
       }
 
-      updateUIState("save-error", "Failed to load graph.", true);
-
-      if (window.showErrorPanel) {
-        window.showErrorPanel(err.message || "Failed to load graph.");
-      }
+      updateUIState(
+        "save-error",
+        "Failed to load graph.",
+        true
+      );
     }
   }
 
   async function saveGraph() {
+    console.log("[saveGraph]");
+
     try {
-      if (window.isSavingToGitHub) return;
+      if (
+        window.editorRuntime
+          .isSavingToGitHub
+      ) {
+        console.warn(
+          "[saveGraph] already saving"
+        );
 
-      if (safeNow() < window.saveCooldownUntil) return;
-
-      window.saveCooldownUntil = safeNow() + DEFAULT_SAVE_COOLDOWN;
-      window.isSavingToGitHub = true;
-
-      updateUIState("save-saving", "Saving graph...");
-
-      const payload = {
-        project: window.PROJECT,
-        data: window.getSerializableGraphData()
-      };
-
-      const json = await fetchJSON(window.SAVE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      window.hasUnsavedChanges = false;
-      window.lastRemoteSaveAt = json?.savedAt
-        ? Date.parse(json.savedAt) || safeNow()
-        : safeNow();
-
-      window.lastVersionId = json?.version || null;
-      window.lastSnapshotPath = json?.snapshotPath || null;
-
-      persistMetaToLocalStorage();
-
-      if (window.updateMetaBadges) {
-        window.updateMetaBadges();
-      }
-
-      saveDraftToLocal();
-
-      window.historyIndexCache = null;
-      window.snapshotCache.clear();
-
-      markClean("Saved to GitHub.");
-    } catch (err) {
-      console.error(err);
-
-      updateUIState("save-error", "GitHub save failed.", true);
-
-      if (window.showErrorPanel) {
-        window.showErrorPanel(err.message || "Save failed.");
-      }
-    } finally {
-      window.isSavingToGitHub = false;
-    }
-  }
-
-  function discardLocalDraft() {
-    const confirmed = confirm(
-      "Discard your local draft and reload from GitHub?"
-    );
-
-    if (!confirmed) return;
-
-    clearLocalDraft();
-
-    window.hasUnsavedChanges = false;
-
-    reloadGraph(true);
-  }
-
-  async function fetchHistoryIndex() {
-    if (window.historyIndexCache) {
-      return window.historyIndexCache;
-    }
-
-    const json = await fetchJSON(
-      `${window.SAVE_URL}?project=${encodeURIComponent(
-        window.PROJECT
-      )}&action=history`
-    );
-
-    window.historyIndexCache = json;
-
-    return json;
-  }
-
-  async function fetchSnapshotByPath(path) {
-    if (!path) {
-      throw new Error("Missing snapshot path.");
-    }
-
-    if (window.snapshotCache.has(path)) {
-      return window.snapshotCache.get(path);
-    }
-
-    const json = await fetchJSON(
-      `${window.SAVE_URL}?project=${encodeURIComponent(
-        window.PROJECT
-      )}&action=snapshot&path=${encodeURIComponent(path)}`
-    );
-
-    const normalized = window.normalizeData(json?.data || json);
-
-    window.snapshotCache.set(path, normalized);
-
-    return normalized;
-  }
-
-  async function previewLatestSnapshot() {
-    try {
-      const history = await fetchHistoryIndex();
-
-      const versions = Array.isArray(history?.versions)
-        ? history.versions
-        : [];
-
-      if (!versions.length) {
-        updateUIState(null, "No snapshot history available.");
         return;
       }
 
-      const snapshot = await fetchSnapshotByPath(versions[0].path);
+      window.editorRuntime.isSavingToGitHub =
+        true;
 
-      window.graphData = snapshot;
-      window.selectedNodeId = snapshot.nodes?.[0]?.id || null;
-      window.selectedEdgeKey = null;
+      updateUIState(
+        "save-saving",
+        "Saving graph..."
+      );
 
-      if (window.refreshAllUI) {
-        window.refreshAllUI();
-      }
+      const payload = {
+        project: window.PROJECT,
+        data:
+          window.getSerializableGraphData()
+      };
 
-      if (window.fitToGraph) {
-        window.fitToGraph();
-      }
+      const json = await fetchJSON(
+        window.SAVE_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
 
-      updateUIState(null, "Previewing latest snapshot.");
+      console.log(
+        "[saveGraph success]",
+        json
+      );
+
+      window.editorRuntime.hasUnsavedChanges =
+        false;
+
+      window.editorRuntime.lastRemoteSaveAt =
+        json?.savedAt
+          ? Date.parse(json.savedAt) ||
+            safeNow()
+          : safeNow();
+
+      saveDraftToLocal();
+
+      markClean("Saved to GitHub.");
     } catch (err) {
-      console.error(err);
+      console.error(
+        "[saveGraph]",
+        err
+      );
 
-      if (window.showErrorPanel) {
-        window.showErrorPanel(
-          err.message || "Snapshot preview failed."
-        );
-      }
+      updateUIState(
+        "save-error",
+        "GitHub save failed.",
+        true
+      );
+    } finally {
+      window.editorRuntime.isSavingToGitHub =
+        false;
     }
   }
 
   function clearSelection() {
+    console.log("[clearSelection]");
+
     window.selectedNodeId = null;
     window.selectedEdgeKey = null;
 
@@ -847,22 +792,44 @@
       window.refreshAllUI();
     }
 
-    updateUIState(null, "Selection cleared.");
+    updateUIState(
+      null,
+      "Selection cleared."
+    );
   }
 
   function setupSearch() {
-    const input = document.getElementById("searchInput");
+    console.log("[setupSearch]");
 
-    if (!input) return;
+    const input =
+      document.getElementById(
+        "searchInput"
+      );
+
+    if (!input) {
+      console.warn(
+        "[setupSearch] missing input"
+      );
+
+      return;
+    }
 
     input.addEventListener(
       "input",
       debounce((event) => {
-        window.currentSearch = String(
+        const value = String(
           event.target.value || ""
         )
           .trim()
           .toLowerCase();
+
+        console.log(
+          "[search]",
+          value
+        );
+
+        window.editorRuntime.currentSearch =
+          value;
 
         if (window.refreshGraph) {
           window.refreshGraph();
@@ -871,12 +838,24 @@
     );
   }
 
-  window.addEventListener("beforeunload", (event) => {
-    if (!window.hasUnsavedChanges) return;
+  window.addEventListener(
+    "beforeunload",
+    (event) => {
+      if (
+        !window.editorRuntime
+          .hasUnsavedChanges
+      ) {
+        return;
+      }
 
-    event.preventDefault();
-    event.returnValue = "";
-  });
+      console.warn(
+        "[beforeunload] unsaved changes"
+      );
+
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  );
 
   Object.assign(window, {
     pushUndoState,
@@ -886,8 +865,6 @@
     saveDraftToLocal,
     loadDraftFromLocal,
     clearLocalDraft,
-    restoreMetaFromLocalStorage,
-    persistMetaToLocalStorage,
     scheduleAutosave,
     scheduleDiffRefresh,
     markDirty,
@@ -897,24 +874,14 @@
     addEdge,
     generateNodeId,
     addNode,
-    getActiveNodeFormValues,
-    getActiveLinkFormValues,
-    applySelectedNodeChanges,
-    deleteSelectedNode,
-    addConnectionFromSidebar,
-    deleteEdge,
-    selectEdgeByKey,
-    addWaypointToSelectedEdge,
-    removeWaypointFromSelectedEdge,
-    clearWaypointsFromSelectedEdge,
     fetchRemoteGraph,
     reloadGraph,
     saveGraph,
-    discardLocalDraft,
-    fetchHistoryIndex,
-    fetchSnapshotByPath,
-    previewLatestSnapshot,
     clearSelection,
     setupSearch
   });
+
+  console.log(
+    "[editor-actions] ready"
+  );
 })();
